@@ -3,6 +3,7 @@
 
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>
+#include <boost/function.hpp>
 #include <boost/optional.hpp>
 #include <boost/range/algorithm/transform.hpp>
 #include <boost/range/irange.hpp>
@@ -147,8 +148,6 @@ public:
     // Constructors {{{
     SparseTensor(Dimensions const& dimensions) : dimensions(dimensions) {}
 
-    SparseTensor(Dimensions const& dimensions, BOOST_RV_REF(IndexedChunks) chunks) : dimensions(dimensions), chunks(chunks) {}
-
     SparseTensor(BOOST_RV_REF(SparseTensor) other) : dimensions(other.dimensions), chunks(boost::move(chunks)) {}
     // }}}
 
@@ -168,14 +167,14 @@ public:
     template<
          typename RightChunk
         ,Dimension number_of_right_dimensions
-        ,typename ChunkContractor
+        ,typename ResultChunk
         ,Dimension number_of_joined_dimensions
-    > typename boost::result_of<ChunkContractor>::type contractSparseTensors(
+    > SparseTensor<ResultChunk,number_of_dimensions_ + number_of_right_dimensions - 2u*number_of_joined_dimensions> contractWith(
          SparseTensor<RightChunk,number_of_right_dimensions> const& right_tensor
         ,boost::array<Dimension,number_of_joined_dimensions> const& left_join_dimensions
         ,boost::array<Dimension,number_of_joined_dimensions> const& right_join_dimensions
         ,boost::array<ResultDimensionInformation,number_of_dimensions_ + number_of_right_dimensions - 2u*number_of_joined_dimensions> result_dimension_sources
-        ,ChunkContractor contractChunks
+        ,boost::function<ResultChunk(Chunk,RightChunk)> contractChunks
     ) const {
         // Usings {{{
         using boost::array;
@@ -211,7 +210,6 @@ public:
         typedef unordered_map<JoinDimensions,RightIndexedChunkList> RightJoinIndexedChunkLists;
         typedef typename RightJoinIndexedChunkLists::value_type RightJoinIndexedChunkList;
 
-        typedef typename boost::result_of<ChunkContractor>::type ResultChunk;
         typedef SparseTensor<ResultChunk,number_of_dimensions_ + number_of_right_dimensions - 2u*number_of_joined_dimensions> ResultSparseTensor;
         typedef typename ResultSparseTensor::Dimensions ResultDimensions;
         typedef typename ResultSparseTensor::Indices ResultIndices;
@@ -295,6 +293,8 @@ public:
                 }
             } // }}}
         } // }}}
+
+        return ResultSparseTensor(result_dimensions,boost::move(result_chunks));
 
         // Return the result {{{
         return ResultSparseTensor(result_dimensions,boost::move(result_chunks));

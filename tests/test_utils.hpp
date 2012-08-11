@@ -5,6 +5,7 @@
 #include <illuminate.hpp>
 
 #include <boost/move/move.hpp>
+#include <functional>
 // }}}
 
 // Usings {{{
@@ -31,6 +32,17 @@ public:
         return *this;
     }
 };
+// }}}
+
+// Helper Functors {{{
+// Constant Function {{{
+template<typename Left, typename Right, typename Result> struct ConstantAbsorber : std::binary_function<Result,Left,Right> {
+    Result value;
+    ConstantAbsorber(Result const& value) : value(value) {}
+    Result operator()(Left const& left, Right const& right) { return value; }
+};
+template<typename T> ConstantAbsorber<T,T,T> makeConstantAbsorber(T const& value) { return ConstantAbsorber<T,T,T>(value); }
+// }}}
 // }}}
 
 #endif
