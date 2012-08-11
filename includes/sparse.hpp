@@ -133,7 +133,7 @@ public:
     // }}}
 
     // Type aliases {{{
-    typedef boost::array<DimensionSize,number_of_dimensions> Dimensions;
+    typedef boost::array<DimensionSize,number_of_dimensions_> Dimensions;
     typedef Dimensions Indices;
     typedef boost::unordered_map<Indices,Chunk> IndexedChunks;
     typedef typename IndexedChunks::value_type IndexedChunk;
@@ -174,7 +174,7 @@ public:
          SparseTensor<RightChunk,number_of_right_dimensions> const& right_tensor
         ,boost::array<Dimension,number_of_joined_dimensions> const& left_join_dimensions
         ,boost::array<Dimension,number_of_joined_dimensions> const& right_join_dimensions
-        ,boost::array<ResultDimensionInformation,number_of_dimensions + number_of_right_dimensions - 2u*number_of_joined_dimensions> result_dimension_sources
+        ,boost::array<ResultDimensionInformation,number_of_dimensions_ + number_of_right_dimensions - 2u*number_of_joined_dimensions> result_dimension_sources
         ,ChunkContractor contractChunks
     ) const {
         // Usings {{{
@@ -187,7 +187,7 @@ public:
         using namespace SparseTensorImplementation;
         // }}}
 
-        Dimension const number_of_result_dimensions = number_of_dimensions + number_of_right_dimensions - 2u*number_of_joined_dimensions;
+        Dimension const number_of_result_dimensions = number_of_dimensions_ + number_of_right_dimensions - 2u*number_of_joined_dimensions;
 
         // Define some type aliases for convenience {{{
         typedef array<Index,number_of_joined_dimensions> JoinDimensions;
@@ -212,7 +212,7 @@ public:
         typedef typename RightJoinIndexedChunkLists::value_type RightJoinIndexedChunkList;
 
         typedef typename boost::result_of<ChunkContractor>::type ResultChunk;
-        typedef SparseTensor<ResultChunk,number_of_result_dimensions> ResultSparseTensor;
+        typedef SparseTensor<ResultChunk,number_of_dimensions_ + number_of_right_dimensions - 2u*number_of_joined_dimensions> ResultSparseTensor;
         typedef typename ResultSparseTensor::Dimensions ResultDimensions;
         typedef typename ResultSparseTensor::Indices ResultIndices;
         typedef typename ResultSparseTensor::IndexedChunk ResultIndexedChunk;
@@ -272,7 +272,7 @@ public:
                     // Compute the result indices, aborting this term if one of them is in the ignored set {{{
                     ResultIndices indices;
                     bool skip_chunk = false;
-                    BOOST_FOREACH(size_t const i, irange(0u,number_of_result_dimensions)) {
+                    BOOST_FOREACH(size_t const i, irange((Dimension)0u,number_of_result_dimensions)) {
                         boost::optional<Index> maybe_index = boost::apply_visitor(makeGetResultIndex(right_dimensions,left_indices,right_indices),result_dimension_sources[i]);
                         if(maybe_index) {
                             indices[i] = *maybe_index;
