@@ -34,4 +34,28 @@ class TestNullSparseTensor(TestCase): # {{{
         result_tensor = SparseTensor((),{})
         self.assertEqual(formSparseContractor((0,),(0,),(),operator.mul)(x_tensor,y_tensor),result_tensor)
     # }}}
+    @with_checker
+    def test_dot_product2_overlapping_tensors(self, # {{{
+        i=irange(1,10),
+        j=irange(1,10),
+        x=irange(1,10),
+        y=irange(1,10)
+    ):
+        x_tensor = SparseTensor((),{(i,j):x})
+        y_tensor = SparseTensor((),{(j,i):y})
+        result_tensor = SparseTensor((),{():x*y})
+        self.assertEqual(formSparseContractor((0,1),(1,0),(),operator.mul)(x_tensor,y_tensor),result_tensor)
+    # }}}
+    @with_checker
+    def test_dot_product2_non_overlapping_tensors(self, # {{{
+        i=irange(1,10),
+        j=irange(11,20),
+        x=irange(1,10),
+        y=irange(1,10)
+    ):
+        x_tensor = SparseTensor((),{(i,j):x})
+        y_tensor = SparseTensor((),{(j,i):y})
+        result_tensor = SparseTensor((),{})
+        self.assertEqual(formSparseContractor((0,1),(0,1),(),operator.mul)(x_tensor,y_tensor),result_tensor)
+    # }}}
 # }}}
