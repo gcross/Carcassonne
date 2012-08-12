@@ -90,7 +90,7 @@ def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimen
         # Compute the result chunks {{{
         result_chunks = {}
         for indexed_chunk_lists_pair in chunk_lists.iteritems():
-            for ((left_indices,left_chunk),(right_indices,right_chunk)) in itertools.product(*indexed_chunk_lists_pair):
+            for ((left_indices,left_chunk),(right_indices,right_chunk)) in itertools.product(*indexed_chunk_lists_pair[1]):
                 result_indices = tuple(dimension_source.getResultIndex(right_dimensions,left_indices,right_indices) for dimension_source in result_dimension_sources)
                 if None in result_indices:
                     continue
