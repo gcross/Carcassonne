@@ -1,8 +1,9 @@
 # Imports {{{
+from numpy import multiply,zeros
 import operator
 from paycheck import *
 
-from ..sparse import SparseTensor, formSparseContractor
+from ..sparse import *
 from . import *
 # }}}
 
@@ -57,5 +58,52 @@ class TestFormSparseTensor(TestCase): # {{{
         y_tensor = SparseTensor((),{(j,i):y})
         result_tensor = SparseTensor((),{})
         self.assertEqual(formSparseContractor((0,1),(0,1),(),operator.mul)(x_tensor,y_tensor),result_tensor)
+    # }}}
+    @with_checker
+    def test_outer_product_r1(self, # {{{
+        x_chunks={(irange(0,2),): float},
+        y_chunks={(irange(0,2),): float},
+    ):
+        x = SparseTensor((3,),x_chunks)
+        y = SparseTensor((3,),y_chunks)
+        z = formSparseContractor((),(),(FromLeft(0),FromRight(0)),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        self.assertAllClose(zd,multiply.outer(xd,yd))
+    # }}}
+    @with_checker
+    def test_outer_product_r2(self, # {{{
+        x_chunks={(irange(0,2),)*2: float},
+        y_chunks={(irange(0,2),)*2: float},
+    ):
+        x = SparseTensor((3,)*2,x_chunks)
+        y = SparseTensor((3,)*2,y_chunks)
+        z = formSparseContractor((),(),(FromLeft(0),FromLeft(1),FromRight(0),FromRight(1)),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        self.assertAllClose(zd,multiply.outer(xd,yd))
+    # }}}
+    @with_checker
+    def test_outer_product_r2_with_interleave(self, # {{{
+        x_chunks={(irange(0,2),)*2: float},
+        y_chunks={(irange(0,2),)*2: float},
+    ):
+        x = SparseTensor((3,)*2,x_chunks)
+        y = SparseTensor((3,)*2,y_chunks)
+        z = formSparseContractor((),(),(FromLeft(0),FromRight(0),FromLeft(1),FromRight(1)),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        self.assertAllClose(zd,multiply.outer(xd,yd).transpose(0,2,1,3))
+    # }}}
+# }}}
+
+class TestFormDenseTensor(TestCase): # {{{
+    def test_empty_tensor(self): # {{{
+        sparse_tensor = SparseTensor((),{})
+        dense_tensor = formDenseTensor(sparse_tensor)
+        self.assertEqual(dense_tensor,0)
     # }}}
 # }}}

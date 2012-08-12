@@ -1,6 +1,7 @@
 # Imports {{{
 from collections import namedtuple
 import itertools
+from numpy import ndarray, zeros
 # }}}
 
 # Types {{{
@@ -9,7 +10,7 @@ SparseTensor = namedtuple("SparseTensor",["dimensions","chunks"])
 
 # Classes {{{
 # Result dimension sources {{{
-class FromLeftTensor(object): # {{{
+class FromLeft(object): # {{{
     number_of_left_dimensions = 1
     number_of_right_dimensions = 0
     def __init__(self,dimension):
@@ -19,7 +20,7 @@ class FromLeftTensor(object): # {{{
     def getResultIndex(self,right_dimensions,left_indices,right_indices):
         return left_indices[self.dimension]
 # }}}
-class FromRightTensor(object): # {{{
+class FromRight(object): # {{{
     number_of_left_dimensions = 0
     number_of_right_dimensions = 1
     def __init__(self,dimension):
@@ -29,7 +30,7 @@ class FromRightTensor(object): # {{{
     def getResultIndex(self,right_dimensions,left_indices,right_indices):
         return right_indices[self.dimension]
 # }}}
-class FromBothTensors(object): # {{{
+class FromBoth(object): # {{{
     number_of_left_dimensions = 1
     number_of_right_dimensions = 1
     def __init__(self,left_dimension,right_dimension,indices_to_ignore=frozenset(),indices_to_sum=frozenset()):
@@ -51,6 +52,20 @@ class FromBothTensors(object): # {{{
 # }}}
 
 # Functions {{{
+def formDenseTensor(sparse_tensor,dtype=None): # {{{
+    dimensions = sparse_tensor.dimensions
+    if not dtype and sparse_tensor.chunks:
+        value = next(sparse_tensor.chunks.itervalues())
+        if isinstance(value,ndarray):
+            dtype = value.dtype
+            dimensions +=  value.shape
+        else:
+            dtype = type(value)
+    dense_tensor = zeros(shape=dimensions,dtype=dtype)
+    for indices, value in sparse_tensor.chunks.iteritems():
+        dense_tensor[indices] += value
+    return dense_tensor
+# }}}
 def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimension_sources,contractChunks): # {{{
     # Compute the numbers of dimensions {{{
     number_of_left_dimensions = len(left_join_dimensions) + sum(dimension_source.number_of_left_dimensions for dimension_source in result_dimension_sources)
@@ -117,9 +132,10 @@ def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimen
 __all__ = [
     "SparseTensor",
 
-    "FromLeftTensor",
-    "FromRightTensor",
-    "FromBothTensors",
+    "FromLeft",
+    "FromRight",
+    "FromBoth",
 
+    "formDenseTensor",
     "formSparseContractor",
 ]# }}}
