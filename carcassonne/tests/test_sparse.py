@@ -1,5 +1,5 @@
 # Imports {{{
-from numpy import multiply,zeros
+from numpy import dot, multiply, zeros
 import operator
 from paycheck import *
 
@@ -97,6 +97,32 @@ class TestFormSparseTensor(TestCase): # {{{
         yd = formDenseTensor(y)
         zd = formDenseTensor(z)
         self.assertAllClose(zd,multiply.outer(xd,yd).transpose(0,2,1,3))
+    # }}}
+    @with_checker
+    def test_matmul(self, # {{{
+        x_chunks={(irange(0,2),)*2: float},
+        y_chunks={(irange(0,2),)*2: float},
+    ):
+        x = SparseTensor((3,)*2,x_chunks)
+        y = SparseTensor((3,)*2,y_chunks)
+        z = formSparseContractor((1,),(0,),(FromLeft(0),FromRight(1)),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        self.assertAllClose(zd,dot(xd,yd))
+    # }}}
+    @with_checker
+    def test_r4_matmul(self, # {{{
+        x_chunks={(irange(0,2),)*4: float},
+        y_chunks={(irange(0,2),)*4: float},
+    ):
+        x = SparseTensor((3,)*4,x_chunks)
+        y = SparseTensor((3,)*4,y_chunks)
+        z = formSparseContractor((1,3),(0,2),(FromLeft(0),FromRight(3),FromRight(1),FromLeft(2)),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        self.assertAllClose(zd,tensordot(xd,yd,((1,3),(0,2))).transpose(0,3,2,1))
     # }}}
 # }}}
 
