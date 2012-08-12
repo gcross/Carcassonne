@@ -247,6 +247,31 @@ class TestFormSparseTensor(TestCase): # {{{
         zc = zc.ravel()
         self.assertAllClose(zd,zc)
     # }}}
+    @with_checker
+    def test_application_of_redirects(self, # {{{
+        a=float,
+        b=float,
+        c=float,
+        d=float,
+        e=float,
+        f=float,
+    ):
+        LA = SparseTensor((2,1),{(0,0):a,(1,0):b})
+        LB = SparseTensor((2,2),{(0,0):b,(1,1):a})
+        LC = formSparseContractor((0,),(0,),(FromBoth(1,1,indices_to_ignore={(0,1)}),),operator.mul)(LA,LB)
+
+        RA = SparseTensor((2,1),{(0,0):c,(1,0):d})
+        RB = SparseTensor((2,2),{(0,0):e,(1,1):f})
+        RC = formSparseContractor((0,),(0,),(FromBoth(1,1,indices_to_redirect={(0,1):0}),),operator.mul)(RA,RB)
+
+        self.assertAllClose(
+            dot(formDenseTensor(LC),formDenseTensor(RC)),
+            dot(
+                tensordot(formDenseTensor(LA),formDenseTensor(LB),(0,0)).ravel(),
+                tensordot(formDenseTensor(RA),formDenseTensor(RB),(0,0)).ravel(),
+            )
+        )
+    # }}}
 # }}}
 
 class TestFormDenseTensor(TestCase): # {{{
