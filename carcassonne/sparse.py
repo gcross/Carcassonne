@@ -36,6 +36,8 @@ class FromBoth(object): # {{{
     def __init__(self,left_dimension,right_dimension,indices_to_ignore=frozenset(),indices_to_sum=frozenset()):
         self.left_dimension = left_dimension
         self.right_dimension = right_dimension
+        self.indices_to_ignore = indices_to_ignore
+        self.indices_to_sum = indices_to_sum
     def getResultDimension(self,left_dimensions,right_dimensions):
         return left_dimensions[self.left_dimension]*right_dimensions[self.right_dimension]
     def getResultIndex(self,right_dimensions,left_indices,right_indices):
@@ -68,14 +70,11 @@ def formDenseTensor(sparse_tensor,dtype=None): # {{{
 # }}}
 def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimension_sources,contractChunks): # {{{
     # Compute the numbers of dimensions {{{
-    number_of_left_dimensions = len(left_join_dimensions) + sum(dimension_source.number_of_left_dimensions for dimension_source in result_dimension_sources)
-    number_of_right_dimensions = len(right_join_dimensions) + sum(dimension_source.number_of_right_dimensions for dimension_source in result_dimension_sources)
-    number_of_result_dimensions = len(result_dimension_sources)
     number_of_join_dimensions = len(left_join_dimensions)
-    # }}}
-    # Perform sanity checks for the numbers of dimensions {{{
     assert(number_of_join_dimensions == len(right_join_dimensions))
-    assert(number_of_result_dimensions == number_of_left_dimensions + number_of_right_dimensions - 2*number_of_join_dimensions)
+    number_of_result_dimensions = len(result_dimension_sources)
+    number_of_left_dimensions = number_of_join_dimensions + sum(dimension_source.number_of_left_dimensions for dimension_source in result_dimension_sources)
+    number_of_right_dimensions = number_of_join_dimensions + sum(dimension_source.number_of_right_dimensions for dimension_source in result_dimension_sources)
     # }}}
     def absorb(left_sparse_tensor,right_sparse_tensor): # {{{
         # Cache the components of the tensors {{{

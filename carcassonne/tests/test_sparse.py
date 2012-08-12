@@ -124,6 +124,68 @@ class TestFormSparseTensor(TestCase): # {{{
         zd = formDenseTensor(z)
         self.assertAllClose(zd,tensordot(xd,yd,((1,3),(0,2))).transpose(0,3,2,1))
     # }}}
+    @with_checker
+    def test_matmul_with_merge(self, # {{{
+        x_chunks={(irange(0,2),)*2: float},
+        y_chunks={(irange(0,2),)*2: float},
+    ):
+        x = SparseTensor((3,)*2,x_chunks)
+        y = SparseTensor((3,)*2,y_chunks)
+        z = formSparseContractor((1,),(0,),(FromBoth(0,1),),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        self.assertAllClose(zd,dot(xd,yd).ravel())
+    # }}}
+    @with_checker(number_of_calls=100)
+    def test_matmul_with_merge_with_ignore(self, # {{{
+        x_chunks={(irange(0,2),)*2: float},
+        y_chunks={(irange(0,2),)*2: float},
+        i=irange(0,2),
+        j=irange(0,2),
+    ):
+        x = SparseTensor((3,)*2,x_chunks)
+        y = SparseTensor((3,)*2,y_chunks)
+        z = formSparseContractor((1,),(0,),(FromBoth(0,1,indices_to_ignore={(i,j)}),),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        zc = dot(xd,yd)
+        zc[i,j] = 0
+        zc = zc.ravel()
+        self.assertAllClose(zd,zc)
+    # }}}
+    @with_checker
+    def test_outer_product_with_merge(self, # {{{
+        x_chunks={(irange(0,2),): float},
+        y_chunks={(irange(0,2),): float},
+    ):
+        x = SparseTensor((3,),x_chunks)
+        y = SparseTensor((3,),y_chunks)
+        z = formSparseContractor((),(),(FromBoth(0,0),),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        self.assertAllClose(zd,multiply.outer(xd,yd).ravel())
+    # }}}
+    @with_checker
+    def test_outer_product_with_merge_with_ignore(self, # {{{
+        x_chunks={(irange(0,2),): float},
+        y_chunks={(irange(0,2),): float},
+        i=irange(0,2),
+        j=irange(0,2),
+    ):
+        x = SparseTensor((3,),x_chunks)
+        y = SparseTensor((3,),y_chunks)
+        z = formSparseContractor((),(),(FromBoth(0,0,indices_to_ignore={(i,j)}),),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        zc = multiply.outer(xd,yd)
+        zc[i,j] = 0
+        zc = zc.ravel()
+        self.assertAllClose(zd,zc)
+    # }}}
 # }}}
 
 class TestFormDenseTensor(TestCase): # {{{
