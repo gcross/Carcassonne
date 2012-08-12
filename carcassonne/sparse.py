@@ -33,11 +33,11 @@ class FromRight(object): # {{{
 class FromBoth(object): # {{{
     number_of_left_dimensions = 1
     number_of_right_dimensions = 1
-    def __init__(self,left_dimension,right_dimension,indices_to_ignore=frozenset(),indices_to_sum=frozenset()):
+    def __init__(self,left_dimension,right_dimension,indices_to_ignore=frozenset(),indices_to_redirect=frozenset()):
         self.left_dimension = left_dimension
         self.right_dimension = right_dimension
         self.indices_to_ignore = indices_to_ignore
-        self.indices_to_sum = indices_to_sum
+        self.indices_to_redirect = indices_to_redirect
     def getResultDimension(self,left_dimensions,right_dimensions):
         return left_dimensions[self.left_dimension]*right_dimensions[self.right_dimension]
     def getResultIndex(self,right_dimensions,left_indices,right_indices):
@@ -46,8 +46,8 @@ class FromBoth(object): # {{{
         indices = (left_index,right_index)
         if indices in self.indices_to_ignore:
             return None
-        if indices in self.indices_to_sum:
-            return self.indices_to_sum[indices]
+        if indices in self.indices_to_redirect:
+            return self.indices_to_redirect[indices]
         return left_index * right_dimensions[self.right_dimension] + right_index
 # }}}
 # }}}

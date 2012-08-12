@@ -1,5 +1,5 @@
 # Imports {{{
-from numpy import dot, multiply, zeros
+from numpy import all, dot, multiply, zeros
 import operator
 from paycheck import *
 
@@ -155,6 +155,28 @@ class TestFormSparseTensor(TestCase): # {{{
         zc = zc.ravel()
         self.assertAllClose(zd,zc)
     # }}}
+    @with_checker(number_of_calls=100)
+    def test_matmul_with_merge_with_nontrivial_redirect(self, # {{{
+        x_chunks={(irange(0,2),)*2: float},
+        y_chunks={(irange(0,2),)*2: float},
+        i=irange(0,2),
+        j=irange(0,2),
+        k=irange(0,8),
+    ):
+        x = SparseTensor((3,)*2,x_chunks)
+        y = SparseTensor((3,)*2,y_chunks)
+        z = formSparseContractor((1,),(0,),(FromBoth(0,1,indices_to_redirect={(i,j):k}),),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        zc = dot(xd,yd)
+        if k != i*3+j:
+            zc[k//3,k%3] += zc[i,j]
+            zc[i,j] = 0
+            self.assertTrue(all(zd[i*3+j]==0))
+        zc = zc.ravel()
+        self.assertAllClose(zd,zc)
+    # }}}
     @with_checker
     def test_outer_product_with_merge(self, # {{{
         x_chunks={(irange(0,2),): float},
@@ -183,6 +205,45 @@ class TestFormSparseTensor(TestCase): # {{{
         zd = formDenseTensor(z)
         zc = multiply.outer(xd,yd)
         zc[i,j] = 0
+        zc = zc.ravel()
+        self.assertAllClose(zd,zc)
+    # }}}
+    @with_checker
+    def test_outer_product_with_merge_with_trivial_redirect(self, # {{{
+        x_chunks={(irange(0,2),): float},
+        y_chunks={(irange(0,2),): float},
+        i=irange(0,2),
+        j=irange(0,2),
+    ):
+        x = SparseTensor((3,),x_chunks)
+        y = SparseTensor((3,),y_chunks)
+        z = formSparseContractor((),(),(FromBoth(0,0,indices_to_redirect={(i,j):i*3+j}),),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        zc = multiply.outer(xd,yd)
+        zc = zc.ravel()
+        self.assertAllClose(zd,zc)
+    # }}}
+    @with_checker
+    def test_outer_product_with_merge_with_nontrivial_redirect(self, # {{{
+        x_chunks={(irange(0,2),): float},
+        y_chunks={(irange(0,2),): float},
+        i=irange(0,2),
+        j=irange(0,2),
+        k=irange(0,8),
+    ):
+        x = SparseTensor((3,),x_chunks)
+        y = SparseTensor((3,),y_chunks)
+        z = formSparseContractor((),(),(FromBoth(0,0,indices_to_redirect={(i,j):k}),),operator.mul)(x,y)
+        xd = formDenseTensor(x)
+        yd = formDenseTensor(y)
+        zd = formDenseTensor(z)
+        zc = multiply.outer(xd,yd)
+        if k != i*3+j:
+            zc[k//3,k%3] += zc[i,j]
+            zc[i,j] = 0
+            self.assertTrue(all(zd[i*3+j]==0))
         zc = zc.ravel()
         self.assertAllClose(zd,zc)
     # }}}
