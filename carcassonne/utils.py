@@ -3,9 +3,115 @@ from numpy import tensordot
 from numpy.random import rand
 # }}}
 
+# Classes {{{
+# Result dimension sources {{{
+class FromLeft(object): # {{{
+    # Constants {{{
+    number_of_left_dimensions = 1
+    number_of_right_dimensions = 0
+    # }}}
+    def __init__(self,dimension): # {{{
+        self.dimension = dimension
+    # }}}
+    def appendDimensionsToTransposition(self,transposition,left_transpose_offsets,right_transpose_offsets): # {{{
+        transposition.append(left_transpose_offsets[self.dimension])
+    # }}}
+    def getResultDimension(self,left_dimensions,right_dimensions): # {{{
+        return left_dimensions[self.dimension]
+    # }}}
+    def getResultIndex(self,right_dimensions,left_indices,right_indices): # {{{
+        return left_indices[self.dimension]
+    # }}}
+# }}}
+class FromRight(object): # {{{
+    # Constants {{{
+    number_of_left_dimensions = 0
+    number_of_right_dimensions = 1
+    # }}}
+    def __init__(self,dimension): # {{{
+        self.dimension = dimension
+    # }}}
+    def appendDimensionsToTransposition(self,transposition,left_transpose_offsets,right_transpose_offsets): # {{{
+        transposition.append(right_transpose_offsets[self.dimension])
+    # }}}
+    def getResultDimension(self,left_dimensions,right_dimensions): # {{{
+        return right_dimensions[self.dimension]
+    # }}}
+    def getResultIndex(self,right_dimensions,left_indices,right_indices): # {{{
+        return right_indices[self.dimension]
+    # }}}
+# }}}
+class FromBoth(object): # {{{
+    # Constants {{{
+    number_of_left_dimensions = 1
+    number_of_right_dimensions = 1
+    # }}}
+    def __init__(self,left_dimension,right_dimension,indices_to_ignore=frozenset(),indices_to_redirect=frozenset()): # {{{
+        self.left_dimension = left_dimension
+        self.right_dimension = right_dimension
+        self.indices_to_ignore = indices_to_ignore
+        self.indices_to_redirect = indices_to_redirect
+    # }}}
+    def appendDimensionsToTransposition(self,transposition,left_transpose_offsets,right_transpose_offsets): # {{{
+        transposition.append(left_transpose_offsets[self.left_dimension])
+        transposition.append(right_transpose_offsets[self.right_dimension])
+    # }}}
+    def getResultDimension(self,left_dimensions,right_dimensions): # {{{
+        return left_dimensions[self.left_dimension]*right_dimensions[self.right_dimension]
+    # }}}
+    def getResultIndex(self,right_dimensions,left_indices,right_indices): # {{{
+        left_index = left_indices[self.left_dimension]
+        right_index = right_indices[self.right_dimension]
+        indices = (left_index,right_index)
+        if indices in self.indices_to_ignore:
+            return None
+        if indices in self.indices_to_redirect:
+            return self.indices_to_redirect[indices]
+        return left_index * right_dimensions[self.right_dimension] + right_index
+    # }}}
+# }}}
+# }}}
+# }}}
+
 # Functions {{{
 def crand(*shape): # {{{
     return rand(*shape)*2-1+rand(*shape)*2j-1j
+# }}}
+def formAbsorber(left_join_dimensions,right_join_dimensions,result_dimension_sources): # {{{
+    # Compute the numbers of dimensions {{{
+    number_of_join_dimensions = len(left_join_dimensions)
+    assert number_of_join_dimensions == len(right_join_dimensions)
+    number_of_left_dimensions = number_of_join_dimensions + sum(x.number_of_left_dimensions for x in result_dimension_sources)
+    number_of_right_dimensions = number_of_join_dimensions + sum(x.number_of_right_dimensions for x in result_dimension_sources)
+    # }}}
+    # Compute the transposition {{{
+    next_transpose_dimension = 0
+
+    left_transpose_offsets = {}
+    for dimension in xrange(number_of_left_dimensions):
+        if dimension not in left_join_dimensions:
+            left_transpose_offsets[dimension] = next_transpose_dimension
+            next_transpose_dimension += 1
+
+    right_transpose_offsets = {}
+    for dimension in xrange(number_of_right_dimensions):
+        if dimension not in right_join_dimensions:
+            right_transpose_offsets[dimension] = next_transpose_dimension
+            next_transpose_dimension += 1
+
+    transposition = []
+    for result_dimension_source in result_dimension_sources:
+        result_dimension_source.appendDimensionsToTransposition(transposition,left_transpose_offsets,right_transpose_offsets)
+    transposition = tuple(transposition)
+    # }}}
+    join_dimensions = (left_join_dimensions,right_join_dimensions)
+    def absorb(left,right): # {{{
+        left_shape = left.shape
+        right_shape = right.shape
+        result_shape = tuple(x.getResultDimension(left_shape,right_shape) for x in result_dimension_sources)
+        return tensordot(left,right,join_dimensions).transpose(transposition).reshape(result_shape)
+    # }}}
+    return absorb
 # }}}
 def formContractor(order,joins,result_joins): # {{{
     observed_tensor_indices = {}
@@ -113,7 +219,12 @@ def formContractor(order,joins,result_joins): # {{{
 
 # Exports {{{
 __all__ = [
+    "FromLeft",
+    "FromRight",
+    "FromBoth",
+
     "crand",
+    "formAbsorber",
     "formContractor",
 ]
 # }}}

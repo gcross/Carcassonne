@@ -1,8 +1,101 @@
 # Imports {{{
+from numpy import dot, multiply
 from paycheck import *
 
-from ..utils import formContractor
+from ..utils import *
 from . import *
+# }}}
+
+class TestFormAbsorber(TestCase): # {{{
+    @with_checker
+    def test_outer_product(self, # {{{
+        n=irange(1,10),
+        m=irange(1,10),
+    ):
+        A = crand(n)
+        B = crand(m)
+        C1 = formAbsorber((),(),(FromLeft(0),FromRight(0)))(A,B)
+        C2 = multiply.outer(A,B)
+        self.assertAllClose(C1,C2)
+# }}}
+    @with_checker
+    def test_r2_outer_product(self, # {{{
+        l=irange(1,10),
+        m=irange(1,10),
+        n=irange(1,10),
+        o=irange(1,10),
+    ):
+        A = crand(l,m)
+        B = crand(n,o)
+        C1 = formAbsorber((),(),(FromLeft(0),FromLeft(1),FromRight(0),FromRight(1)))(A,B)
+        C2 = multiply.outer(A,B)
+        self.assertAllClose(C1,C2)
+# }}}
+    @with_checker
+    def test_r2_outer_product_with_interleave(self, # {{{
+        l=irange(1,10),
+        m=irange(1,10),
+        n=irange(1,10),
+        o=irange(1,10),
+    ):
+        A = crand(l,m)
+        B = crand(n,o)
+        C1 = formAbsorber((),(),(FromLeft(0),FromRight(0),FromLeft(1),FromRight(1)))(A,B)
+        C2 = multiply.outer(A,B).transpose(0,2,1,3)
+        self.assertAllClose(C1,C2)
+# }}}
+    @with_checker
+    def test_r2_outer_product_with_interleave_and_merge(self, # {{{
+        l=irange(1,10),
+        m=irange(1,10),
+        n=irange(1,10),
+        o=irange(1,10),
+    ):
+        A = crand(l,m)
+        B = crand(n,o)
+        C1 = formAbsorber((),(),(FromBoth(1,0),FromBoth(0,1)))(A,B)
+        C2 = multiply.outer(A,B).transpose(1,2,0,3).reshape(m*n,l*o)
+        self.assertAllClose(C1,C2)
+# }}}
+    @with_checker
+    def test_matvec(self, # {{{
+        l=irange(1,10),
+        m=irange(1,10),
+        n=irange(1,10),
+    ):
+        A = crand(l,m)
+        B = crand(m,n)
+        C1 = formAbsorber((1,),(0,),(FromLeft(0),FromRight(1,)))(A,B)
+        C2 = dot(A,B)
+        self.assertAllClose(C1,C2)
+# }}}
+    @with_checker
+    def test_matvec_with_merge(self, # {{{
+        l=irange(1,10),
+        m=irange(1,10),
+        n=irange(1,10),
+    ):
+        A = crand(l,m)
+        B = crand(m,n)
+        C1 = formAbsorber((1,),(0,),(FromBoth(0,1),))(A,B)
+        C2 = dot(A,B).ravel()
+        self.assertAllClose(C1,C2)
+# }}}
+    @with_checker
+    def test_r4_matvec_with_merge(self, # {{{
+        l=irange(1,10),
+        m=irange(1,10),
+        n=irange(1,10),
+        o=irange(1,10),
+        p=irange(1,10),
+        q=irange(1,10),
+    ):
+        A = crand(l,m,n,o)
+        B = crand(o,n,p,q)
+        C1 = formAbsorber((2,3,),(1,0,),(FromBoth(0,3),FromBoth(1,2),))(A,B)
+        C2 = tensordot(A,B,((2,3),(1,0))).transpose(0,3,1,2).reshape(l*q,m*p)
+        self.assertAllClose(C1,C2)
+# }}}
 # }}}
 
 class TestFormContractor(TestCase): # {{{

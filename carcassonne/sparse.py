@@ -2,55 +2,12 @@
 from collections import namedtuple
 import itertools
 from numpy import ndarray, zeros
+
+from .utils import FromLeft, FromRight, FromBoth
 # }}}
 
 # Types {{{
 SparseTensor = namedtuple("SparseTensor",["dimensions","chunks"])
-# }}}
-
-# Classes {{{
-# Result dimension sources {{{
-class FromLeft(object): # {{{
-    number_of_left_dimensions = 1
-    number_of_right_dimensions = 0
-    def __init__(self,dimension):
-        self.dimension = dimension
-    def getResultDimension(self,left_dimensions,right_dimensions):
-        return left_dimensions[self.dimension]
-    def getResultIndex(self,right_dimensions,left_indices,right_indices):
-        return left_indices[self.dimension]
-# }}}
-class FromRight(object): # {{{
-    number_of_left_dimensions = 0
-    number_of_right_dimensions = 1
-    def __init__(self,dimension):
-        self.dimension = dimension
-    def getResultDimension(self,left_dimensions,right_dimensions):
-        return right_dimensions[self.dimension]
-    def getResultIndex(self,right_dimensions,left_indices,right_indices):
-        return right_indices[self.dimension]
-# }}}
-class FromBoth(object): # {{{
-    number_of_left_dimensions = 1
-    number_of_right_dimensions = 1
-    def __init__(self,left_dimension,right_dimension,indices_to_ignore=frozenset(),indices_to_redirect=frozenset()):
-        self.left_dimension = left_dimension
-        self.right_dimension = right_dimension
-        self.indices_to_ignore = indices_to_ignore
-        self.indices_to_redirect = indices_to_redirect
-    def getResultDimension(self,left_dimensions,right_dimensions):
-        return left_dimensions[self.left_dimension]*right_dimensions[self.right_dimension]
-    def getResultIndex(self,right_dimensions,left_indices,right_indices):
-        left_index = left_indices[self.left_dimension]
-        right_index = right_indices[self.right_dimension]
-        indices = (left_index,right_index)
-        if indices in self.indices_to_ignore:
-            return None
-        if indices in self.indices_to_redirect:
-            return self.indices_to_redirect[indices]
-        return left_index * right_dimensions[self.right_dimension] + right_index
-# }}}
-# }}}
 # }}}
 
 # Functions {{{
@@ -130,10 +87,6 @@ def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimen
 # Exports {{{
 __all__ = [
     "SparseTensor",
-
-    "FromLeft",
-    "FromRight",
-    "FromBoth",
 
     "formDenseTensor",
     "formSparseContractor",
