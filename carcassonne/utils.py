@@ -3,11 +3,10 @@ from numpy import tensordot
 from numpy.random import rand
 # }}}
 
+# Functions {{{
 def crand(*shape): # {{{
     return rand(*shape)*2-1+rand(*shape)*2j-1j
 # }}}
-
-# Functions {{{
 def formContractor(order,joins,result_joins): # {{{
     observed_tensor_indices = {}
 
