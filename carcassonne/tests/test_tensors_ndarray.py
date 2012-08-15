@@ -2,7 +2,7 @@
 from numpy import dot, multiply
 from paycheck import *
 
-from ..tensors import *
+from ..tensors.ndarray import *
 from . import *
 # }}}
 
@@ -46,7 +46,7 @@ class TestNormalizationSide(TestCase): # {{{
     ):
         A = crand(a,b,c*c)
         B = crand(c,d,e,f,g)
-        C1 = NormalizationSide._absorbCenterFrom[0](A.reshape(a,b,c,c),B.conj(),B)
+        C1 = NormalizationSide._absorbCenter[0](A.reshape(a,b,c,c),B.conj(),B)
         C2 = tensordot(
                 A,
                 tensordot(B.conj(),B,(4,4)).transpose(0,2,4,6,1,3,5,7).reshape(c*c,d*d,e*e,f*f),
@@ -65,7 +65,7 @@ class TestNormalizationSide(TestCase): # {{{
     ):
         A = crand(a,b,d*d)
         B = crand(c,d,e,f,g)
-        C1 = NormalizationSide._absorbCenterFrom[1](A.reshape(a,b,d,d),B.conj(),B)
+        C1 = NormalizationSide._absorbCenter[1](A.reshape(a,b,d,d),B.conj(),B)
         C2 = tensordot(
                 A,
                 tensordot(B.conj(),B,(4,4)).transpose(0,2,4,6,1,3,5,7).reshape(c*c,d*d,e*e,f*f),
@@ -84,7 +84,7 @@ class TestNormalizationSide(TestCase): # {{{
     ):
         A = crand(a,b,e*e)
         B = crand(c,d,e,f,g)
-        C1 = NormalizationSide._absorbCenterFrom[2](A.reshape(a,b,e,e),B.conj(),B)
+        C1 = NormalizationSide._absorbCenter[2](A.reshape(a,b,e,e),B.conj(),B)
         C2 = tensordot(
                 A,
                 tensordot(B.conj(),B,(4,4)).transpose(0,2,4,6,1,3,5,7).reshape(c*c,d*d,e*e,f*f),
@@ -103,7 +103,7 @@ class TestNormalizationSide(TestCase): # {{{
     ):
         A = crand(a,b,f*f)
         B = crand(c,d,e,f,g)
-        C1 = NormalizationSide._absorbCenterFrom[3](A.reshape(a,b,f,f),B.conj(),B)
+        C1 = NormalizationSide._absorbCenter[3](A.reshape(a,b,f,f),B.conj(),B)
         C2 = tensordot(
                 A,
                 tensordot(B.conj(),B,(4,4)).transpose(0,2,4,6,1,3,5,7).reshape(c*c,d*d,e*e,f*f),
