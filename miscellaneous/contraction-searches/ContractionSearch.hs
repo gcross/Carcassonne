@@ -2,7 +2,7 @@
 {-# LANGUAGE UnicodeSyntax #-}
 -- }}}
 
-module ContractionSearch where
+module ContractionSearch (ContractionGraph, findMinimalContractionCost) where
 
 -- Imports {{{
 import Control.Monad
@@ -56,6 +56,7 @@ allContractionCosts maximum_cost_so_far graph =
                     allContractionCosts
                         (cost `max` maximum_cost_so_far)
                         ((incoming_adjacent_3,first_node,external_cost_3,outgoing_adjacent_3) & graph_without_first_and_second)
+{-# SPECIALIZE allContractionCosts :: Word → ContractionGraph → [Word] #-}
 -- }}}
 findMinimalContractionCost :: ContractionGraph → Word -- {{{
 findMinimalContractionCost = minimum . allContractionCosts 0
