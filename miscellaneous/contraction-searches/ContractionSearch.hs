@@ -40,16 +40,16 @@ allContractionCosts maximum_cost_so_far graph =
                         (incoming_adjacent_1,_,external_cost_1,outgoing_adjacent_1) = context1
                         (incoming_adjacent_2,_,external_cost_2,outgoing_adjacent_2) = context2
                         cost =
-                            external_cost_1 *
-                            external_cost_2 *
-                            product (map fst incoming_adjacent_1) *
-                            product (map fst incoming_adjacent_2) *
-                            product (map fst outgoing_adjacent_1) *
-                            product (map fst outgoing_adjacent_2)
+                            external_cost_1 +
+                            external_cost_2 +
+                            sum (map fst incoming_adjacent_1) +
+                            sum (map fst incoming_adjacent_2) +
+                            sum (map fst outgoing_adjacent_1) +
+                            sum (map fst outgoing_adjacent_2)
                         incoming_adjacent_3 =
                             filter ((/= second_node) . snd) incoming_adjacent_1 ++
                             filter ((/= first_node) . snd) incoming_adjacent_2
-                        external_cost_3 = external_cost_1 * external_cost_2
+                        external_cost_3 = external_cost_1 + external_cost_2
                         outgoing_adjacent_3 =
                             filter ((/= second_node) . snd) outgoing_adjacent_1 ++
                             filter ((/= first_node) . snd) outgoing_adjacent_2

@@ -45,63 +45,23 @@ tests = -- {{{
         ,testProperty "two nodes" $ \d1 d2 b → -- {{{
             findMinimalContractionCost
                 (mkGraph [(1,d1),(2,d2)] [(1,2,b)])
-            == d1*d2*b
+            == d1+d2+b
          -- }}}
-        ,testProperty "three nodes" $ \ -- {{{
-          (Positive d1)
-          (Positive d2)
-          (Positive d3)
-          (Positive b12)
-          (Positive b23)
-          (Positive b31)
+        ,testProperty "three nodes" $ \d1 d2 d3 b12 b23 b31 -- {{{
           → findMinimalContractionCost
                 (mkGraph
                     [(1,d1),(2,d2),(3,d3)]
                     [(1,2,b12),(2,3,b23),(3,1,b31)]
                 )
             == minimum
-                [maximum [b12*b23*b31*d1*d2,b23*b31*d1*d2*d3]
-                ,maximum [b23*b31*b12*d2*d3,b31*b12*d2*d3*d1]
-                ,maximum [b31*b12*b23*d3*d1,b12*b23*d3*d1*d2]
+                [maximum [b12+b23+b31+d1+d2,b23+b31+d1+d2+d3]
+                ,maximum [b23+b31+b12+d2+d3,b31+b12+d2+d3+d1]
+                ,maximum [b31+b12+b23+d3+d1,b12+b23+d3+d1+d2]
                 ]
          -- }}}
-        ,testCase "four nodes, case 1" $
-            findMinimalContractionCost
-                (mkGraph
-                    [(1,1),(2,1),(3,1),(4,1)]
-                    [(1,2,2)
-                    ,(1,3,1)
-                    ,(1,4,1)
-                    ,(2,3,1)
-                    ,(2,4,2)
-                    ,(3,4,1)
-                    ]
-                )
-            @?= 4
-        ,testCase "four nodes, case 2" $
-            findMinimalContractionCost
-                (mkGraph
-                    [(1,1),(2,1),(3,1),(4,1)]
-                    [(1,2,1)
-                    ,(1,3,2)
-                    ,(1,4,1)
-                    ,(2,3,1)
-                    ,(2,4,2)
-                    ,(3,4,1)
-                    ]
-                )
-            @?= 2
         ,testProperty "four nodes, random labels" $ \ -- {{{
-          (Positive d1)
-          (Positive d2)
-          (Positive d3)
-          (Positive d4)
-          (Positive b12)
-          (Positive b13)
-          (Positive b14)
-          (Positive b23)
-          (Positive b24)
-          (Positive b34)
+          d1 d2 d3 d4
+          b12 b13 b14 b23 b24 b34
           →
            let b :: Word → Word → Word
                b 1 2 = b12
@@ -124,19 +84,19 @@ tests = -- {{{
                costForBandwidths :: [Word] → Word
                costForBandwidths permutation = minimum $
                 [maximum
-                    [b_12*b_13*b_14*b_23*b_24*d_1*d_2
-                    ,b_13*b_23*b_14*b_24*b_34*d_1*d_2*d_3
-                    ,b_14*b_24*b_34*d_1*d_2*d_3*d_4
+                    [b_12+b_13+b_14+b_23+b_24+d_1+d_2
+                    ,b_13+b_23+b_14+b_24+b_34+d_1+d_2+d_3
+                    ,b_14+b_24+b_34+d_1+d_2+d_3+d_4
                     ]
                 ,maximum
-                    [b_12*b_13*b_14*b_23*b_24*d_1*d_2
-                    ,b_13*b_23*b_14*b_24*b_34*d_3*d_4
-                    ,b_13*b_14*b_23*b_24*d_1*d_2*d_3*d_4
+                    [b_12+b_13+b_14+b_23+b_24+d_1+d_2
+                    ,b_13+b_23+b_14+b_24+b_34+d_3+d_4
+                    ,b_13+b_14+b_23+b_24+d_1+d_2+d_3+d_4
                     ]
                 ,maximum
-                    [b_12*b_13*b_14*b_23*b_24*d_1*d_2
-                    ,b_13*b_23*b_14*b_24*b_34*d_1*d_2*d_4
-                    ,b_13*b_23*b_34*d_1*d_2*d_3*d_4
+                    [b_12+b_13+b_14+b_23+b_24+d_1+d_2
+                    ,b_13+b_23+b_14+b_24+b_34+d_1+d_2+d_4
+                    ,b_13+b_23+b_34+d_1+d_2+d_3+d_4
                     ]
                 ]
                 where
