@@ -50,17 +50,14 @@ def randomNormalizableTensorAndIndex(ndim): # {{{
     return crand(*shape), index
 # }}}
 
-def randomPartition(elements): # {{{
-    number_of_elements = len(elements)
-    number_of_partitions = randint(0,number_of_elements)
-    partition_indices = [randint(0,number_of_elements) for _ in xrange(number_of_partitions)]
-    partition_indices.sort()
-    partition_indices = [0] + partition_indices + [number_of_elements]
-    return [elements[partition_indices[i]:partition_indices[i+1]] for i in xrange(number_of_partitions+1)]
+def randomPermutation(size): # {{{
+    permutation = range(size)
+    shuffle(permutation)
+    return permutation
 # }}}
 
-def randomShape(ndim): # {{{
-    return [randint(1,5) for _ in range(ndim)]
+def randomShape(ndim,maximum=5): # {{{
+    return tuple(randint(1,maximum) for _ in range(ndim))
 # }}}
 
 def randomShapeAgreeingWith(ndim,index,other_dimension): # {{{
@@ -69,10 +66,11 @@ def randomShapeAgreeingWith(ndim,index,other_dimension): # {{{
     return shape
 # }}}
 
-def randomShuffledPartition(elements):
+def randomShuffledPartition(elements): # {{{
     elements = list(elements)
     shuffle(elements)
     return randomPartition(elements)
+# }}}
 
 def randomTensor(ndim): # {{{
     return crand(*randomShape(ndim))
@@ -109,6 +107,11 @@ class TestCase(unittest.TestCase):
         v2 = array(v2)
         self.assertEqual(v1.shape,v2.shape)
         self.assertTrue(all(v1 == v2))
+    # }}}
+
+    def assertDataAlmostEqual(self,v1,v2,rtol=1e-05,atol=1e-08): # {{{
+        self.assertEqual(v1.shape,v2.shape)
+        self.assertTrue(v1.allcloseTo(v2,rtol=rtol,atol=atol))
     # }}}
 
     def assertNormalized(self,tensor,index): # {{{
