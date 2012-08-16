@@ -94,7 +94,13 @@ def randomTensorAndIndexAgreeingWith(ndim,other_dimension): # {{{
 
 # Classes {{{
 
-class TestCase(unittest.TestCase):
+class Dummy: # {{{
+    def __init__(self,**fields):
+        for name, value in fields.items():
+            setattr(self,name,value)
+# }}}
+
+class TestCase(unittest.TestCase): # {{{
     def assertAllClose(self,v1,v2): # {{{
         v1 = array(v1)
         v2 = array(v2)
@@ -124,5 +130,6 @@ class TestCase(unittest.TestCase):
     def assertVanishing(self,v): # {{{
         self.assertAlmostEqual(norm(v),0)
     # }}}
+# }}}
 
 # }}}

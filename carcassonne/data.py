@@ -84,12 +84,18 @@ class NDArrayData(Data): # {{{
         return NDArrayData(_arr.reshape(shape))
     # }}}
     def split(self,*splits): # {{{
-        return NDArrayData(self._arr.reshape(sum(splits,tuple())))
+        return NDArrayData(self._arr.reshape(splits))
     # }}}
-    def splitAt(self,index,split): # {{{
-        splits = [(size,) for size in self._arr.shape]
-        splits[index] = split
+    def splitAt(self,index,*split): # {{{
+        splits = [size for size in self._arr.shape]
+        assert prod(split) == self._arr.shape[index]
+        splits = splits[:index] + list(split) + splits[index+1:]
         return self.split(*splits)
+    # }}}
+    def splitAtByRoot(self,index,root): # {{{
+        size = round(self._arr.shape[index]**(1.0/root))
+        assert size**root == self._arr.shape[index]
+        return self.splitAt(index,(size,)*root)
     # }}}
     def transpose(self,*args): # {{{
         return NDArrayData(self._arr.transpose(*args))
