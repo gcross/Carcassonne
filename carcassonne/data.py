@@ -1,7 +1,7 @@
 # Imports {{{
 from collections import defaultdict
 from copy import copy
-from itertools import izip
+from functools import reduce
 from numpy import allclose, array, ones, prod, tensordot, zeros
 from random import randint
 

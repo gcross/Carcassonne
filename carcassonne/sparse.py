@@ -14,14 +14,14 @@ SparseTensor = namedtuple("SparseTensor",["dimensions","chunks"])
 def formDenseTensor(sparse_tensor,dtype=None): # {{{
     dimensions = sparse_tensor.dimensions
     if not dtype and sparse_tensor.chunks:
-        value = next(sparse_tensor.chunks.itervalues())
+        value = next(iter(sparse_tensor.chunks.values()))
         if isinstance(value,ndarray):
             dtype = value.dtype
             dimensions +=  value.shape
         else:
             dtype = type(value)
     dense_tensor = zeros(shape=dimensions,dtype=dtype)
-    for indices, value in sparse_tensor.chunks.iteritems():
+    for indices, value in sparse_tensor.chunks.items():
         dense_tensor[indices] += value
     return dense_tensor
 # }}}
@@ -45,19 +45,19 @@ def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimen
         # }}}
         # Determine which join indices overlap between the left and right, and from them create a dictionary of chunk lists {{{
         chunk_lists = {index: ([],[]) for index in (
-            frozenset(tuple(indices[join_dimension] for join_dimension in left_join_dimensions) for indices in left_chunks.iterkeys()) &
-            frozenset(tuple(indices[join_dimension] for join_dimension in right_join_dimensions) for indices in right_chunks.iterkeys())
+            frozenset(tuple(indices[join_dimension] for join_dimension in left_join_dimensions) for indices in left_chunks.keys()) &
+            frozenset(tuple(indices[join_dimension] for join_dimension in right_join_dimensions) for indices in right_chunks.keys())
         )}
         # }}}
         # Add all overlapping left chunks to the chunk list {{{
-        for indexed_chunk in left_chunks.iteritems():
+        for indexed_chunk in left_chunks.items():
             indices = indexed_chunk[0]
             join_indices = tuple(indices[join_dimension] for join_dimension in left_join_dimensions)
             if join_indices in chunk_lists:
                 chunk_lists[join_indices][0].append(indexed_chunk)
         # }}}
         # Add all overlapping right chunks to the chunk list {{{
-        for indexed_chunk in right_chunks.iteritems():
+        for indexed_chunk in right_chunks.items():
             indices = indexed_chunk[0]
             join_indices = tuple(indices[join_dimension] for join_dimension in right_join_dimensions)
             if join_indices in chunk_lists:
@@ -65,7 +65,7 @@ def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimen
         # }}}
         # Compute the result chunks {{{
         result_chunks = {}
-        for indexed_chunk_lists_pair in chunk_lists.iteritems():
+        for indexed_chunk_lists_pair in chunk_lists.items():
             for ((left_indices,left_chunk),(right_indices,right_chunk)) in itertools.product(*indexed_chunk_lists_pair[1]):
                 result_indices = tuple(dimension_source.getResultIndex(right_dimensions,left_indices,right_indices) for dimension_source in result_dimension_sources)
                 if None in result_indices:

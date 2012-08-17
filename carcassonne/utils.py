@@ -179,7 +179,7 @@ def computeLengthAndCheckForGaps(indices,error_message): # {{{
     if len(indices) == 0:
         return 0
     length = max(indices)+1
-    unobserved_indices = set(xrange(length))
+    unobserved_indices = set(range(length))
     for index in indices:
         unobserved_indices.remove(index)
     if unobserved_indices:
@@ -190,7 +190,7 @@ def computePostContractionIndexMap(rank,contracted_indices,offset=0): # {{{
     contracted_indices = set(contracted_indices)
     index_map = dict()
     new_index = 0
-    for old_index in xrange(rank):
+    for old_index in range(rank):
         if old_index not in contracted_indices:
             index_map[old_index] = new_index + offset
             new_index += 1
@@ -207,13 +207,13 @@ def formAbsorber(left_join_dimensions,right_join_dimensions,result_dimension_sou
     next_transpose_dimension = 0
 
     left_transpose_offsets = {}
-    for dimension in xrange(number_of_left_dimensions):
+    for dimension in range(number_of_left_dimensions):
         if dimension not in left_join_dimensions:
             left_transpose_offsets[dimension] = next_transpose_dimension
             next_transpose_dimension += 1
 
     right_transpose_offsets = {}
-    for dimension in xrange(number_of_right_dimensions):
+    for dimension in range(number_of_right_dimensions):
         if dimension not in right_join_dimensions:
             right_transpose_offsets[dimension] = next_transpose_dimension
             next_transpose_dimension += 1
@@ -335,7 +335,7 @@ def formContractor(order,joins,result_joins): # {{{
     return contract
 # }}}
 def invertPermutation(permutation): # {{{
-    return [permutation.index(i) for i in xrange(len(permutation))]
+    return [permutation.index(i) for i in range(len(permutation))]
 # }}}
 def makeDataContractor(joins,final_groups,tensor_ranks=None): # {{{
     # Tabulate all of the tensor indices to compute the number of arguments and their ranks {{{
@@ -370,7 +370,7 @@ def makeDataContractor(joins,final_groups,tensor_ranks=None): # {{{
             observed_tensor_indices[tensor_number],
             "the following indices of tensor {} were expected but not observed".format(tensor_number)
         )
-        for tensor_number in xrange(number_of_tensors)
+        for tensor_number in range(number_of_tensors)
     ]
     if tensor_ranks is None:
         tensor_ranks = observed_tensor_ranks
@@ -380,11 +380,11 @@ def makeDataContractor(joins,final_groups,tensor_ranks=None): # {{{
     # }}}
     # Build the prelude for the function {{{
     function_lines = [
-        "def contract(" + ",".join(["_{}".format(tensor_number) for tensor_number in xrange(number_of_tensors)]) + "):",
+        "def contract(" + ",".join(["_{}".format(tensor_number) for tensor_number in range(number_of_tensors)]) + "):",
     ]
     # Build the documentation string {{{
     function_lines.append('"""')
-    for tensor_number in xrange(number_of_tensors):
+    for tensor_number in range(number_of_tensors):
         function_lines.append("_{} - tensor of rank {}".format(tensor_number,tensor_ranks[tensor_number]))
     function_lines.append('"""')
     # }}}
@@ -405,7 +405,7 @@ def makeDataContractor(joins,final_groups,tensor_ranks=None): # {{{
     # }}}
     # Build the main part of the function {{{
     next_tensor_number = number_of_tensors
-    active_tensor_numbers = set(xrange(number_of_tensors))
+    active_tensor_numbers = set(range(number_of_tensors))
     joins.reverse()
     while joins:
         join = joins.pop()
@@ -467,7 +467,7 @@ def makeDataContractor(joins,final_groups,tensor_ranks=None): # {{{
         index_offset = 0
         index_map = {}
         for tensor_number in active_tensor_numbers:
-            for index in xrange(tensor_ranks[tensor_number]):
+            for index in range(tensor_ranks[tensor_number]):
                 index_map[(tensor_number,index)] = index+index_offset
             index_offset += tensor_ranks[tensor_number]
         final_groups = [applyIndexMapTo(index_map,group) for group in final_groups]
@@ -482,7 +482,7 @@ def makeDataContractor(joins,final_groups,tensor_ranks=None): # {{{
     visible_exceptions = {}
     for exception_name in ["DimensionMismatchError","UnexpectedTensorRankError"]:
         visible_exceptions[exception_name] = globals()[exception_name]
-    exec function_source in visible_exceptions, captured_definition
+    exec(function_source,visible_exceptions,captured_definition)
     contract = captured_definition["contract"]
     contract.source = function_source
     return contract

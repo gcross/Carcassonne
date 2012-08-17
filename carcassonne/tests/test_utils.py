@@ -1,4 +1,5 @@
 # Imports {{{
+from functools import reduce
 from numpy import dot, multiply
 from paycheck import *
 
@@ -458,15 +459,15 @@ class TestMakeDataContractor(TestCase): # {{{
     @with_checker
     def test_single_tensor_outer_product(self,ndim=irange(1,5)): # {{{
         data = NDArrayData.newRandom(randomShape(ndim))
-        contract = makeDataContractor([],[[(0,i) for i in xrange(ndim)]])
+        contract = makeDataContractor([],[[(0,i) for i in range(ndim)]])
         contracted_data = contract(data)
         raveled_data = data.join([range(ndim)])
         self.assertDataAlmostEqual(raveled_data,contracted_data)
     # }}}
     @with_checker
     def test_multiple_tensors_outer_product(self,number_of_tensors=irange(1,5)): # {{{
-        tensors = [NDArrayData.newRandom(randomShape(randint(1,3),3)) for _ in xrange(number_of_tensors)]
-        contraction = makeDataContractor([],[[(tensor_number,i)] for tensor_number, tensor in enumerate(tensors) for i in xrange(tensor.ndim)])(*tensors)
+        tensors = [NDArrayData.newRandom(randomShape(randint(1,3),3)) for _ in range(number_of_tensors)]
+        contraction = makeDataContractor([],[[(tensor_number,i)] for tensor_number, tensor in enumerate(tensors) for i in range(tensor.ndim)])(*tensors)
         self.assertDataAlmostEqual(
             reduce(lambda x,y: x.contractWith(y,[],[]),tensors),
             contraction
@@ -484,7 +485,7 @@ class TestMakeDataContractor(TestCase): # {{{
         B_inverse_permutation = invertPermutation(B_permutation)
         B_shape = applyPermutation(B_permutation,A_shape)
         B = NDArrayData.newRandom(B_shape)
-        axes = zip(range(ndim),B_inverse_permutation)
+        axes = list(zip(range(ndim),B_inverse_permutation))
         shuffle(axes)
         A_axes, B_axes = zip(*axes)
         contraction = makeDataContractor([Join(0,A_axes,1,B_axes)],[])(A,B)
@@ -604,10 +605,10 @@ class TestMakeDataContractor(TestCase): # {{{
     # }}}
     @with_checker
     def test_matrix_multiplication_many_matrices(self, number_of_matrices=irange(1,10)): # {{{
-        dimensions = [randint(1,10) for _ in xrange(number_of_matrices+1)]
-        matrices = [NDArrayData.newRandom((dimensions[i],dimensions[i+1])) for i in xrange(number_of_matrices)]
+        dimensions = [randint(1,10) for _ in range(number_of_matrices+1)]
+        matrices = [NDArrayData.newRandom((dimensions[i],dimensions[i+1])) for i in range(number_of_matrices)]
         correct_value = reduce(dot,[matrix.toArray() for matrix in matrices])
-        joins = [Join(i,1,i+1,0) for i in xrange(number_of_matrices-1)]
+        joins = [Join(i,1,i+1,0) for i in range(number_of_matrices-1)]
         shuffle(joins)
         contraction = makeDataContractor(joins,[[(0,0)],[(number_of_matrices-1,1)]])(*matrices)
         self.assertAllClose(
@@ -617,14 +618,14 @@ class TestMakeDataContractor(TestCase): # {{{
     # }}}
     @with_checker
     def test_unexpected_tensor_rank_detected(self,number_of_tensors=irange(1,5)): # {{{
-        ndims = [randint(1,5) for _ in xrange(number_of_tensors)]
+        ndims = [randint(1,5) for _ in range(number_of_tensors)]
         tensors = [NDArrayData.newRandom(randomShape(ndim)) for ndim in ndims]
         broken_tensor_number = randint(0,len(ndims)-1)
         actual_rank = ndims[broken_tensor_number]
         expected_rank = actual_rank + 1
         ndims[broken_tensor_number] += 1
         try:
-            makeDataContractor([],[[(tensor_number,index)] for tensor_number in xrange(number_of_tensors) for index in xrange(ndims[tensor_number])])(*tensors)
+            makeDataContractor([],[[(tensor_number,index)] for tensor_number in range(number_of_tensors) for index in range(ndims[tensor_number])])(*tensors)
             self.fail("exception was not thrown")
         except UnexpectedTensorRankError as e:
             self.assertEqual(e.tensor_number,broken_tensor_number)
@@ -681,12 +682,12 @@ class TestMakeDataContractor(TestCase): # {{{
     # }}}
     @with_checker
     def test_bad_rank_specification_detected(self,number_of_tensors=irange(1,5)): # {{{
-        tensor_ranks = [randint(1,5) for _ in xrange(number_of_tensors)]
+        tensor_ranks = [randint(1,5) for _ in range(number_of_tensors)]
         observed_tensor_ranks = tensor_ranks
         while observed_tensor_ranks == tensor_ranks:
-            observed_tensor_ranks = [randint(1,5) for _ in xrange(number_of_tensors)]
+            observed_tensor_ranks = [randint(1,5) for _ in range(number_of_tensors)]
         try:
-            makeDataContractor([],[[(tensor_number,index)] for tensor_number, tensor_rank in enumerate(observed_tensor_ranks) for index in xrange(tensor_rank)],tensor_ranks=tensor_ranks)
+            makeDataContractor([],[[(tensor_number,index)] for tensor_number, tensor_rank in enumerate(observed_tensor_ranks) for index in range(tensor_rank)],tensor_ranks=tensor_ranks)
             self.fail("exception was not thrown")
         except ValueError:
             pass

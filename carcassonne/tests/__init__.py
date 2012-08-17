@@ -51,7 +51,7 @@ def randomNormalizableTensorAndIndex(ndim): # {{{
 # }}}
 
 def randomPermutation(size): # {{{
-    permutation = range(size)
+    permutation = list(range(size))
     shuffle(permutation)
     return permutation
 # }}}

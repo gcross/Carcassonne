@@ -50,7 +50,7 @@ class NormalizationSide(object): # {{{
                 [(0,1),(1,(i-1)%4),(2,(i-1)%4)],
                 [(1,(i+2)%4),(2,(i+2)%4)],
             ]
-        ) for i in xrange(4)
+        ) for i in range(4)
     ]
     def absorbCenter(self,center):
         direction = self.direction
