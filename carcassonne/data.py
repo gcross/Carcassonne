@@ -74,6 +74,7 @@ class NDArrayData(Data): # {{{
             return self._arr
     # }}}
     def join(self,*groups): # {{{
+        groups = [[group] if isinstance(group,int) else group for group in groups]
         _arr = self._arr.transpose([index for group in groups for index in group])
         shape = []
         index = 0
