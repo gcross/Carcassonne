@@ -472,7 +472,7 @@ def makeDataContractor(joins,final_groups,tensor_ranks=None): # {{{
             index_offset += tensor_ranks[tensor_number]
         final_groups = [applyIndexMapTo(index_map,group) for group in final_groups]
         # }}}
-        function_lines.append("return _{}.join({})".format(final_tensor_number,final_groups))
+        function_lines.append("return _{}.join(*{})".format(final_tensor_number,final_groups))
     else:
         function_lines.append("return _{}.extractScalar()".format(final_tensor_number))
     # }}}

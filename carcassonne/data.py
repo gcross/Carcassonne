@@ -73,7 +73,7 @@ class NDArrayData(Data): # {{{
         else:
             return self._arr
     # }}}
-    def join(self,groups): # {{{
+    def join(self,*groups): # {{{
         _arr = self._arr.transpose([index for group in groups for index in group])
         shape = []
         index = 0
@@ -82,15 +82,15 @@ class NDArrayData(Data): # {{{
             index += len(group)
         return NDArrayData(_arr.reshape(shape))
     # }}}
-    def split(self,splits): # {{{
+    def split(self,*splits): # {{{
         return NDArrayData(self._arr.reshape(sum(splits,tuple())))
     # }}}
     def splitAt(self,index,split): # {{{
         splits = [(size,) for size in self._arr.shape]
         splits[index] = split
-        return self.split(splits)
+        return self.split(*splits)
     # }}}
-    def transpose(self,args): # {{{
+    def transpose(self,*args): # {{{
         return NDArrayData(self._arr.transpose(*args))
     # }}}
   # }}}
@@ -133,7 +133,7 @@ class ScalarData(Data): # {{{
     def extractScalar(self): # {{{
         return self.value
     # }}}
-    def join(self,grouping): # {{{
+    def join(self,*grouping): # {{{
         assert grouping == []
         return copy(self)
     # }}}

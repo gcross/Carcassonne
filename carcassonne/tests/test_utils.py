@@ -16,8 +16,8 @@ class TaggedNDArrayData(NDArrayData): # {{{
         self.tag = tag
     def contractWith(self,other,self_axes,other_axes):
         return TaggedNDArrayData(NDArrayData.contractWith(self,other,self_axes,other_axes).toArray(),(self.tag,other.tag))
-    def join(self,groups):
-        return TaggedNDArrayData(NDArrayData.join(self,groups).toArray(),self.tag)
+    def join(self,*groups):
+        return TaggedNDArrayData(NDArrayData.join(self,*groups).toArray(),self.tag)
 # }}}
 
 # }}}
@@ -461,7 +461,7 @@ class TestMakeDataContractor(TestCase): # {{{
         data = NDArrayData.newRandom(randomShape(ndim))
         contract = makeDataContractor([],[[(0,i) for i in range(ndim)]])
         contracted_data = contract(data)
-        raveled_data = data.join([range(ndim)])
+        raveled_data = data.join(*[range(ndim)])
         self.assertDataAlmostEqual(raveled_data,contracted_data)
     # }}}
     @with_checker
@@ -734,7 +734,7 @@ class TestMakeDataContractor(TestCase): # {{{
         A = NDArrayData.newRandom((a,b,c))
         B = NDArrayData.newRandom((d,e,c,f))
         self.assertDataAlmostEqual(
-            A.contractWith(B,[2],[2]).join([[0,2],[1,3],[4]]),
+            A.contractWith(B,[2],[2]).join([0,2],[1,3],[4]),
             makeDataContractor(
                 [Join(0,2,1,2)],
                 [
@@ -760,7 +760,7 @@ class TestMakeDataContractor(TestCase): # {{{
         A = NDArrayData.newRandom((a,b,c,d))
         B = NDArrayData.newRandom((e,f,d,h,i))
         self.assertDataAlmostEqual(
-            A.contractWith(B,[3],[2]).join([[0,3],[1,4],[2,5],[6]]),
+            A.contractWith(B,[3],[2]).join([0,3],[1,4],[2,5],[6]),
             makeDataContractor(
                 [Join(0,3,1,2)],
                 [
