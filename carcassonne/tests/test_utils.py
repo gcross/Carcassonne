@@ -455,11 +455,11 @@ class TestFormContractor(TestCase): # {{{
     # }}}
 # }}}
 
-class TestMakeDataContractor(TestCase): # {{{
+class TestFormDataContractor(TestCase): # {{{
     @with_checker
     def test_single_tensor_outer_product(self,ndim=irange(1,5)): # {{{
         data = NDArrayData.newRandom(*randomShape(ndim))
-        contract = makeDataContractor([],[[(0,i) for i in range(ndim)]])
+        contract = formDataContractor([],[[(0,i) for i in range(ndim)]])
         contracted_data = contract(data)
         raveled_data = data.join(*[range(ndim)])
         self.assertDataAlmostEqual(raveled_data,contracted_data)
@@ -467,7 +467,7 @@ class TestMakeDataContractor(TestCase): # {{{
     @with_checker
     def test_multiple_tensors_outer_product(self,number_of_tensors=irange(1,5)): # {{{
         tensors = [NDArrayData.newRandom(*randomShape(randint(1,3),3)) for _ in range(number_of_tensors)]
-        contraction = makeDataContractor([],[[(tensor_number,i)] for tensor_number, tensor in enumerate(tensors) for i in range(tensor.ndim)])(*tensors)
+        contraction = formDataContractor([],[[(tensor_number,i)] for tensor_number, tensor in enumerate(tensors) for i in range(tensor.ndim)])(*tensors)
         self.assertDataAlmostEqual(
             reduce(lambda x,y: x.contractWith(y,[],[]),tensors),
             contraction
@@ -488,7 +488,7 @@ class TestMakeDataContractor(TestCase): # {{{
         axes = list(zip(range(ndim),B_inverse_permutation))
         shuffle(axes)
         A_axes, B_axes = zip(*axes)
-        contraction = makeDataContractor([Join(0,A_axes,1,B_axes)],[])(A,B)
+        contraction = formDataContractor([Join(0,A_axes,1,B_axes)],[])(A,B)
         self.assertAlmostEqual(
             A.contractWith(B,A_axes,B_axes).extractScalar(),
             contraction
@@ -525,7 +525,7 @@ class TestMakeDataContractor(TestCase): # {{{
         A_left_axes.sort()
         B_right_axes.sort()
 
-        contraction = makeDataContractor(
+        contraction = formDataContractor(
             [Join(0,A_middle_axes,1,B_middle_axes)],
             [[(tensor_number,axis)] for tensor_number, axes in enumerate([A_left_axes,B_right_axes]) for axis in axes]
         )(A,B)
@@ -539,7 +539,7 @@ class TestMakeDataContractor(TestCase): # {{{
     def test_matrix_multiplication_two_matrices(self,m=irange(1,10),k=irange(1,10),n=irange(1,10)): # {{{
         A = NDArrayData.newRandom(m,k)
         B = NDArrayData.newRandom(k,n)
-        contraction = makeDataContractor([Join(0,1,1,0)],[[(0,0)],[(1,1)]])(A,B)
+        contraction = formDataContractor([Join(0,1,1,0)],[[(0,0)],[(1,1)]])(A,B)
         self.assertDataAlmostEqual(
             A.contractWith(B,[1],[0]),
             contraction
@@ -564,7 +564,7 @@ class TestMakeDataContractor(TestCase): # {{{
         D = TaggedNDArrayData(crand(d,e),'D')
 
         correct_value = reduce(dot,[tensor.toArray() for tensor in [A,B,C,D]])
-        contraction = makeDataContractor(
+        contraction = formDataContractor(
             [
                 Join(0,1,1,0),
                 Join(2,1,3,0),
@@ -597,7 +597,7 @@ class TestMakeDataContractor(TestCase): # {{{
             Join(1,1,2,0),
         ]
         shuffle(joins)
-        contraction = makeDataContractor(joins,[[(0,0)],[(2,1)]])(A,B,C)
+        contraction = formDataContractor(joins,[[(0,0)],[(2,1)]])(A,B,C)
         self.assertAllClose(
             correct_value,
             contraction.toArray()
@@ -610,7 +610,7 @@ class TestMakeDataContractor(TestCase): # {{{
         correct_value = reduce(dot,[matrix.toArray() for matrix in matrices])
         joins = [Join(i,1,i+1,0) for i in range(number_of_matrices-1)]
         shuffle(joins)
-        contraction = makeDataContractor(joins,[[(0,0)],[(number_of_matrices-1,1)]])(*matrices)
+        contraction = formDataContractor(joins,[[(0,0)],[(number_of_matrices-1,1)]])(*matrices)
         self.assertAllClose(
             correct_value,
             contraction.toArray()
@@ -625,7 +625,7 @@ class TestMakeDataContractor(TestCase): # {{{
         expected_rank = actual_rank + 1
         ndims[broken_tensor_number] += 1
         try:
-            makeDataContractor([],[[(tensor_number,index)] for tensor_number in range(number_of_tensors) for index in range(ndims[tensor_number])])(*tensors)
+            formDataContractor([],[[(tensor_number,index)] for tensor_number in range(number_of_tensors) for index in range(ndims[tensor_number])])(*tensors)
             self.fail("exception was not thrown")
         except UnexpectedTensorRankError as e:
             self.assertEqual(e.tensor_number,broken_tensor_number)
@@ -665,7 +665,7 @@ class TestMakeDataContractor(TestCase): # {{{
 
         middle_tensor = NDArrayData.newRandom(*left_shared_shape + right_shared_shape)
         try:
-            makeDataContractor(
+            formDataContractor(
                 [
                     Join(0,left_inverse_permutation,1,range(left_ndim)),
                     Join(2,right_inverse_permutation,1,range(left_ndim,left_ndim+right_ndim))
@@ -687,7 +687,7 @@ class TestMakeDataContractor(TestCase): # {{{
         while observed_tensor_ranks == tensor_ranks:
             observed_tensor_ranks = [randint(1,5) for _ in range(number_of_tensors)]
         try:
-            makeDataContractor([],[[(tensor_number,index)] for tensor_number, tensor_rank in enumerate(observed_tensor_ranks) for index in range(tensor_rank)],tensor_ranks=tensor_ranks)
+            formDataContractor([],[[(tensor_number,index)] for tensor_number, tensor_rank in enumerate(observed_tensor_ranks) for index in range(tensor_rank)],tensor_ranks=tensor_ranks)
             self.fail("exception was not thrown")
         except ValueError:
             pass
@@ -712,7 +712,7 @@ class TestMakeDataContractor(TestCase): # {{{
         shuffle(joins)
         self.assertDataAlmostEqual(
             A.contractWith(B,[2],[1]).contractWith(C,[0,2],[1,2]),
-            makeDataContractor(
+            formDataContractor(
                 joins,
                 [
                     [(0,1)],
@@ -735,7 +735,7 @@ class TestMakeDataContractor(TestCase): # {{{
         B = NDArrayData.newRandom(d,e,c,f)
         self.assertDataAlmostEqual(
             A.contractWith(B,[2],[2]).join([0,2],[1,3],[4]),
-            makeDataContractor(
+            formDataContractor(
                 [Join(0,2,1,2)],
                 [
                     [(0,0),(1,0)],
@@ -761,7 +761,7 @@ class TestMakeDataContractor(TestCase): # {{{
         B = NDArrayData.newRandom(e,f,d,h,i)
         self.assertDataAlmostEqual(
             A.contractWith(B,[3],[2]).join([0,3],[1,4],[2,5],[6]),
-            makeDataContractor(
+            formDataContractor(
                 [Join(0,3,1,2)],
                 [
                     [(0,0),(1,0)],

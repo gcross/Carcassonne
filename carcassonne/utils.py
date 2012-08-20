@@ -157,7 +157,7 @@ class FromBoth(object): # {{{
 # Decorators {{{
 class prependDataContractor(object): # {{{
     def __init__(self,*args,**keywords):
-        self.contractor = makeDataContractor(*args,**keywords)
+        self.contractor = formDataContractor(*args,**keywords)
     def __call__(self,f):
         def new_f(*args,**keywords):
             return f(self.contractor,*args,**keywords)
@@ -334,10 +334,7 @@ def formContractor(order,joins,result_joins): # {{{
 
     return contract
 # }}}
-def invertPermutation(permutation): # {{{
-    return [permutation.index(i) for i in range(len(permutation))]
-# }}}
-def makeDataContractor(joins,final_groups,tensor_ranks=None): # {{{
+def formDataContractor(joins,final_groups,tensor_ranks=None): # {{{
     # Tabulate all of the tensor indices to compute the number of arguments and their ranks {{{
     observed_tensor_indices = defaultdict(lambda: set())
     observed_joins = set()
@@ -488,6 +485,9 @@ def makeDataContractor(joins,final_groups,tensor_ranks=None): # {{{
     return contract
     # }}}
 # }}}
+def invertPermutation(permutation): # {{{
+    return [permutation.index(i) for i in range(len(permutation))]
+# }}}
 def randomComplexSample(shape): # {{{
     return random_sample(shape)*2-1+random_sample(shape)*2j-1j
 # }}}
@@ -508,8 +508,8 @@ __all__ = [
     "crand",
     "formAbsorber",
     "formContractor",
+    "formDataContractor",
     "invertPermutation",
-    "makeDataContractor",
     "randomComplexSample",
 ]
 # }}}

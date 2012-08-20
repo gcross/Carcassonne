@@ -1,5 +1,5 @@
 # Imports {{{
-from ..utils import Join, makeDataContractor, prependDataContractor
+from ..utils import Join, formDataContractor, prependDataContractor
 # }}}
 
 # Classes {{{
@@ -38,7 +38,7 @@ class NormalizationSide(object): # {{{
     # }}}
     # def absorbCenter + friends # {{{
     _absorbCenter = [
-        makeDataContractor(
+        formDataContractor(
             # 0 = side, 1 = center, 2 = center*
             [
                 Join(0,2,1,i),
