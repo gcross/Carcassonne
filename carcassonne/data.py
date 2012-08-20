@@ -2,7 +2,7 @@
 from collections import defaultdict
 from copy import copy
 from functools import reduce
-from numpy import allclose, array, ones, prod, tensordot, zeros
+from numpy import allclose, array, multiply, ones, prod, tensordot, zeros
 from random import randint
 
 from .utils import applyPermutation, crand, randomComplexSample
@@ -32,7 +32,7 @@ class NDArrayData(Data): # {{{
         return NDArrayData(_arr)
     # }}}
     @classmethod # newOuterProduct {{{
-    def newOuterProduct(cls,factors):
+    def newOuterProduct(cls,*factors):
         return cls(reduce(multiply.outer,factors))
     # }}}
     @classmethod # newRandom {{{
