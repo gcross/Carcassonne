@@ -169,13 +169,13 @@ class TestNormalizationStage2(TestCase): # {{{
 class TestNormalizationStage3(TestCase): # {{{
     @with_checker
     def test__init__(self, # {{{
-        a = irange(1,10),
-        b = irange(1,10),
-        c = irange(1,10),
-        d = irange(1,10),
-        e = irange(1,10),
-        f = irange(1,10),
-        g = irange(1,10),
+        a = irange(1,5),
+        b = irange(1,5),
+        c = irange(1,5),
+        d = irange(1,5),
+        e = irange(1,5),
+        f = irange(1,5),
+        g = irange(1,5),
     ):
         A = NDArrayData.newRandom(a,b,c,d,c,d)
         B = NDArrayData.newRandom(b,a,e,f,e,f)
