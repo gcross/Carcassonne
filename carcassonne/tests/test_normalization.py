@@ -1,5 +1,6 @@
 # Imports {{{
 from copy import copy
+from numpy import zeros
 from random import randint
 
 from . import *
@@ -107,5 +108,39 @@ class TestNormalization(TestCase): # {{{
             [[(i+4,3)] for i in range(4)]+[[(8,4)]]
         )(*corners_data + sides_data + (center_data,))
         self.assertDataAlmostEqual(observed,exact)
+    # }}}
+    @with_checker
+    def test_W_state(self, # {{{
+        moves=(irange(0,1),)*4
+    ):
+        center = zeros((4,)*4+(2,))
+        center[0,0,0,0,0] = 1
+        center[1,0,1,0,0] = 1
+        center[0,1,0,1,0] = 1
+        center[1,1,1,1,0] = 1
+        center[1,2,0,2,0] = 1
+        center[2,0,2,1,0] = 1
+        center[1,3,0,3,0] = 1
+        center[3,0,3,1,0] = 1
+        center[3,2,2,3,1] = 1
+        center = NDArrayData(center)
+
+        corners = [NormalizationCorner(NDArrayData.newTrivial((1,1)))]*4
+        sides = [
+            NormalizationSide(0,NDArrayData.newOuterProduct([1],[1],[0,1,0,1],[0,1,0,1])),
+            NormalizationSide(1,NDArrayData.newOuterProduct([1],[1],[1,0,1,0],[1,0,1,0])),
+            NormalizationSide(2,NDArrayData.newOuterProduct([1],[1],[1,0,1,0],[1,0,1,0])),
+            NormalizationSide(3,NDArrayData.newOuterProduct([1],[1],[0,1,0,1],[0,1,0,1])),
+        ]
+        normalization = Normalization(corners,sides)
+
+        directions = sum(([i]*moves[i] for i in range(4)),[])
+        shuffle(directions)
+        for direction in directions:
+            normalization.absorbCenter(direction,center)
+        self.assertEqual(
+            normalization.computeNormalization(center),
+            (1+moves[0]+moves[2])*(1+moves[1]+moves[3])
+        )
     # }}}
 # }}}
