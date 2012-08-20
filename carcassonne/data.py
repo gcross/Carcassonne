@@ -36,7 +36,7 @@ class NDArrayData(Data): # {{{
         return cls(reduce(multiply.outer,factors))
     # }}}
     @classmethod # newRandom {{{
-    def newRandom(cls,shape):
+    def newRandom(cls,*shape):
         return cls(randomComplexSample(shape))
     # }}}
     @classmethod # newTrivial {{{

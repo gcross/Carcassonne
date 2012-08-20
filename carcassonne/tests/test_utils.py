@@ -458,7 +458,7 @@ class TestFormContractor(TestCase): # {{{
 class TestMakeDataContractor(TestCase): # {{{
     @with_checker
     def test_single_tensor_outer_product(self,ndim=irange(1,5)): # {{{
-        data = NDArrayData.newRandom(randomShape(ndim))
+        data = NDArrayData.newRandom(*randomShape(ndim))
         contract = makeDataContractor([],[[(0,i) for i in range(ndim)]])
         contracted_data = contract(data)
         raveled_data = data.join(*[range(ndim)])
@@ -466,7 +466,7 @@ class TestMakeDataContractor(TestCase): # {{{
     # }}}
     @with_checker
     def test_multiple_tensors_outer_product(self,number_of_tensors=irange(1,5)): # {{{
-        tensors = [NDArrayData.newRandom(randomShape(randint(1,3),3)) for _ in range(number_of_tensors)]
+        tensors = [NDArrayData.newRandom(*randomShape(randint(1,3),3)) for _ in range(number_of_tensors)]
         contraction = makeDataContractor([],[[(tensor_number,i)] for tensor_number, tensor in enumerate(tensors) for i in range(tensor.ndim)])(*tensors)
         self.assertDataAlmostEqual(
             reduce(lambda x,y: x.contractWith(y,[],[]),tensors),
@@ -480,11 +480,11 @@ class TestMakeDataContractor(TestCase): # {{{
     @with_checker
     def test_two_tensors_inner_product_resulting_in_scalar(self,ndim=irange(1,5)): # {{{
         A_shape = randomShape(ndim)
-        A = NDArrayData.newRandom(A_shape)
+        A = NDArrayData.newRandom(*A_shape)
         B_permutation = randomPermutation(ndim)
         B_inverse_permutation = invertPermutation(B_permutation)
         B_shape = applyPermutation(B_permutation,A_shape)
-        B = NDArrayData.newRandom(B_shape)
+        B = NDArrayData.newRandom(*B_shape)
         axes = list(zip(range(ndim),B_inverse_permutation))
         shuffle(axes)
         A_axes, B_axes = zip(*axes)
@@ -513,14 +513,14 @@ class TestMakeDataContractor(TestCase): # {{{
         A_shape = applyPermutation(A_permutation,left_shape + middle_shape)
         A_axes = applyPermutation(invertPermutation(A_permutation),range(A_ndim))
         A_left_axes, A_middle_axes = A_axes[:left_ndim], A_axes[left_ndim:]
-        A = NDArrayData.newRandom(A_shape)
+        A = NDArrayData.newRandom(*A_shape)
 
         B_ndim = middle_ndim + right_ndim
         B_permutation = randomPermutation(B_ndim)
         B_shape = applyPermutation(B_permutation,middle_shape + right_shape)
         B_axes = applyPermutation(invertPermutation(B_permutation),range(B_ndim))
         B_middle_axes, B_right_axes = B_axes[:middle_ndim], B_axes[middle_ndim:]
-        B = NDArrayData.newRandom(B_shape)
+        B = NDArrayData.newRandom(*B_shape)
 
         A_left_axes.sort()
         B_right_axes.sort()
@@ -537,8 +537,8 @@ class TestMakeDataContractor(TestCase): # {{{
     # }}}
     @with_checker
     def test_matrix_multiplication_two_matrices(self,m=irange(1,10),k=irange(1,10),n=irange(1,10)): # {{{
-        A = NDArrayData.newRandom((m,k))
-        B = NDArrayData.newRandom((k,n))
+        A = NDArrayData.newRandom(m,k)
+        B = NDArrayData.newRandom(k,n)
         contraction = makeDataContractor([Join(0,1,1,0)],[[(0,0)],[(1,1)]])(A,B)
         self.assertDataAlmostEqual(
             A.contractWith(B,[1],[0]),
@@ -588,9 +588,9 @@ class TestMakeDataContractor(TestCase): # {{{
         c=irange(1,10),
         d=irange(1,10),
     ):
-        A = NDArrayData.newRandom((a,b))
-        B = NDArrayData.newRandom((b,c))
-        C = NDArrayData.newRandom((c,d))
+        A = NDArrayData.newRandom(a,b)
+        B = NDArrayData.newRandom(b,c)
+        C = NDArrayData.newRandom(c,d)
         correct_value = reduce(dot,[tensor.toArray() for tensor in [A,B,C]])
         joins = [
             Join(0,1,1,0),
@@ -606,7 +606,7 @@ class TestMakeDataContractor(TestCase): # {{{
     @with_checker
     def test_matrix_multiplication_many_matrices(self, number_of_matrices=irange(1,10)): # {{{
         dimensions = [randint(1,10) for _ in range(number_of_matrices+1)]
-        matrices = [NDArrayData.newRandom((dimensions[i],dimensions[i+1])) for i in range(number_of_matrices)]
+        matrices = [NDArrayData.newRandom(*(dimensions[i],dimensions[i+1])) for i in range(number_of_matrices)]
         correct_value = reduce(dot,[matrix.toArray() for matrix in matrices])
         joins = [Join(i,1,i+1,0) for i in range(number_of_matrices-1)]
         shuffle(joins)
@@ -619,7 +619,7 @@ class TestMakeDataContractor(TestCase): # {{{
     @with_checker
     def test_unexpected_tensor_rank_detected(self,number_of_tensors=irange(1,5)): # {{{
         ndims = [randint(1,5) for _ in range(number_of_tensors)]
-        tensors = [NDArrayData.newRandom(randomShape(ndim)) for ndim in ndims]
+        tensors = [NDArrayData.newRandom(*randomShape(ndim)) for ndim in ndims]
         broken_tensor_number = randint(0,len(ndims)-1)
         actual_rank = ndims[broken_tensor_number]
         expected_rank = actual_rank + 1
@@ -647,7 +647,7 @@ class TestMakeDataContractor(TestCase): # {{{
             left_index = left_inverse_permutation[right_index]
             left_shape[left_index] += 1
             left_dimension = left_shape[left_index]
-        left_tensor = NDArrayData.newRandom(left_shape)
+        left_tensor = NDArrayData.newRandom(*left_shape)
 
         right_shared_shape = randomShape(right_ndim)
         right_permutation = randomPermutation(right_ndim)
@@ -661,9 +661,9 @@ class TestMakeDataContractor(TestCase): # {{{
             right_shape[right_index] += 1
             right_dimension = right_shape[right_index]
             left_index += left_ndim
-        right_tensor = NDArrayData.newRandom(right_shape)
+        right_tensor = NDArrayData.newRandom(*right_shape)
 
-        middle_tensor = NDArrayData.newRandom(left_shared_shape + right_shared_shape)
+        middle_tensor = NDArrayData.newRandom(*left_shared_shape + right_shared_shape)
         try:
             makeDataContractor(
                 [
@@ -701,9 +701,9 @@ class TestMakeDataContractor(TestCase): # {{{
         e = irange(1,10),
         f = irange(1,10),
     ):
-        A = NDArrayData.newRandom((a,e,b))
-        B = NDArrayData.newRandom((c,b,f))
-        C = NDArrayData.newRandom((d,a,c))
+        A = NDArrayData.newRandom(a,e,b)
+        B = NDArrayData.newRandom(c,b,f)
+        C = NDArrayData.newRandom(d,a,c)
         joins = [
             Join(0,0,2,1),
             Join(0,2,1,1),
@@ -731,8 +731,8 @@ class TestMakeDataContractor(TestCase): # {{{
         e = irange(1,10),
         f = irange(1,10),
     ):
-        A = NDArrayData.newRandom((a,b,c))
-        B = NDArrayData.newRandom((d,e,c,f))
+        A = NDArrayData.newRandom(a,b,c)
+        B = NDArrayData.newRandom(d,e,c,f)
         self.assertDataAlmostEqual(
             A.contractWith(B,[2],[2]).join([0,2],[1,3],[4]),
             makeDataContractor(
@@ -757,8 +757,8 @@ class TestMakeDataContractor(TestCase): # {{{
         h = irange(1,5),
         i = irange(1,5),
     ):
-        A = NDArrayData.newRandom((a,b,c,d))
-        B = NDArrayData.newRandom((e,f,d,h,i))
+        A = NDArrayData.newRandom(a,b,c,d)
+        B = NDArrayData.newRandom(e,f,d,h,i)
         self.assertDataAlmostEqual(
             A.contractWith(B,[3],[2]).join([0,3],[1,4],[2,5],[6]),
             makeDataContractor(

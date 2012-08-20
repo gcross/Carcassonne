@@ -17,8 +17,8 @@ class TestNormalizationCorner(TestCase): # {{{
         d = irange(1,10),
         e = irange(1,10),
     ) :
-        A = NDArrayData.newRandom((a,b))
-        B = NDArrayData.newRandom((c,a,d,e))
+        A = NDArrayData.newRandom(a,b)
+        B = NDArrayData.newRandom(c,a,d,e)
         C1 = NormalizationCorner(A).absorbFromLeft(NormalizationSide(0,B)).data
         C2 = A.contractWith(B,(0,),(1,)).join(1,(0,2,3))
         self.assertDataAlmostEqual(C1,C2)
@@ -31,8 +31,8 @@ class TestNormalizationCorner(TestCase): # {{{
         d = irange(1,10),
         e = irange(1,10),
     ) :
-        A = NDArrayData.newRandom((a,b))
-        B = NDArrayData.newRandom((b,c,d,e))
+        A = NDArrayData.newRandom(a,b)
+        B = NDArrayData.newRandom(b,c,d,e)
         C1 = NormalizationCorner(A).absorbFromRight(NormalizationSide(0,B)).data
         C2 = A.contractWith(B,(1,),(0,)).join((0,2,3),1)
         self.assertDataAlmostEqual(C1,C2)
@@ -50,8 +50,8 @@ class TestNormalizationSide(TestCase): # {{{
         f = irange(1,3),
         g = irange(1,3),
     ):
-        A = NDArrayData.newRandom((a,b,c,c))
-        B = NDArrayData.newRandom((c,d,e,f,g))
+        A = NDArrayData.newRandom(a,b,c,c)
+        B = NDArrayData.newRandom(c,d,e,f,g)
         C1 = NormalizationSide(0,A).absorbCenter(B).data
         C2 = A.join(0,1,(2,3)).contractWith(
                 (B).contractWith(B.conj(),(4,),(4,)
@@ -72,8 +72,8 @@ class TestNormalizationSide(TestCase): # {{{
         f = irange(1,3),
         g = irange(1,3),
     ):
-        A = NDArrayData.newRandom((a,b,d,d))
-        B = NDArrayData.newRandom((c,d,e,f,g))
+        A = NDArrayData.newRandom(a,b,d,d)
+        B = NDArrayData.newRandom(c,d,e,f,g)
         C1 = NormalizationSide(1,A).absorbCenter(B).data
         C2 = A.join(0,1,(2,3)).contractWith(
                 (B).contractWith(B.conj(),(4,),(4,)
@@ -94,8 +94,8 @@ class TestNormalizationSide(TestCase): # {{{
         f = irange(1,3),
         g = irange(1,3),
     ):
-        A = NDArrayData.newRandom((a,b,e,e))
-        B = NDArrayData.newRandom((c,d,e,f,g))
+        A = NDArrayData.newRandom(a,b,e,e)
+        B = NDArrayData.newRandom(c,d,e,f,g)
         C1 = NormalizationSide(2,A).absorbCenter(B).data
         C2 = A.join(0,1,(2,3)).contractWith(
                 (B).contractWith(B.conj(),(4,),(4,)
@@ -116,8 +116,8 @@ class TestNormalizationSide(TestCase): # {{{
         f = irange(1,3),
         g = irange(1,3),
     ):
-        A = NDArrayData.newRandom((a,b,f,f))
-        B = NDArrayData.newRandom((c,d,e,f,g))
+        A = NDArrayData.newRandom(a,b,f,f)
+        B = NDArrayData.newRandom(c,d,e,f,g)
         C1 = NormalizationSide(3,A).absorbCenter(B).data
         C2 = A.join(0,1,(2,3)).contractWith(
                 (B).contractWith(B.conj(),(4,),(4,)
@@ -139,8 +139,8 @@ class TestNormalizationStage1(TestCase): # {{{
         d = irange(1,10),
         e = irange(1,10),
     ):
-        A = NDArrayData.newRandom((a,b))
-        B = NDArrayData.newRandom((b,c,d,e))
+        A = NDArrayData.newRandom(a,b)
+        B = NDArrayData.newRandom(b,c,d,e)
         C1 = TN.NormalizationStage1(NormalizationCorner(A),NormalizationSide(0,B)).data
         C2 = A.contractWith(B,(1,),(0,))
         self.assertDataAlmostEqual(C1,C2)
@@ -158,8 +158,8 @@ class TestNormalizationStage2(TestCase): # {{{
         f = irange(1,10),
         g = irange(1,10),
     ):
-        A = NDArrayData.newRandom((a,b,c,d))
-        B = NDArrayData.newRandom((e,a,f,g))
+        A = NDArrayData.newRandom(a,b,c,d)
+        B = NDArrayData.newRandom(e,a,f,g)
         C1 = TN.NormalizationStage2(Dummy(data=A),Dummy(data=B)).data
         C2 = A.contractWith(B,(0,),(1,)).join(3,0,1,4,2,5)
         self.assertDataAlmostEqual(C1,C2)
@@ -177,9 +177,9 @@ class TestNormalizationStage3(TestCase): # {{{
         f = irange(1,10),
         g = irange(1,10),
     ):
-        A = NDArrayData.newRandom((a,b,c,d,c,d))
-        B = NDArrayData.newRandom((b,a,e,f,e,f))
-        C = NDArrayData.newRandom((c,d,e,f,g))
+        A = NDArrayData.newRandom(a,b,c,d,c,d)
+        B = NDArrayData.newRandom(b,a,e,f,e,f)
+        C = NDArrayData.newRandom(c,d,e,f,g)
         D1 = TN.NormalizationStage3(Dummy(data=A),Dummy(data=B))(C)
         AB = A.contractWith(B,(0,1),(1,0)).join(0,1,4,5,2,3,6,7)
         D2 = AB.contractWith(C,(0,1,2,3),(0,1,2,3))
