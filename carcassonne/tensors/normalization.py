@@ -3,7 +3,7 @@ from ..utils import Join, formDataContractor, prependDataContractor
 # }}}
 
 # Classes {{{
-class NormalizationCorner(object): # {{{
+class NormalizationCorner: # {{{
     def __init__(self,data): # {{{
         self.data = data
     # }}}
@@ -31,7 +31,7 @@ class NormalizationCorner(object): # {{{
     # }}}
 # }}}
 
-class NormalizationSide(object): # {{{
+class NormalizationSide: # {{{
     def __init__(self,direction,data): # {{{
         self.direction = direction
         self.data = data
@@ -78,7 +78,7 @@ class NormalizationSide(object): # {{{
     # }}}
 # }}}
 
-class NormalizationStage1(object): # {{{
+class NormalizationStage1: # {{{
     # def init + friends # {{{
     @prependDataContractor(
         [Join(0,1,1,0)],
@@ -94,7 +94,7 @@ class NormalizationStage1(object): # {{{
     # }}}
 # }}}
 
-class NormalizationStage2(object): # {{{
+class NormalizationStage2: # {{{
     # def absorbFromLeft + friends # {{{
     @prependDataContractor(
         [Join(0,0,1,1)],
@@ -112,7 +112,7 @@ class NormalizationStage2(object): # {{{
     # }}}
 # }}}
 
-class NormalizationStage3(object): # {{{
+class NormalizationStage3: # {{{
     def __init__(self,stage2_0,stage2_1): # {{{
         self.data0 = stage2_0.data.join((0,1),4,5,2,3)
         self.data1 = stage2_1.data.join((1,0),4,5,2,3)

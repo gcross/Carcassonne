@@ -13,7 +13,7 @@ from ..utils import *
 
 # Decorators {{{
 
-class prependContractor(object): # {{{
+class prependContractor: # {{{
     def __init__(self,*args,**keywords):
         self.contractor = formContractor(*args,**keywords)
     def __call__(self,f):

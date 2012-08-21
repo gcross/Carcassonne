@@ -9,7 +9,7 @@ from .utils import applyPermutation, crand, randomComplexSample
 # }}}
 
 # Base classes {{{
-class Data(object): # {{{
+class Data: # {{{
   # Instance methods {{{
     def toNDArrayData(self):
         return NDArrayData(self.toArray())

@@ -27,7 +27,7 @@ class UnexpectedTensorRankError(ValueError): # {{{
 # }}}
 
 # Classes {{{
-class Join(object): # {{{
+class Join: # {{{
     def __init__( # {{{
         self
         ,left_tensor_number
@@ -86,7 +86,7 @@ class Join(object): # {{{
     # }}}
 # }}}
 # Result dimension sources {{{
-class FromLeft(object): # {{{
+class FromLeft: # {{{
     # Constants {{{
     number_of_left_dimensions = 1
     number_of_right_dimensions = 0
@@ -104,7 +104,7 @@ class FromLeft(object): # {{{
         return left_indices[self.dimension]
     # }}}
 # }}}
-class FromRight(object): # {{{
+class FromRight: # {{{
     # Constants {{{
     number_of_left_dimensions = 0
     number_of_right_dimensions = 1
@@ -122,7 +122,7 @@ class FromRight(object): # {{{
         return right_indices[self.dimension]
     # }}}
 # }}}
-class FromBoth(object): # {{{
+class FromBoth: # {{{
     # Constants {{{
     number_of_left_dimensions = 1
     number_of_right_dimensions = 1
@@ -155,7 +155,7 @@ class FromBoth(object): # {{{
 # }}}
 
 # Decorators {{{
-class prependDataContractor(object): # {{{
+class prependDataContractor: # {{{
     def __init__(self,*args,**keywords):
         self.contractor = formDataContractor(*args,**keywords)
     def __call__(self,f):
