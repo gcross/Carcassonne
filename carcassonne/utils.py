@@ -85,11 +85,14 @@ class Join: # {{{
             self.checkOrderAndSwap()
     # }}}
 # }}}
-# Result dimension sources {{{
 class FromLeft: # {{{
     # Constants {{{
     number_of_left_dimensions = 1
     number_of_right_dimensions = 0
+    # }}}
+    # Properties {{{
+    left_dimensions = property(lambda self: (self.dimension,))
+    right_dimensions = property(lambda self: ())
     # }}}
     def __init__(self,dimension): # {{{
         self.dimension = dimension
@@ -109,6 +112,10 @@ class FromRight: # {{{
     number_of_left_dimensions = 0
     number_of_right_dimensions = 1
     # }}}
+    # Properties {{{
+    left_dimensions = property(lambda self: ())
+    right_dimensions = property(lambda self: (self.dimension,))
+    # }}}
     def __init__(self,dimension): # {{{
         self.dimension = dimension
     # }}}
@@ -126,6 +133,10 @@ class FromBoth: # {{{
     # Constants {{{
     number_of_left_dimensions = 1
     number_of_right_dimensions = 1
+    # }}}
+    # Properties {{{
+    left_dimensions = property(lambda self: (self.left_dimension,))
+    right_dimensions = property(lambda self: (self.right_dimension,))
     # }}}
     def __init__(self,left_dimension,right_dimension,indices_to_ignore=frozenset(),indices_to_redirect=frozenset()): # {{{
         self.left_dimension = left_dimension

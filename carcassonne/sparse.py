@@ -29,6 +29,49 @@ def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimen
     number_of_join_dimensions = len(left_join_dimensions)
     assert(number_of_join_dimensions == len(right_join_dimensions))
     number_of_result_dimensions = len(result_dimension_sources)
+    number_of_left_dimensions = number_of_join_dimensions + sum(x.number_of_left_dimensions for x in result_dimension_sources)
+    number_of_right_dimensions = number_of_join_dimensions + sum(x.number_of_right_dimensions for x in result_dimension_sources)
+    # }}}
+    # Check that no left join dimensions are repeated {{{
+    observed_left_dimensions = set()
+    for dimension in left_join_dimensions:
+        if dimension in observed_left_dimensions:
+            raise ValueError("left join dimension {} appears more than once".format(dimension))
+        observed_left_dimensions.add(dimension)
+    # }}}
+    # Check that no right join dimensions are repeated {{{
+    observed_right_dimensions = set()
+    for dimension in right_join_dimensions:
+        if dimension in observed_right_dimensions:
+            raise ValueError("right join dimension {} appears more than once".format(dimension))
+        observed_right_dimensions.add(dimension)
+    # }}}
+    # Check that the result dimensions do not conflict with the join dimensions or each other {{{
+    for result_dimension_source in result_dimension_sources:
+        for dimension in result_dimension_source.left_dimensions:
+            if dimension in observed_left_dimensions:
+                if dimension in left_join_dimensions:
+                    raise ValueError("left dimension {} appears both as a join dimension and as a result dimension".format(dimension))
+                else:
+                    raise ValueError("left dimension {} appears more than once in the result dimensions".format(dimension))
+            observed_left_dimensions.add(dimension)
+        for dimension in result_dimension_source.right_dimensions:
+            if dimension in observed_right_dimensions:
+                if dimension in right_join_dimensions:
+                    raise ValueError("right dimension {} appears both as a join dimension and as a result dimension".format(dimension))
+                else:
+                    raise ValueError("right dimension {} appears more than once in the result dimensions".format(dimension))
+            observed_right_dimensions.add(dimension)
+    # }}}
+    # Check that the obserbed numbers of dimensions are consistent with the expected numbers {{{
+    missing_left_dimensions = frozenset(range(max(observed_left_dimensions)))-observed_left_dimensions
+    if missing_left_dimensions:
+        raise ValueError("The following left dimensions do not appear in the arguments: {}".format(missing_left_dimensions))
+    assert number_of_left_dimensions == len(observed_left_dimensions)
+    missing_right_dimensions = frozenset(range(max(observed_right_dimensions)))-observed_right_dimensions
+    if missing_right_dimensions:
+        raise ValueError("The following right dimensions do not appear in the arguments: {}".format(missing_right_dimensions))
+    assert number_of_right_dimensions == len(observed_right_dimensions)
     # }}}
     def absorb(contractChunks,left_sparse_tensor,right_sparse_tensor): # {{{
         # Cache the components of the tensors {{{
@@ -36,6 +79,12 @@ def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimen
         left_chunks = left_sparse_tensor.chunks
         right_dimensions = right_sparse_tensor.dimensions
         right_chunks = right_sparse_tensor.chunks
+        # }}}
+        # Check that the tensors have the correct numbers of dimensions {{{
+        if len(left_dimensions) != number_of_left_dimensions:
+            raise ValueError("The left tensor was expected to have {} dimensions but it actually has {} dimensions.".format(number_of_left_dimensions,len(left_dimensions)))
+        if len(right_dimensions) != number_of_right_dimensions:
+            raise ValueError("The right tensor was expected to have {} dimensions but it actually has {} dimensions.".format(number_of_right_dimensions,len(right_dimensions)))
         # }}}
         # Compute the result dimensions {{{
         result_dimensions = tuple(dimension_source.getResultDimension(left_dimensions,right_dimensions) for dimension_source in result_dimension_sources)
