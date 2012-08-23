@@ -107,7 +107,7 @@ class TestNormalization(TestCase): # {{{
             [Join(i+4,2,8,i) for i in range(4)],
             [[(i+4,3)] for i in range(4)]+[[(8,4)]]
         )(*corners_data + sides_data + (center_data,))
-        self.assertDataAlmostEqual(observed,exact)
+        self.assertDataAlmostEqual(observed,exact,rtol=1e-7)
     # }}}
     @with_checker
     def test_W_state(self, # {{{
