@@ -6,7 +6,7 @@ from random import randint
 from . import *
 from ..data import *
 from ..normalization import *
-from ..tensors.normalization import *
+from ..tensors.dense import *
 # }}}
 
 class TestNormalization(TestCase): # {{{
@@ -16,8 +16,8 @@ class TestNormalization(TestCase): # {{{
         corners_data = tuple(NDArrayData.newRandom(*(randint(1,n),)*2) for _ in range(4))
         center_data = NDArrayData.newRandom(*(randint(1,n),)*5)
         sides_data = tuple(NDArrayData.newRandom(corners_data[i].shape[1],corners_data[(i-1)%4].shape[0],center_data.shape[i],center_data.shape[i]) for i in range(4))
-        corners = tuple(map(NormalizationCorner,corners_data))
-        sides = tuple(NormalizationSide(i,sides_data[i]) for i in range(4))
+        corners = tuple(map(DenseCorner,corners_data))
+        sides = tuple(DenseSide(sides_data[i]) for i in range(4))
         return corners_data, sides_data, center_data, corners, sides
     # }}}
     @with_checker
@@ -28,7 +28,7 @@ class TestNormalization(TestCase): # {{{
         corners = list(corners)
         sides = list(sides)
         corners[0] = corners[0].absorbFromLeft(sides[1])
-        sides[0] = sides[0].absorbCenter(center_data)
+        sides[0] = sides[0].absorbCenterSS(0,center_data)
         corners[-1] = corners[-1].absorbFromRight(sides[-1])
         self.assertDataAlmostEqual(normalization.corners[0].data,corners[0].data)
         self.assertDataAlmostEqual(normalization.corners[1].data,corners[1].data)
@@ -47,7 +47,7 @@ class TestNormalization(TestCase): # {{{
         corners = list(corners)
         sides = list(sides)
         corners[1] = corners[1].absorbFromLeft(sides[2])
-        sides[1] = sides[1].absorbCenter(center_data)
+        sides[1] = sides[1].absorbCenterSS(1,center_data)
         corners[0] = corners[0].absorbFromRight(sides[0])
         self.assertDataAlmostEqual(normalization.corners[0].data,corners[0].data)
         self.assertDataAlmostEqual(normalization.corners[1].data,corners[1].data)
@@ -66,7 +66,7 @@ class TestNormalization(TestCase): # {{{
         corners = list(corners)
         sides = list(sides)
         corners[2] = corners[2].absorbFromLeft(sides[3])
-        sides[2] = sides[2].absorbCenter(center_data)
+        sides[2] = sides[2].absorbCenterSS(2,center_data)
         corners[1] = corners[1].absorbFromRight(sides[1])
         self.assertDataAlmostEqual(normalization.corners[0].data,corners[0].data)
         self.assertDataAlmostEqual(normalization.corners[1].data,corners[1].data)
@@ -85,7 +85,7 @@ class TestNormalization(TestCase): # {{{
         corners = list(corners)
         sides = list(sides)
         corners[3] = corners[3].absorbFromLeft(sides[0])
-        sides[3] = sides[3].absorbCenter(center_data)
+        sides[3] = sides[3].absorbCenterSS(3,center_data)
         corners[2] = corners[2].absorbFromRight(sides[2])
         self.assertDataAlmostEqual(normalization.corners[0].data,corners[0].data)
         self.assertDataAlmostEqual(normalization.corners[1].data,corners[1].data)
@@ -107,7 +107,7 @@ class TestNormalization(TestCase): # {{{
             [Join(i+4,2,8,i) for i in range(4)],
             [[(i+4,3)] for i in range(4)]+[[(8,4)]]
         )(*corners_data + sides_data + (center_data,))
-        self.assertDataAlmostEqual(observed,exact,rtol=1e-7)
+        self.assertDataAlmostEqual(observed,exact,rtol=1e-6)
     # }}}
     @with_checker
     def test_W_state(self, # {{{
@@ -125,12 +125,12 @@ class TestNormalization(TestCase): # {{{
         center[3,2,2,3,1] = 1
         center = NDArrayData(center)
 
-        corners = [NormalizationCorner(NDArrayData.newTrivial((1,1)))]*4
+        corners = [DenseCorner(NDArrayData.newTrivial((1,1)))]*4
         sides = [
-            NormalizationSide(0,NDArrayData.newOuterProduct([1],[1],[0,1,0,1],[0,1,0,1])),
-            NormalizationSide(1,NDArrayData.newOuterProduct([1],[1],[1,0,1,0],[1,0,1,0])),
-            NormalizationSide(2,NDArrayData.newOuterProduct([1],[1],[1,0,1,0],[1,0,1,0])),
-            NormalizationSide(3,NDArrayData.newOuterProduct([1],[1],[0,1,0,1],[0,1,0,1])),
+            DenseSide(NDArrayData.newOuterProduct([1],[1],[0,1,0,1],[0,1,0,1])),
+            DenseSide(NDArrayData.newOuterProduct([1],[1],[1,0,1,0],[1,0,1,0])),
+            DenseSide(NDArrayData.newOuterProduct([1],[1],[1,0,1,0],[1,0,1,0])),
+            DenseSide(NDArrayData.newOuterProduct([1],[1],[0,1,0,1],[0,1,0,1])),
         ]
         normalization = Normalization(corners,sides)
 

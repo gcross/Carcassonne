@@ -12,7 +12,7 @@ class Normalization(): # {{{
     # }}}
     def absorbCenter(self,direction,center): # {{{
         self.corners[direction] = self.corners[direction].absorbFromLeft(self.sides[(direction+1)%4])
-        self.sides[direction] = self.sides[direction].absorbCenter(center)
+        self.sides[direction] = self.sides[direction].absorbCenterSS(direction,center)
         self.corners[(direction-1)%4] = self.corners[(direction-1)%4].absorbFromRight(self.sides[(direction-1)%4])
     # }}}
     def computeNormalization(self,center): # {{{
