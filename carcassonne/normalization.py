@@ -1,7 +1,4 @@
 # Imports {{{
-from numpy import dot
-
-from .utils import FromRight, FromBoth, formAbsorber, formContractor
 # }}}
 
 # Classes {{{

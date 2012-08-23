@@ -336,7 +336,7 @@ def formContractor(order,joins,result_joins): # {{{
 # }}}
 def formDataContractor(joins,final_groups,tensor_ranks=None): # {{{
     # Tabulate all of the tensor indices to compute the number of arguments and their ranks {{{
-    observed_tensor_indices = defaultdict(lambda: set())
+    observed_tensor_indices = defaultdict(set)
     observed_joins = set()
     def observeTensorIndices(tensor_number,*indices):
         if tensor_number < 0:

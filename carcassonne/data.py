@@ -1,11 +1,9 @@
 # Imports {{{
-from collections import defaultdict
 from copy import copy
 from functools import reduce
-from numpy import allclose, array, multiply, ones, prod, tensordot, zeros
-from random import randint
+from numpy import allclose, array, multiply, ones, prod, tensordot
 
-from .utils import applyPermutation, crand, randomComplexSample
+from .utils import crand, randomComplexSample
 # }}}
 
 # Base classes {{{
@@ -26,8 +24,8 @@ class NDArrayData(Data): # {{{
     @classmethod # newFilled {{{
     def newFilled(cls,shape,value,dtype=None):
         if not dtype:
-            dtype = typeof(value)
-        _arr = nd_array(shape,dtype)
+            dtype = type(value)
+        _arr = ndarray(shape,dtype)
         _arr[...] = value
         return NDArrayData(_arr)
     # }}}

@@ -3,8 +3,6 @@ from collections import namedtuple
 from functools import partial
 import itertools
 from numpy import ndarray, zeros
-
-from .utils import FromLeft, FromRight, FromBoth
 # }}}
 
 # Types {{{
@@ -31,8 +29,6 @@ def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimen
     number_of_join_dimensions = len(left_join_dimensions)
     assert(number_of_join_dimensions == len(right_join_dimensions))
     number_of_result_dimensions = len(result_dimension_sources)
-    number_of_left_dimensions = number_of_join_dimensions + sum(dimension_source.number_of_left_dimensions for dimension_source in result_dimension_sources)
-    number_of_right_dimensions = number_of_join_dimensions + sum(dimension_source.number_of_right_dimensions for dimension_source in result_dimension_sources)
     # }}}
     def absorb(contractChunks,left_sparse_tensor,right_sparse_tensor): # {{{
         # Cache the components of the tensors {{{
@@ -86,6 +82,9 @@ def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimen
     else:
         return absorb
 # }}}
+def mapSparseChunkValues(f,tensor): # {{{
+    return SparseTensor(tensor.dimensions,{x: f(y) for (x,y) in tensor.chunks.items()})
+# }}}
 # }}}
 
 # Exports {{{
@@ -94,4 +93,5 @@ __all__ = [
 
     "formDenseTensor",
     "formSparseContractor",
+    "mapSparseChunkValues",
 ]# }}}
