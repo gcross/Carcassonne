@@ -10,7 +10,9 @@ from . import *
 class TestFormSparseTensor(TestCase): # {{{
     def test_contract_empty_tensors(self): # {{{
         empty_tensor = SparseTensor((),{})
-        self.assertEqual(formSparseContractor((),(),(),None)(empty_tensor,empty_tensor),empty_tensor)
+        def throwit():
+            raise Exception("Should not have been called!")
+        self.assertEqual(formSparseContractor((),(),(),throwit)(empty_tensor,empty_tensor),empty_tensor)
     # }}}
     def test_outer_product_trivial(self): # {{{
         def contractChunks(c1,c2):
