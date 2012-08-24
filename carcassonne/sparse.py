@@ -27,7 +27,7 @@ def formDenseTensor(sparse_tensor,toArray=None,shape=None,dtype=None): # {{{
             else:
                 shape = ()
     if shape is None:
-        raise ValueError("shape could not be inferred automatically")
+        shape = ()
     dense_tensor = zeros(shape=sparse_tensor.dimensions+shape,dtype=dtype)
     for indices, value in sparse_tensor.chunks.items():
         dense_tensor[indices] += toArray(value)
@@ -73,11 +73,11 @@ def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimen
             observed_right_dimensions.add(dimension)
     # }}}
     # Check that the obserbed numbers of dimensions are consistent with the expected numbers {{{
-    missing_left_dimensions = frozenset(range(max(observed_left_dimensions)))-observed_left_dimensions
+    missing_left_dimensions = frozenset(range(max(observed_left_dimensions)+1 if observed_left_dimensions else 0))-observed_left_dimensions
     if missing_left_dimensions:
         raise ValueError("The following left dimensions do not appear in the arguments: {}".format(missing_left_dimensions))
     assert number_of_left_dimensions == len(observed_left_dimensions)
-    missing_right_dimensions = frozenset(range(max(observed_right_dimensions)))-observed_right_dimensions
+    missing_right_dimensions = frozenset(range(max(observed_right_dimensions)+1 if observed_right_dimensions else 0))-observed_right_dimensions
     if missing_right_dimensions:
         raise ValueError("The following right dimensions do not appear in the arguments: {}".format(missing_right_dimensions))
     assert number_of_right_dimensions == len(observed_right_dimensions)
