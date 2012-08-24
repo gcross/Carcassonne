@@ -106,9 +106,9 @@ class TestSparseSide(TestCase): # {{{
     # }}}
 # }}}
 
-class TestSparseStage1(TestCase): # {{{
+class TestSparseStages(TestCase): # {{{
     @with_checker
-    def test__init__(self, # {{{
+    def test_stage_1(self, # {{{
         sa = irange(5,10),
         sb = irange(5,10),
         sc = irange(5,10),
@@ -123,16 +123,13 @@ class TestSparseStage1(TestCase): # {{{
         B = randomSparseTensor((sb,sc,sd),(db,dc,dd,de),4)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
-        C1 = SparseStage1(SparseCorner(mapSparseChunkValues(DenseCorner,A)),SparseSide(mapSparseChunkValues(DenseSide,B))).tensor
+        C1 = formSparseStage1(SparseCorner(mapSparseChunkValues(DenseCorner,A)),SparseSide(mapSparseChunkValues(DenseSide,B)))
         C1D = NDArrayData(formDenseTensor(C1,toArray=NDArrayData.toArray,shape=(da,dc,dd,de)))
         C2D = AD.contractWith(BD,(1,3),(0,3)).join(0,2,3,1,4,5,6)
         self.assertDataAlmostEqual(C1D,C2D)
     # }}}
-# }}}
-
-class TestSparseStage2(TestCase): # {{{
     @with_checker
-    def test__init__(self, # {{{
+    def test_stage_2(self, # {{{
         sa = irange(5,8),
         sb = irange(5,8),
         sc = irange(5,8),
@@ -148,16 +145,13 @@ class TestSparseStage2(TestCase): # {{{
         B = randomSparseTensor((sd,sa,se),(dd,da,de,de),4)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
-        C1 = SparseStage2(SparseSide(A),SparseSide(B)).tensor
+        C1 = formSparseStage2(A,B)
         C1D = NDArrayData(formDenseTensor(C1,toArray=NDArrayData.toArray,shape=(dd,db,dc,de,dc,de)))
         C2D = AD.contractWith(BD,(0,3),(1,4)).join(5,0,1,6,7,2,3,8,4,9)
         self.assertDataAlmostEqual(C1D,C2D)
     # }}}
-# }}}
-
-class TestSparseStage3(TestCase): # {{{
     @with_checker
-    def test__call__(self, # {{{
+    def test_stage_3(self, # {{{
         sa = irange(5,6),
         sb = irange(5,6),
         sc = irange(5,6),
@@ -179,7 +173,7 @@ class TestSparseStage3(TestCase): # {{{
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
         DD = NDArrayData(formDenseTensor(D,toArray=NDArrayData.toArray))
-        C1D = SparseStage3(SparseSide(mapSparseChunkValues(lambda x: Dummy(data=x),A)),SparseSide(mapSparseChunkValues(lambda x: Dummy(data=x),B)))(C,D)
+        C1D = formSparseStage3(A,B)(C,D)
         C2D = formDataContractor(
             [
                 Join(0,(6,7),2,(0,1)),

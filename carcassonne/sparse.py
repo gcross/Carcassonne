@@ -3,10 +3,18 @@ from collections import namedtuple
 from functools import partial
 import itertools
 from numpy import ndarray, zeros
+
+from .utils import prepend
 # }}}
 
 # Types {{{
 SparseTensor = namedtuple("SparseTensor",["dimensions","chunks"])
+# }}}
+
+# Decorators {{{
+def prependSparseContractor(*args,**keywords): # {{{
+    return prepend(formSparseContractor(*args,**keywords))
+# }}}
 # }}}
 
 # Functions {{{

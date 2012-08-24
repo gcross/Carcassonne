@@ -1,7 +1,7 @@
 # Imports {{{
-from ..sparse import SparseTensor, formSparseContractor
+from ..sparse import SparseTensor, formSparseContractor, prependSparseContractor
 from ..tensors.dense import DenseCorner, formDenseStage1, formDenseStage2
-from ..utils import FromLeft, FromRight, FromBoth, Join, formDataContractor 
+from ..utils import FromLeft, FromRight, FromBoth, Join, formDataContractor, prepend
 # }}}
 
 # Values {{{
@@ -80,46 +80,42 @@ class SparseSide: # {{{
         )
     # }}}
 # }}}
-class SparseStage1: # {{{
-    # def init + friends # {{{
-    _contractor = staticmethod(formSparseContractor(
-        (1,),
-        (0,),
-        [
-            FromLeft(0),
-            FromRight(1),
-            FromRight(2),
-        ],
-        formDenseStage1
-    ))
-    def __init__(self,corner,side):
-        self.tensor = self._contractor(corner.tensor,side.tensor)
-    # }}}
 # }}}
-class SparseStage2: # {{{
-    # def init + friends # {{{
-    _contractor = staticmethod(formSparseContractor(
-        (0,),
-        (1,),
-        [
-            FromRight(0),
-            FromLeft(1),
-            FromLeft(2),
-            FromRight(2),
-        ],
-        formDenseStage2
-    ))
-    def __init__(self,stage1_0,stage1_1):
-        self.tensor = self._contractor(stage1_0.tensor,stage1_1.tensor)
-    # }}}
+
+# def formSparseStage1 {{{
+@prependSparseContractor(
+    (1,),
+    (0,),
+    [
+        FromLeft(0),
+        FromRight(1),
+        FromRight(2),
+    ],
+    formDenseStage1
+)
+def formSparseStage1(contractor,corner,side):
+    return contractor(corner.tensor,side.tensor)
 # }}}
-class SparseStage3: # {{{
-    def __init__(self,stage2_0,stage2_1): # {{{
-        self.tensor0 = stage2_0.tensor
-        self.tensor1 = stage2_1.tensor
-    # }}}
-    # call + friends # {{{
-    _dense_contractor_0 = staticmethod(formDataContractor( # {{{
+
+# def formSparseStage2: {{{
+@prependSparseContractor(
+    (0,),
+    (1,),
+    [
+        FromRight(0),
+        FromLeft(1),
+        FromLeft(2),
+        FromRight(2),
+    ],
+    formDenseStage2
+)
+def formSparseStage2(contractor,stage1_0,stage1_1):
+    return contractor(stage1_0,stage1_1)
+# }}}
+
+# def formSparseStage3: {{{
+@prepend( # {{{
+    formDataContractor( # dense contractor 0 {{{
         [
             Join(1,4,2,1),
             Join(0,(2,3),1,(0,1)),
@@ -133,8 +129,8 @@ class SparseStage3: # {{{
             [(0,1)],
             [(0,0)],
         ]
-    )) # }}}
-    _dense_contractor_1 = staticmethod(formDataContractor( # {{{
+    ), # }}}
+    formDataContractor( # dense contractor 1 {{{
         [
             Join(0,(0,1,2,3),1,(5,6,2,3)),
         ],
@@ -145,8 +141,8 @@ class SparseStage3: # {{{
             [(0,5)],
             [(1,4)],
         ]
-    )) # }}}
-    _sparse_contractor_0 = staticmethod(formSparseContractor( # {{{
+    ), # }}}
+    formSparseContractor( # sparse contractor 0 {{{
         (2,3), # stage 2 tensor 0 indices
         (0,1), # center operator tensor indices
         [
@@ -155,23 +151,38 @@ class SparseStage3: # {{{
             FromRight(2),
             FromRight(3),
         ]
-    )) # }}}
-    _sparse_contractor_1 = staticmethod(formSparseContractor( # {{{
+    ), # }}}
+    formSparseContractor( # sparse contractor 1 {{{
         (0,1,2,3), # stage 2 tensor 1 indices
         (0,1,2,3), # intermediate tensor indices
         []
-    )) # }}}
-    def __call__(self,state_center_data,operator_center_tensor):
-        def contractChunks(dense,operator_center_data):
-            return self._dense_contractor_0(dense.data,state_center_data,operator_center_data)
-        intermediate_tensor = self._sparse_contractor_0(contractChunks,self.tensor0,operator_center_tensor)
-        final_tensor = self._sparse_contractor_1(lambda x,y: self._dense_contractor_1(x.data,y),self.tensor1,intermediate_tensor)
-        assert final_tensor.dimensions == ()
+    ), # }}}
+) # }}}
+def formSparseStage3( # {{{
+    denseContractor0,
+    denseContractor1,
+    sparseContractor0,
+    sparseContractor1,
+    stage2_0,
+    stage2_1,
+):
+    def multiply(state_center_data,operator_center_tensor):
+        result = sparseContractor1(
+            denseContractor1,
+            stage2_1,
+            sparseContractor0(
+                lambda stage2_0_data,operator_center_data:
+                    denseContractor0(stage2_0_data,state_center_data,operator_center_data),
+                stage2_0,
+                operator_center_tensor
+            )
+        )
+        assert result.dimensions == ()
         try:
-            return final_tensor.chunks[()]
+            return result.chunks[()]
         except KeyError:
             return state_center_data.newZeros(shape=state_center_data.shape,dtype=state_center_data.dtype)
-    # }}}
+    return multiply
 # }}}
 # }}}
 
@@ -180,8 +191,8 @@ __all__ = [
     "SparseCorner",
     "SparseSide",
 
-    "SparseStage1",
-    "SparseStage2",
-    "SparseStage3",
+    "formSparseStage1",
+    "formSparseStage2",
+    "formSparseStage3",
 ]
 # }}}
