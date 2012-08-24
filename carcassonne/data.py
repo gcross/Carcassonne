@@ -1,7 +1,7 @@
 # Imports {{{
 from copy import copy
 from functools import reduce
-from numpy import allclose, array, multiply, ones, prod, tensordot
+from numpy import allclose, array, multiply, ones, prod, tensordot, zeros
 
 from .utils import crand, randomComplexSample
 # }}}
@@ -40,6 +40,10 @@ class NDArrayData(Data): # {{{
     @classmethod # newTrivial {{{
     def newTrivial(cls,shape,dtype=int):
         return cls(ones(shape,dtype=dtype))
+    # }}}
+    @classmethod # newTrivial {{{
+    def newZeros(cls,shape,dtype=int):
+        return cls(zeros(shape,dtype=dtype))
     # }}}
   # }}}
   # Instance methods {{{
@@ -101,6 +105,7 @@ class NDArrayData(Data): # {{{
   # }}}
   # Properties {{{
 
+    dtype = property(fget = lambda self: self._arr.dtype)
     ndim = property(fget = lambda self: self._arr.ndim)
     shape = property(fget = lambda self: self._arr.shape)
 

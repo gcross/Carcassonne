@@ -7,6 +7,10 @@ class DenseCorner: # {{{
     def __init__(self,data): # {{{
         self.data = data
     # }}}
+    def __iadd__(self,other): # {{{
+        self.data += other.data
+        return self
+    # }}}
     # def absorbFromLeft + friends # {{{
     _absorbFromLeft = staticmethod(formDataContractor(
         [Join(0,0,1,1)],
@@ -34,6 +38,10 @@ class DenseCorner: # {{{
 class DenseSide: # {{{
     def __init__(self,data): # {{{
         self.data = data
+    # }}}
+    def __iadd__(self,other): # {{{
+        self.data += other.data
+        return self
     # }}}
     # def absorbCenterSS + friends # {{{
     _absorbCenterSS = [

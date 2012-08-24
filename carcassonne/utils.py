@@ -502,6 +502,19 @@ def invertPermutation(permutation): # {{{
 def randomComplexSample(shape): # {{{
     return random_sample(shape)*2-1+random_sample(shape)*2j-1j
 # }}}
+def replaceAt(iterable,index,new_value): # {{{
+    return type(iterable)(old_value if i != index else new_value for (i,old_value) in enumerate(iterable))
+# }}}
+# }}}
+
+# Index functions {{{
+def O(i): return (i+2)%4
+def L(i): return (i+1)%4
+def R(i): return (i-1)%4
+def A(d,i): return i-1 if i > d else i
+def OA(i): return A(i,O(i))
+def LA(i): return A(i,L(i))
+def RA(i): return A(i,R(i))
 # }}}
 
 # Exports {{{
@@ -522,5 +535,14 @@ __all__ = [
     "formDataContractor",
     "invertPermutation",
     "randomComplexSample",
+    "replaceAt",
+
+    "O",
+    "L",
+    "R",
+    "A",
+    "OA",
+    "LA",
+    "RA",
 ]
 # }}}

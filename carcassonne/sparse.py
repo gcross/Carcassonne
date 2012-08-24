@@ -10,18 +10,27 @@ SparseTensor = namedtuple("SparseTensor",["dimensions","chunks"])
 # }}}
 
 # Functions {{{
-def formDenseTensor(sparse_tensor,dtype=None): # {{{
+def formDenseTensor(sparse_tensor,toArray=None,shape=None,dtype=None): # {{{
+    if toArray is None:
+        toArray = lambda x: x
     dimensions = sparse_tensor.dimensions
-    if not dtype and sparse_tensor.chunks:
-        value = next(iter(sparse_tensor.chunks.values()))
-        if isinstance(value,ndarray):
-            dtype = value.dtype
-            dimensions +=  value.shape
-        else:
-            dtype = type(value)
-    dense_tensor = zeros(shape=dimensions,dtype=dtype)
+    if sparse_tensor.chunks:
+        value = toArray(next(iter(sparse_tensor.chunks.values())))
+        if dtype is None:
+            if hasattr(value,"dtype"):
+                dtype = value.dtype
+            else:
+                dtype = type(value)
+        if shape is None:
+            if hasattr(value,"shape"):
+                shape = value.shape
+            else:
+                shape = ()
+    if shape is None:
+        raise ValueError("shape could not be inferred automatically")
+    dense_tensor = zeros(shape=sparse_tensor.dimensions+shape,dtype=dtype)
     for indices, value in sparse_tensor.chunks.items():
-        dense_tensor[indices] += value
+        dense_tensor[indices] += toArray(value)
     return dense_tensor
 # }}}
 def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimension_sources,contractChunks=None): # {{{
