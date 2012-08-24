@@ -129,7 +129,7 @@ class DenseStage1: # {{{
 # }}}
 
 class DenseStage2: # {{{
-    # def absorbFromLeft + friends # {{{
+    # def init + friends # {{{
     @prependDataContractor(
         [Join(0,0,1,1)],
         [
@@ -151,7 +151,7 @@ class DenseStage3: # {{{
         self.data0 = stage2_0.data.join((0,1),4,5,2,3)
         self.data1 = stage2_1.data.join((1,0),4,5,2,3)
     # }}}
-    # operator() + friends # {{{
+    # call + friends # {{{
     @prependDataContractor(
         [
             Join(0,[3,4],2,[0,1]),
