@@ -1,5 +1,6 @@
 # Imports {{{
 from collections import defaultdict
+from functools import partial
 from numpy import tensordot
 from numpy.random import rand, random_sample
 # }}}
@@ -166,13 +167,15 @@ class FromBoth: # {{{
 # }}}
 
 # Decorators {{{
-class prependDataContractor: # {{{
+class prepend: # {{{
     def __init__(self,*args,**keywords):
-        self.contractor = formDataContractor(*args,**keywords)
+        self.args = args
+        self.keywords = keywords
     def __call__(self,f):
-        def new_f(*args,**keywords):
-            return f(self.contractor,*args,**keywords)
-        return new_f
+        return partial(f,*self.args,**self.keywords)
+# }}}
+def prependDataContractor(*args,**keywords): # {{{
+    return prepend(formDataContractor(*args,**keywords))
 # }}}
 # }}}
 
@@ -526,6 +529,9 @@ __all__ = [
     "FromRight",
     "FromBoth",
     "Join",
+
+    "prepend",
+    "prependDataContractor",
 
     "applyIndexMapTo",
     "applyPermutation",
