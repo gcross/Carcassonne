@@ -3,7 +3,6 @@ from numpy import dot, multiply
 from paycheck import *
 
 from ..data import NDArrayData
-import carcassonne.tensors.dense as CTD
 from ..tensors.dense import *
 from . import *
 # }}}
@@ -105,7 +104,7 @@ class TestDenseStage1(TestCase): # {{{
     ):
         A = NDArrayData.newRandom(a,b)
         B = NDArrayData.newRandom(b,c,d,e)
-        C1 = CTD.DenseStage1(DenseCorner(A),DenseSide(B)).data
+        C1 = DenseStage1(DenseCorner(A),DenseSide(B)).data
         C2 = A.contractWith(B,(1,),(0,))
         self.assertDataAlmostEqual(C1,C2)
     # }}}
@@ -124,7 +123,7 @@ class TestDenseStage2(TestCase): # {{{
     ):
         A = NDArrayData.newRandom(a,b,c,d)
         B = NDArrayData.newRandom(e,a,f,g)
-        C1 = CTD.DenseStage2(Dummy(data=A),Dummy(data=B)).data
+        C1 = DenseStage2(Dummy(data=A),Dummy(data=B)).data
         C2 = A.contractWith(B,(0,),(1,)).join(3,0,1,4,2,5)
         self.assertDataAlmostEqual(C1,C2)
     # }}}
@@ -132,7 +131,7 @@ class TestDenseStage2(TestCase): # {{{
 
 class TestDenseStage3(TestCase): # {{{
     @with_checker
-    def test__init__(self, # {{{
+    def test__call__(self, # {{{
         a = irange(1,5),
         b = irange(1,5),
         c = irange(1,5),
@@ -144,7 +143,7 @@ class TestDenseStage3(TestCase): # {{{
         A = NDArrayData.newRandom(a,b,c,d,c,d)
         B = NDArrayData.newRandom(b,a,e,f,e,f)
         C = NDArrayData.newRandom(c,d,e,f,g)
-        D1 = CTD.DenseStage3(Dummy(data=A),Dummy(data=B))(C)
+        D1 = DenseStage3(Dummy(data=A),Dummy(data=B))(C)
         AB = A.contractWith(B,(0,1),(1,0)).join(0,1,4,5,2,3,6,7)
         D2 = AB.contractWith(C,(0,1,2,3),(0,1,2,3))
         self.assertDataAlmostEqual(D1,D2)

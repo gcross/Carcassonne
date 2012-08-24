@@ -104,3 +104,97 @@ class TestSparseSide(TestCase): # {{{
         self.assertDataAlmostEqual(D1D,D2D,atol=1e-3,rtol=1e-3)
     # }}}
 # }}}
+
+class TestSparseStage1(TestCase): # {{{
+    @with_checker
+    def test__init__(self, # {{{
+        sa = irange(5,10),
+        sb = irange(5,10),
+        sc = irange(5,10),
+        sd = irange(5,10),
+        da = irange(1,5),
+        db = irange(1,5),
+        dc = irange(1,5),
+        dd = irange(1,5),
+        de = irange(1,5),
+    ):
+        A = randomSparseTensor((sa,sb),(da,db),4)
+        B = randomSparseTensor((sb,sc,sd),(db,dc,dd,de),4)
+        AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
+        BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
+        C1 = SparseStage1(SparseCorner(mapSparseChunkValues(DenseCorner,A)),SparseSide(mapSparseChunkValues(DenseSide,B))).tensor
+        C1D = NDArrayData(formDenseTensor(C1,toArray=lambda x: x.data.toArray(),shape=(da,dc,dd,de)))
+        C2D = AD.contractWith(BD,(1,3),(0,3)).join(0,2,3,1,4,5,6)
+        self.assertDataAlmostEqual(C1D,C2D)
+    # }}}
+# }}}
+
+class TestSparseStage2(TestCase): # {{{
+    @with_checker
+    def test__init__(self, # {{{
+        sa = irange(5,8),
+        sb = irange(5,8),
+        sc = irange(5,8),
+        sd = irange(5,8),
+        se = irange(5,8),
+        da = irange(1,3),
+        db = irange(1,3),
+        dc = irange(1,3),
+        dd = irange(1,3),
+        de = irange(1,3),
+    ):
+        A = randomSparseTensor((sa,sb,sc),(da,db,dc,dc),4)
+        B = randomSparseTensor((sd,sa,se),(dd,da,de,de),4)
+        AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
+        BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
+        C1 = SparseStage2(SparseSide(mapSparseChunkValues(DenseSide,A)),SparseSide(mapSparseChunkValues(DenseSide,B))).tensor
+        C1D = NDArrayData(formDenseTensor(C1,toArray=lambda x: x.data.toArray(),shape=(dd,db,dc,de,dc,de)))
+        C2D = AD.contractWith(BD,(0,3),(1,4)).join(5,0,1,6,7,2,3,8,4,9)
+        self.assertDataAlmostEqual(C1D,C2D)
+    # }}}
+# }}}
+
+class TestSparseStage3(TestCase): # {{{
+    @with_checker
+    def test__call__(self, # {{{
+        sa = irange(5,6),
+        sb = irange(5,6),
+        sc = irange(5,6),
+        sd = irange(5,6),
+        se = irange(5,6),
+        sf = irange(5,6),
+        da = irange(1,2),
+        db = irange(1,2),
+        dc = irange(1,2),
+        dd = irange(1,2),
+        de = irange(1,2),
+        df = irange(1,2),
+        dp = irange(1,2),
+    ):
+        A = randomSparseTensor((sa,sb,sc,sd),(da,db,dc,dd,dc,dd),4)
+        B = randomSparseTensor((sb,sa,se,sf),(db,da,de,df,de,df),4)
+        C = NDArrayData.newRandom(dc,dd,de,df,dp)
+        D = randomSparseTensor((sc,sd,se,sf),(dp,dp),4)
+        AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
+        BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
+        DD = NDArrayData(formDenseTensor(D,toArray=NDArrayData.toArray))
+        C1D = SparseStage3(SparseSide(mapSparseChunkValues(lambda x: Dummy(data=x),A)),SparseSide(mapSparseChunkValues(lambda x: Dummy(data=x),B)))(C,D)
+        C2D = formDataContractor(
+            [
+                Join(0,(6,7),2,(0,1)),
+                Join(3,5,2,4),
+                Join(1,(6,7),2,(2,3)),
+                Join(0,(0,1,4,5),1,(1,0,5,4)),
+                Join(0,(2,3),3,(0,1)),
+                Join(1,(2,3),3,(2,3)),
+            ],[
+                [(0,8)],
+                [(0,9)],
+                [(1,8)],
+                [(1,9)],
+                [(3,4)],
+            ]
+        )(AD,BD,C,DD)
+        self.assertDataAlmostEqual(C1D,C2D)
+    # }}}
+# }}}

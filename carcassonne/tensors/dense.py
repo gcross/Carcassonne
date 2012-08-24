@@ -126,6 +126,10 @@ class DenseStage1: # {{{
     def __init__(contractor,self,corner,side):
         self.data = contractor(corner.data,side.data)
     # }}}
+    def __iadd__(self,other): # {{{
+        self.data += other.data
+        return self
+    # }}}
 # }}}
 
 class DenseStage2: # {{{
@@ -143,6 +147,10 @@ class DenseStage2: # {{{
     )
     def __init__(contractor,self,stage1_0,stage1_1):
         self.data = contractor(stage1_0.data,stage1_1.data)
+    # }}}
+    def __iadd__(self,other): # {{{
+        self.data += other.data
+        return self
     # }}}
 # }}}
 
@@ -176,5 +184,9 @@ class DenseStage3: # {{{
 __all__ = [
     "DenseCorner",
     "DenseSide",
+
+    "DenseStage1",
+    "DenseStage2",
+    "DenseStage3",
 ]
 # }}}
