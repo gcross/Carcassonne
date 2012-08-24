@@ -62,7 +62,7 @@ class DenseSide: # {{{
         )
     # }}}
     # def absorbCenterSOS + friends {{{
-    _absorbCenterSOS = [formDataContractor( # {{{
+    _absorbCenterSOS = [formDataContractor(
         # 0 = side, 1 = state, 2 = state*, 3 = operator
         [
             Join(3,0,2,4),
@@ -76,20 +76,19 @@ class DenseSide: # {{{
             [(1,(i+2)%4)],
             [(2,(i+2)%4)],
         ]
-    ) for i in range(4)] # }}}
-    # }}}
+    ) for i in range(4)]
     def absorbCenterSOS(self,direction,center_state,center_operator,center_state_conj=None):
         if center_state_conj is None:
             center_state_conj = center_state.conj()
         return DenseSide(
-            self.absorbCenterSOS(
+            self._absorbCenterSOS[direction](
                 self.data,
                 center_state,
                 center_state_conj,
                 center_operator,
             )
         )
-
+    # }}}
     @staticmethod # def formMultiplier {{{
     def formMultiplier(corners,sides):
         return DenseStage3(
