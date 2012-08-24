@@ -93,9 +93,9 @@ class TestDenseSide(TestCase): # {{{
     # }}}
 # }}}
 
-class TestDenseStage1(TestCase): # {{{
+class TestDenseStages(TestCase): # {{{
     @with_checker
-    def test__init__(self, # {{{
+    def test_stage_1(self, # {{{
         a = irange(1,10),
         b = irange(1,10),
         c = irange(1,10),
@@ -104,15 +104,12 @@ class TestDenseStage1(TestCase): # {{{
     ):
         A = NDArrayData.newRandom(a,b)
         B = NDArrayData.newRandom(b,c,d,e)
-        C1 = DenseStage1(DenseCorner(A),DenseSide(B)).data
+        C1 = formDenseStage1(DenseCorner(A),DenseSide(B))
         C2 = A.contractWith(B,(1,),(0,))
         self.assertDataAlmostEqual(C1,C2)
     # }}}
-# }}}
-
-class TestDenseStage2(TestCase): # {{{
     @with_checker
-    def test__init__(self, # {{{
+    def test_stage_2(self, # {{{
         a = irange(1,10),
         b = irange(1,10),
         c = irange(1,10),
@@ -123,15 +120,12 @@ class TestDenseStage2(TestCase): # {{{
     ):
         A = NDArrayData.newRandom(a,b,c,d)
         B = NDArrayData.newRandom(e,a,f,g)
-        C1 = DenseStage2(Dummy(data=A),Dummy(data=B)).data
+        C1 = formDenseStage2(A,B)
         C2 = A.contractWith(B,(0,),(1,)).join(3,0,1,4,2,5)
         self.assertDataAlmostEqual(C1,C2)
     # }}}
-# }}}
-
-class TestDenseStage3(TestCase): # {{{
     @with_checker
-    def test__call__(self, # {{{
+    def test_stage_3(self, # {{{
         a = irange(1,5),
         b = irange(1,5),
         c = irange(1,5),
@@ -143,7 +137,7 @@ class TestDenseStage3(TestCase): # {{{
         A = NDArrayData.newRandom(a,b,c,d,c,d)
         B = NDArrayData.newRandom(b,a,e,f,e,f)
         C = NDArrayData.newRandom(c,d,e,f,g)
-        D1 = DenseStage3(Dummy(data=A),Dummy(data=B))(C)
+        D1 = formDenseStage3(A,B)(C)
         AB = A.contractWith(B,(0,1),(1,0)).join(0,1,4,5,2,3,6,7)
         D2 = AB.contractWith(C,(0,1,2,3),(0,1,2,3))
         self.assertDataAlmostEqual(D1,D2)

@@ -99,84 +99,70 @@ class DenseSide: # {{{
     # }}}
     @staticmethod # def formMultiplier {{{
     def formMultiplier(corners,sides):
-        return DenseStage3(
-            DenseStage2(
-                DenseStage1(corners[0],sides[0]),
-                DenseStage1(corners[1],sides[1]),
+        return formDenseStage3(
+            formDenseStage2(
+                formDenseStage1(corners[0],sides[0]),
+                formDenseStage1(corners[1],sides[1]),
             ),
-            DenseStage2(
-                DenseStage1(corners[2],sides[2]),
-                DenseStage1(corners[3],sides[3]),
+            formDenseStage2(
+                formDenseStage1(corners[2],sides[2]),
+                formDenseStage1(corners[3],sides[3]),
             ),
         )
     # }}}
 # }}}
-
-class DenseStage1: # {{{
-    # def init + friends # {{{
-    @prependDataContractor(
-        [Join(0,1,1,0)],
-        [
-            [(0,0)],
-            [(1,1)],
-            [(1,2)],
-            [(1,3)],
-        ]
-    )
-    def __init__(contractor,self,corner,side):
-        self.data = contractor(corner.data,side.data)
-    # }}}
-    def __iadd__(self,other): # {{{
-        self.data += other.data
-        return self
-    # }}}
 # }}}
 
-class DenseStage2: # {{{
-    # def init + friends # {{{
-    @prependDataContractor(
-        [Join(0,0,1,1)],
-        [
-            [(1,0)],
-            [(0,1)],
-            [(0,2)],
-            [(1,2)],
-            [(0,3)],
-            [(1,3)],
-        ]
-    )
-    def __init__(contractor,self,stage1_0,stage1_1):
-        self.data = contractor(stage1_0.data,stage1_1.data)
-    # }}}
-    def __iadd__(self,other): # {{{
-        self.data += other.data
-        return self
-    # }}}
+# Functions {{{
+# def formDenseStage1 + friends {{{
+@prependDataContractor(
+    [Join(0,1,1,0)],
+    [
+        [(0,0)],
+        [(1,1)],
+        [(1,2)],
+        [(1,3)],
+    ]
+)
+def formDenseStage1(contractor,corner,side):
+    return contractor(corner.data,side.data)
 # }}}
-
-class DenseStage3: # {{{
-    def __init__(self,stage2_0,stage2_1): # {{{
-        self.data0 = stage2_0.data.join((0,1),4,5,2,3)
-        self.data1 = stage2_1.data.join((1,0),4,5,2,3)
-    # }}}
-    # call + friends # {{{
-    @prependDataContractor(
-        [
-            Join(0,[3,4],2,[0,1]),
-            Join(1,[3,4],2,[2,3]),
-            Join(0,0,1,0),
-        ],
-        [
-            [(0,1)],
-            [(0,2)],
-            [(1,1)],
-            [(1,2)],
-            [(2,4)],
-        ]
-    )
-    def __call__(contractor,self,center):
-        return contractor(self.data0,self.data1,center)
-    # }}}
+# def formDenseStage2 + friends {{{
+@prependDataContractor(
+    [Join(0,0,1,1)],
+    [
+        [(1,0)],
+        [(0,1)],
+        [(0,2)],
+        [(1,2)],
+        [(0,3)],
+        [(1,3)],
+    ]
+)
+def formDenseStage2(contractor,stage1_0,stage1_1):
+    return contractor(stage1_0,stage1_1)
+# }}}
+# def formDenseStage3 + friends {{{
+@prependDataContractor(
+    [
+        Join(0,[3,4],2,[0,1]),
+        Join(1,[3,4],2,[2,3]),
+        Join(0,0,1,0),
+    ],
+    [
+        [(0,1)],
+        [(0,2)],
+        [(1,1)],
+        [(1,2)],
+        [(2,4)],
+    ]
+)
+def formDenseStage3(contractor,stage2_0,stage2_1):
+    data0 = stage2_0.join((0,1),4,5,2,3)
+    data1 = stage2_1.join((1,0),4,5,2,3)
+    def multiply(center):
+        return contractor(data0,data1,center)
+    return multiply
 # }}}
 # }}}
 
@@ -185,8 +171,8 @@ __all__ = [
     "DenseCorner",
     "DenseSide",
 
-    "DenseStage1",
-    "DenseStage2",
-    "DenseStage3",
+    "formDenseStage1",
+    "formDenseStage2",
+    "formDenseStage3",
 ]
 # }}}

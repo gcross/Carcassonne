@@ -1,6 +1,6 @@
 # Imports {{{
 from ..sparse import SparseTensor, formSparseContractor
-from ..tensors.dense import DenseCorner, DenseStage1, DenseStage2
+from ..tensors.dense import DenseCorner, formDenseStage1, formDenseStage2
 from ..utils import FromLeft, FromRight, FromBoth, Join, formDataContractor 
 # }}}
 
@@ -90,7 +90,7 @@ class SparseStage1: # {{{
             FromRight(1),
             FromRight(2),
         ],
-        DenseStage1
+        formDenseStage1
     ))
     def __init__(self,corner,side):
         self.tensor = self._contractor(corner.tensor,side.tensor)
@@ -107,7 +107,7 @@ class SparseStage2: # {{{
             FromLeft(2),
             FromRight(2),
         ],
-        DenseStage2
+        formDenseStage2
     ))
     def __init__(self,stage1_0,stage1_1):
         self.tensor = self._contractor(stage1_0.tensor,stage1_1.tensor)
