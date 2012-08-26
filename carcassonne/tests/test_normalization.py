@@ -13,8 +13,8 @@ class TestNormalization(TestCase): # {{{
     @staticmethod # generateData # {{{
     def generateData():
         n = 5
-        corners_data = tuple(NDArrayData.newRandom(*(randint(1,n),)*2) for _ in range(4))
-        center_data = NDArrayData.newRandom(*(randint(1,n),)*5)
+        corners_data = tuple(NDArrayData.newRandom(*(randint(1,n) for _ in range(2))) for _ in range(4))
+        center_data = NDArrayData.newRandom(*(randint(1,n) for _ in range(5)))
         sides_data = tuple(NDArrayData.newRandom(corners_data[i].shape[1],corners_data[(i-1)%4].shape[0],center_data.shape[i],center_data.shape[i]) for i in range(4))
         corners = tuple(map(DenseCorner,corners_data))
         sides = tuple(DenseSide(sides_data[i]) for i in range(4))
