@@ -129,6 +129,21 @@ class TestCase(unittest.TestCase): # {{{
         self.assertTrue(v1.allcloseTo(v2,rtol=rtol,atol=atol))
     # }}}
 
+    def assertSparseTensorsAlmostEqual(self,x,y,rtol=1e-05,atol=1e-05): # {{{
+        self.assertEqual(x.dimensions,y.dimensions)
+        x = x.chunks
+        y = y.chunks
+        xmy = x.keys() - y.keys()
+        ymx = y.keys() - x.keys()
+        self.assertEqual((xmy,ymx),(set(),set()))
+        for index in x:
+            self.assertDataAlmostEqual(x[index],y[index])
+    # }}}
+
+    def assertSparseTensorWithWrappedDataAlmostEqual(self,x,y,rtol=1e-05,atol=1e-05): # {{{
+        return self.assertSparseTensorsAlmostEqual(mapSparseChunkValues(lambda x: x.data,x),mapSparseChunkValues(lambda y: y.data,y),rtol,atol)
+    # }}}
+
     def assertNormalized(self,tensor,index): # {{{
         self.assertAllClose(
             tensordot(tensor.conj(),tensor,(withoutIndex(range(tensor.ndim),index),)*2),
