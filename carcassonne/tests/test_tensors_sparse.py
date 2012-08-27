@@ -28,11 +28,7 @@ class TestSparseCorner(TestCase): # {{{
         B = randomSparseTensor((sc,sa,sd),(dc,da,dd,de),4)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
-        C1 = absorbSparseSideIntoCornerFromLeft(
-                direction,
-                A,
-                mapSparseChunkValues(DenseSide,B)
-        )
+        C1 = absorbSparseSideIntoCornerFromLeft(direction,A,B)
         C1D = NDArrayData(formDenseTensor(C1,NDArrayData.toArray,shape=(dc,db*dd*de)))
         C2D = AD.contractWith(BD,(0,2),(1,4)).join(2,(0,3),4,(1,5,6))
         self.assertDataAlmostEqual(C1D,C2D)
@@ -54,11 +50,7 @@ class TestSparseCorner(TestCase): # {{{
         B = randomSparseTensor((sb,sc,sd),(db,dc,dd,de),4)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
-        C1 = absorbSparseSideIntoCornerFromRight(
-                direction,
-                A,
-                mapSparseChunkValues(DenseSide,B)
-        )
+        C1 = absorbSparseSideIntoCornerFromRight(direction,A,B)
         C1D = NDArrayData(formDenseTensor(C1,NDArrayData.toArray,shape=(da*dd*de,dc)))
         C2D = AD.contractWith(BD,(1,3),(0,3)).join((0,3),2,(1,5,6),4)
         self.assertDataAlmostEqual(C1D,C2D)
@@ -91,8 +83,8 @@ class TestSparseSide(TestCase): # {{{
         C = randomSparseTensor(replaceAt((sd,se,sf,sg),i,sc),(dp,dp),4)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         CD = NDArrayData(formDenseTensor(C,toArray=NDArrayData.toArray))
-        D1 = absorbSparseCenterSOSIntoSide(i,mapSparseChunkValues(DenseSide,A),B,C)
-        D1D = NDArrayData(formDenseTensor(D1,toArray = lambda x: x.data.toArray(),shape=(da*B_shape[L(i)]**2,db*B_shape[R(i)]**2,B_shape[O(i)],B_shape[O(i)])))
+        D1 = absorbSparseCenterSOSIntoSide(i,A,B,C)
+        D1D = NDArrayData(formDenseTensor(D1,toArray=NDArrayData.toArray,shape=(da*B_shape[L(i)]**2,db*B_shape[R(i)]**2,B_shape[O(i)],B_shape[O(i)])))
         D2D = formDataContractor(
             [
                 Join(0,5,1,i),
@@ -132,7 +124,7 @@ class TestSparseStages(TestCase): # {{{
         B = randomSparseTensor((sb,sc,sd),(db,dc,dd,de),4)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
-        C1 = formExpectationStage1(A,mapSparseChunkValues(DenseSide,B))
+        C1 = formExpectationStage1(A,B)
         C1D = NDArrayData(formDenseTensor(C1,toArray=NDArrayData.toArray,shape=(da,dc,dd,de)))
         C2D = AD.contractWith(BD,(1,3),(0,3)).join(0,2,3,1,4,5,6)
         self.assertDataAlmostEqual(C1D,C2D)

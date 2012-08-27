@@ -35,7 +35,7 @@ class TestExpectation(TestCase): # {{{
             for i in range(4)
         )
         corners = corners_tensor
-        sides = tuple(mapSparseChunkValues(DenseSide,side_tensor) for side_tensor in sides_tensor)
+        sides = sides_tensor
         return corners_tensor, sides_tensor, state_center_data, operator_center_tensor, corners, sides
     # }}}
     @with_checker(number_of_calls=40)
@@ -52,10 +52,10 @@ class TestExpectation(TestCase): # {{{
         self.assertSparseTensorsAlmostEqual(expectation.corners[1],corners[1])
         self.assertSparseTensorsAlmostEqual(expectation.corners[2],corners[2])
         self.assertSparseTensorsAlmostEqual(expectation.corners[3],corners[3])
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[0],sides[0])
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[1],sides[1])
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[2],sides[2])
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[3],sides[3])
+        self.assertSparseTensorsAlmostEqual(expectation.sides[0],sides[0])
+        self.assertSparseTensorsAlmostEqual(expectation.sides[1],sides[1])
+        self.assertSparseTensorsAlmostEqual(expectation.sides[2],sides[2])
+        self.assertSparseTensorsAlmostEqual(expectation.sides[3],sides[3])
     # }}}
     @with_checker(number_of_calls=10)
     def test_formMultiplier(self): # {{{

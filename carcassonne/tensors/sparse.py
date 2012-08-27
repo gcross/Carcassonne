@@ -1,6 +1,6 @@
 # Imports {{{
 from ..sparse import SparseTensor, formSparseContractor, prependSparseContractor
-from ..tensors.dense import absorbDenseSideIntoCornerFromLeft, absorbDenseSideIntoCornerFromRight, formDenseStage1, formDenseStage2
+from ..tensors.dense import absorbDenseSideIntoCornerFromLeft, absorbDenseSideIntoCornerFromRight, absorbDenseCenterSOSIntoSide, formNormalizationStage1, formNormalizationStage2
 from ..utils import FromLeft, FromRight, FromBoth, Join, formDataContractor, prepend
 # }}}
 
@@ -54,7 +54,7 @@ def absorbSparseCenterSOSIntoSide(contractors,direction,side_tensor,state_center
     if state_center_data_conj is None:
         state_center_data_conj = state_center_data.conj()
     def contractChunks(side,operator_center_data):
-        return side.absorbCenterSOS(direction,state_center_data,operator_center_data,state_center_data_conj)
+        return absorbDenseCenterSOSIntoSide(direction,side,state_center_data,operator_center_data,state_center_data_conj)
     return \
         contractors[direction](
             contractChunks,
@@ -84,7 +84,7 @@ def formExpectationMultiplier(corners,sides,operator_center_tensor): # {{{
         FromRight(1),
         FromRight(2),
     ],
-    formDenseStage1
+    formNormalizationStage1
 )
 def formExpectationStage1(contractor,corner,side):
     return contractor(corner,side)
@@ -99,7 +99,7 @@ def formExpectationStage1(contractor,corner,side):
         FromLeft(2),
         FromRight(2),
     ],
-    formDenseStage2
+    formNormalizationStage2
 )
 def formExpectationStage2(contractor,stage1_0,stage1_1):
     return contractor(stage1_0,stage1_1)
