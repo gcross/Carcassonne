@@ -79,4 +79,156 @@ class TestExpectation(TestCase): # {{{
             if not any(isnan(exact.toArray())):
                 raise
     # }}}
+    @staticmethod
+    def makeSillyField(d=1): # {{{
+        corners = [SparseTensor((1,1),{(0,0):NDArrayData.newTrivial((1,1))})]*4
+        D = NDArrayData.newTrivial((1,)*4)
+        sides = [
+            SparseTensor((1,1,4),{(0,0,2): D, (0,0,3): D}),
+            SparseTensor((1,1,4),{(0,0,0): D, (0,0,1): D}),
+            SparseTensor((1,1,4),{(0,0,0): D, (0,0,1): D}),
+            SparseTensor((1,1,4),{(0,0,2): D, (0,0,3): D}),
+        ]
+        I = NDArrayData.newTrivial((d,d))
+        operator_center_tensor = SparseTensor((4,4,4,4),{
+            (0,0,0,0): I,
+            (2,0,2,0): I,
+            (0,2,0,1): I,
+            (2,2,2,2): I,
+            (2,1,0,1): I,
+            (1,0,1,2): I,
+            (2,3,0,3): I,
+            (3,0,3,2): I,
+            (3,1,1,3): I,
+        })
+        return corners, sides, operator_center_tensor
+    # }}}
+    def test_silly_field_no_steps(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        self.assertEqual(expectation.computeExpectation(state_center_data),1)
+    # }}}
+    def test_silly_field_step_0(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        expectation.absorbCenter(0,state_center_data)
+        self.assertEqual(expectation.computeExpectation(state_center_data),2)
+    # }}}
+    def test_silly_field_step_00(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        expectation.absorbCenter(0,state_center_data)
+        expectation.absorbCenter(0,state_center_data)
+        self.assertEqual(expectation.computeExpectation(state_center_data),3)
+    # }}}
+    def test_silly_field_step_01(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        expectation.absorbCenter(0,state_center_data)
+        expectation.absorbCenter(1,state_center_data)
+        self.assertEqual(expectation.computeExpectation(state_center_data),3)
+    # }}}
+    def test_silly_field_step_1(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        expectation.absorbCenter(1,state_center_data)
+        self.assertEqual(expectation.computeExpectation(state_center_data),2)
+    # }}}
+    def test_silly_field_step_10(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        print()
+        for i, corner in enumerate(expectation.corners):
+            print("#{} corner is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,corner).chunks))
+        for i, side in enumerate(expectation.sides):
+            print("#{} side is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,side).chunks))
+        expectation.absorbCenter(1,state_center_data)
+        for i, corner in enumerate(expectation.corners):
+            print("#{} corner is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,corner).chunks))
+        for i, side in enumerate(expectation.sides):
+            print("#{} side is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,side).chunks))
+        expectation.absorbCenter(0,state_center_data)
+        for i, corner in enumerate(expectation.corners):
+            print("#{} corner is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,corner).chunks))
+        for i, side in enumerate(expectation.sides):
+            print("#{} side is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,side).chunks))
+        self.assertEqual(expectation.computeExpectation(state_center_data),4)
+    # }}}
+    def test_silly_field_step_11(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        expectation.absorbCenter(1,state_center_data)
+        expectation.absorbCenter(1,state_center_data)
+        self.assertEqual(expectation.computeExpectation(state_center_data),3)
+    # }}}
+    def test_silly_field_step_2(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        expectation.absorbCenter(2,state_center_data)
+        self.assertEqual(expectation.computeExpectation(state_center_data),2)
+    # }}}
+    def test_silly_field_step_22(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        expectation.absorbCenter(2,state_center_data)
+        expectation.absorbCenter(2,state_center_data)
+        self.assertEqual(expectation.computeExpectation(state_center_data),3)
+    # }}}
+    def test_silly_field_step_23(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        expectation.absorbCenter(2,state_center_data)
+        expectation.absorbCenter(3,state_center_data)
+        self.assertEqual(expectation.computeExpectation(state_center_data),3)
+    # }}}
+    def test_silly_field_step_3(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        expectation.absorbCenter(3,state_center_data)
+        self.assertEqual(expectation.computeExpectation(state_center_data),2)
+    # }}}
+    def test_silly_field_step_33(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        expectation.absorbCenter(3,state_center_data)
+        expectation.absorbCenter(3,state_center_data)
+        self.assertEqual(expectation.computeExpectation(state_center_data),3)
+    # }}}
+    def test_silly_field_step_32(self): # {{{
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+        expectation.absorbCenter(3,state_center_data)
+        expectation.absorbCenter(2,state_center_data)
+        self.assertEqual(expectation.computeExpectation(state_center_data),3)
+    # }}}
+    @with_checker
+    def test_silly_field_random_walk(self, # {{{
+        moves=(irange(0,1),)*4
+    ):
+        corners, sides, operator_center_tensor = self.makeSillyField()
+        state_center_data = NDArrayData.newTrivial((1,)*5)
+        expectation = Expectation(corners,sides,operator_center_tensor)
+
+        directions = sum(([i]*moves[i] for i in range(4)),[])
+        shuffle(directions)
+        for direction in directions:
+            expectation.absorbCenter(direction,state_center_data)
+        self.assertEqual(
+            expectation.computeExpectation(state_center_data),
+            (1+moves[0]+moves[2])*(1+moves[1]+moves[3])
+        )
+    # }}}
 # }}}

@@ -15,10 +15,10 @@ special_indices = [
         "indices_to_redirect": {(0,1):0},
     },
 ]
-corner_left_special_indices = [special_indices[i] for i in  [1,0,0,1]]
-corner_right_special_indices = [special_indices[i] for i in [1,0,0,1]]
-side_left_special_indices = [special_indices[i] for i in    [1,1,0,0]]
-side_right_special_indices = [special_indices[i] for i in   [0,0,1,1]]
+corner_left_special_indices = [{}]*4 #[special_indices[i] for i in  [0,0,1,1]]
+corner_right_special_indices = [{}]*4 #[special_indices[i] for i in [1,0,0,1]]
+side_left_special_indices = [{}]*4 #[special_indices[i] for i in    [1,1,0,0]]
+side_right_special_indices = [{}]*4 #[special_indices[i] for i in   [0,0,1,1]]
 # }}}
 
 # Functions {{{

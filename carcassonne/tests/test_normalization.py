@@ -63,22 +63,22 @@ class TestNormalization(TestCase): # {{{
     ):
         center = zeros((4,)*4+(2,))
         center[0,0,0,0,0] = 1
-        center[1,0,1,0,0] = 1
-        center[0,1,0,1,0] = 1
-        center[1,1,1,1,0] = 1
-        center[1,2,0,2,0] = 1
-        center[2,0,2,1,0] = 1
-        center[1,3,0,3,0] = 1
-        center[3,0,3,1,0] = 1
-        center[3,2,2,3,1] = 1
+        center[2,0,2,0,0] = 1
+        center[0,2,0,2,0] = 1
+        center[2,2,2,2,0] = 1
+        center[2,1,0,1,0] = 1
+        center[1,0,1,2,0] = 1
+        center[2,3,0,3,0] = 1
+        center[3,0,3,2,0] = 1
+        center[3,1,1,3,1] = 1
         center = NDArrayData(center)
 
         corners = [NDArrayData.newTrivial((1,1))]*4
         sides = [
-            NDArrayData.newOuterProduct([1],[1],[0,1,0,1],[0,1,0,1]),
-            NDArrayData.newOuterProduct([1],[1],[1,0,1,0],[1,0,1,0]),
-            NDArrayData.newOuterProduct([1],[1],[1,0,1,0],[1,0,1,0]),
-            NDArrayData.newOuterProduct([1],[1],[0,1,0,1],[0,1,0,1]),
+            NDArrayData.newOuterProduct([1],[1],[0,0,1,1],[0,0,1,1]),
+            NDArrayData.newOuterProduct([1],[1],[1,1,0,0],[1,1,0,0]),
+            NDArrayData.newOuterProduct([1],[1],[1,1,0,0],[1,1,0,0]),
+            NDArrayData.newOuterProduct([1],[1],[0,0,1,1],[0,0,1,1]),
         ]
         normalization = Normalization(corners,sides)
 

@@ -15,7 +15,7 @@ class Expectation: # {{{
         self.sides[direction] = absorbSparseCenterSOSIntoSide(direction,self.sides[direction],state_center_data,self.operator_center_tensor,state_center_data_conj)
         self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(direction,self.corners[R(direction)],self.sides[R(direction)])
     # }}}
-    def computeNormalization(self,state_center_data,state_center_data_conj=None): # {{{
+    def computeExpectation(self,state_center_data,state_center_data_conj=None): # {{{
         if state_center_data_conj is None:
             state_center_data_conj = state_center_data.conj()
         return state_center_data_conj.contractWith(self.formMultiplier()(state_center_data),range(5),range(5)).extractScalar()
