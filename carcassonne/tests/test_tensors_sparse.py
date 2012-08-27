@@ -27,7 +27,11 @@ class TestSparseCorner(TestCase): # {{{
         B = randomSparseTensor((sc,sa,sd),(dc,da,dd,de),4)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
-        C1 = SparseCorner(mapSparseChunkValues(DenseCorner,A)).absorbFromLeft(direction,SparseSide(mapSparseChunkValues(DenseSide,B))).tensor
+        C1 = absorbSparseSideIntoCornerFromLeft(
+                direction,
+                mapSparseChunkValues(DenseCorner,A),
+                SparseSide(mapSparseChunkValues(DenseSide,B))
+        )
         C1D = NDArrayData(formDenseTensor(C1,toArray=lambda x: x.data.toArray(),shape=(dc,db*dd*de)))
         C2D = AD.contractWith(BD,(0,2),(1,4)).join(2,(0,3),4,(1,5,6))
         self.assertDataAlmostEqual(C1D,C2D)
@@ -49,7 +53,11 @@ class TestSparseCorner(TestCase): # {{{
         B = randomSparseTensor((sb,sc,sd),(db,dc,dd,de),4)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
-        C1 = SparseCorner(mapSparseChunkValues(DenseCorner,A)).absorbFromRight(direction,SparseSide(mapSparseChunkValues(DenseSide,B))).tensor
+        C1 = absorbSparseSideIntoCornerFromRight(
+                direction,
+                mapSparseChunkValues(DenseCorner,A),
+                SparseSide(mapSparseChunkValues(DenseSide,B))
+        )
         C1D = NDArrayData(formDenseTensor(C1,toArray=lambda x: x.data.toArray(),shape=(da*dd*de,dc)))
         C2D = AD.contractWith(BD,(1,3),(0,3)).join((0,3),2,(1,5,6),4)
         self.assertDataAlmostEqual(C1D,C2D)
@@ -123,7 +131,7 @@ class TestSparseStages(TestCase): # {{{
         B = randomSparseTensor((sb,sc,sd),(db,dc,dd,de),4)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
-        C1 = formSparseStage1(SparseCorner(mapSparseChunkValues(DenseCorner,A)),SparseSide(mapSparseChunkValues(DenseSide,B)))
+        C1 = formSparseExpectationStage1(mapSparseChunkValues(DenseCorner,A),SparseSide(mapSparseChunkValues(DenseSide,B)))
         C1D = NDArrayData(formDenseTensor(C1,toArray=NDArrayData.toArray,shape=(da,dc,dd,de)))
         C2D = AD.contractWith(BD,(1,3),(0,3)).join(0,2,3,1,4,5,6)
         self.assertDataAlmostEqual(C1D,C2D)
@@ -145,7 +153,7 @@ class TestSparseStages(TestCase): # {{{
         B = randomSparseTensor((sd,sa,se),(dd,da,de,de),4)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
-        C1 = formSparseStage2(A,B)
+        C1 = formSparseExpectationStage2(A,B)
         C1D = NDArrayData(formDenseTensor(C1,toArray=NDArrayData.toArray,shape=(dd,db,dc,de,dc,de)))
         C2D = AD.contractWith(BD,(0,3),(1,4)).join(5,0,1,6,7,2,3,8,4,9)
         self.assertDataAlmostEqual(C1D,C2D)
@@ -168,12 +176,12 @@ class TestSparseStages(TestCase): # {{{
     ):
         A = randomSparseTensor((sa,sb,sc,sd),(da,db,dc,dd,dc,dd),4)
         B = randomSparseTensor((sb,sa,se,sf),(db,da,de,df,de,df),4)
-        C = NDArrayData.newRandom(dc,dd,de,df,dp)
-        D = randomSparseTensor((sc,sd,se,sf),(dp,dp),4)
+        C = randomSparseTensor((sc,sd,se,sf),(dp,dp),4)
+        D = NDArrayData.newRandom(dc,dd,de,df,dp)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
-        DD = NDArrayData(formDenseTensor(D,toArray=NDArrayData.toArray))
-        C1D = formSparseStage3(A,B)(C,D)
+        CD = NDArrayData(formDenseTensor(C,toArray=NDArrayData.toArray))
+        C1D = formSparseExpectationStage3(A,B,C)(D)
         C2D = formDataContractor(
             [
                 Join(0,(6,7),2,(0,1)),
@@ -189,7 +197,7 @@ class TestSparseStages(TestCase): # {{{
                 [(1,9)],
                 [(3,4)],
             ]
-        )(AD,BD,C,DD)
+        )(AD,BD,D,CD)
         try:
             self.assertDataAlmostEqual(C1D,C2D,rtol=1e-3,atol=1e-3)
         except:

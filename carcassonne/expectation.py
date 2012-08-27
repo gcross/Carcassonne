@@ -1,4 +1,6 @@
 # Imports {{{
+from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight
+from .utils import L, R
 # }}}
 
 # Classes {{{
@@ -9,9 +11,9 @@ class Expectation: # {{{
         self.operator_center_tensor = operator_center_tensor
     # }}}
     def absorbCenter(self,direction,state_center_data,state_center_data_conj=None): # {{{
-        self.corners[direction] = self.corners[direction].absorbFromLeft(direction,self.sides[(direction+1)%4])
+        self.corners[direction] = absorbSparseSideIntoCornerFromLeft(direction,self.corners[direction],self.sides[L(direction)])
         self.sides[direction] = self.sides[direction].absorbCenterSOS(direction,state_center_data,self.operator_center_tensor,state_center_data_conj)
-        self.corners[(direction-1)%4] = self.corners[(direction-1)%4].absorbFromRight(direction-1,self.sides[(direction-1)%4])
+        self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(direction,self.corners[R(direction)],self.sides[R(direction)])
     # }}}
     def computeNormalization(self,state_center_data,state_center_data_conj=None): # {{{
         if state_center_data_conj is None:

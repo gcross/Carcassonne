@@ -22,38 +22,6 @@ side_right_special_indices = [special_indices[i] for i in   [0,0,1,1]]
 # }}}
 
 # Classes {{{
-class SparseCorner: # {{{
-    def __init__(self,tensor): # {{{
-        self.tensor = tensor
-    # }}}
-    @staticmethod # constructUsing # {{{
-    def constructUsing(direction,datacls):
-        return SparseCorner(direction,SparseTensor(
-            (1,1),
-            {(1,1): datacls.newTrivial((1,1))},
-        ))
-    # }}}
-    # def absorbFromLeft + friends # {{{
-    _absorbFromLeft = [formSparseContractor(
-        (0,), # my join indices
-        (1,), # side's join indices
-        (FromRight(0),FromBoth(1,2,**special_indices)),
-        DenseCorner.absorbFromLeft
-    ) for special_indices in corner_left_special_indices]
-    def absorbFromLeft(self,direction,side):
-        return SparseCorner(self._absorbFromLeft[direction](self.tensor,side.tensor))
-    # }}}
-    # def absorbFromRight + friends # {{{
-    _absorbFromRight = [formSparseContractor(
-        (1,), # my join indices
-        (0,), # side's join indices
-        (FromBoth(0,2,**special_indices),FromRight(1)),
-        DenseCorner.absorbFromRight
-    ) for special_indices in corner_right_special_indices]
-    def absorbFromRight(self,direction,side):
-        return SparseCorner(self._absorbFromRight[direction](self.tensor,side.tensor))
-    # }}}
-# }}}
 class SparseSide: # {{{
     def __init__(self,tensor): # {{{
         self.tensor = tensor
@@ -81,14 +49,14 @@ class SparseSide: # {{{
     # }}}
     @staticmethod # def formMultiplier {{{
     def formMultiplier(corners,sides,operator_center_tensor):
-        return formSparseStage3(
-            formSparseStage2(
-                formSparseStage1(corners[0],sides[0]),
-                formSparseStage1(corners[1],sides[1]),
+        return formSparseExpectationStage3(
+            formSparseExpectationStage2(
+                formSparseExpectationStage1(corners[0],sides[0]),
+                formSparseExpectationStage1(corners[1],sides[1]),
             ),
-            formSparseStage2(
-                formSparseStage1(corners[2],sides[2]),
-                formSparseStage1(corners[3],sides[3]),
+            formSparseExpectationStage2(
+                formSparseExpectationStage1(corners[2],sides[2]),
+                formSparseExpectationStage1(corners[3],sides[3]),
             ),
             operator_center_tensor,
         )
@@ -96,7 +64,28 @@ class SparseSide: # {{{
 # }}}
 # }}}
 
-# def formSparseStage1 {{{
+# Functions {{{
+# def absorbSparseSideIntoCornerFromLeft + friends # {{{
+@prepend([formSparseContractor(
+    (0,), # corner join indices
+    (1,), # side join indices
+    (FromRight(0),FromBoth(1,2,**special_indices)),
+    DenseCorner.absorbFromLeft
+) for special_indices in corner_left_special_indices])
+def absorbSparseSideIntoCornerFromLeft(contractors,direction,corner,side):
+    return contractors[direction](corner,side.tensor)
+# }}}
+# def absorbSparseSideIntoCornerFromRight + friends # {{{
+@prepend([formSparseContractor(
+    (1,), # corner join indices
+    (0,), # side join indices
+    (FromBoth(0,2,**special_indices),FromRight(1)),
+    DenseCorner.absorbFromRight
+) for special_indices in corner_right_special_indices])
+def absorbSparseSideIntoCornerFromRight(contractors,direction,corner,side):
+    return contractors[direction](corner,side.tensor)
+# }}}
+# def formSparseExpectationStage1 {{{
 @prependSparseContractor(
     (1,),
     (0,),
@@ -107,11 +96,10 @@ class SparseSide: # {{{
     ],
     formDenseStage1
 )
-def formSparseStage1(contractor,corner,side):
-    return contractor(corner.tensor,side.tensor)
+def formSparseExpectationStage1(contractor,corner,side):
+    return contractor(corner,side.tensor)
 # }}}
-
-# def formSparseStage2: {{{
+# def formSparseExpectationStage2: {{{
 @prependSparseContractor(
     (0,),
     (1,),
@@ -123,11 +111,10 @@ def formSparseStage1(contractor,corner,side):
     ],
     formDenseStage2
 )
-def formSparseStage2(contractor,stage1_0,stage1_1):
+def formSparseExpectationStage2(contractor,stage1_0,stage1_1):
     return contractor(stage1_0,stage1_1)
 # }}}
-
-# def formSparseStage3: {{{
+# def formSparseExpectationStage3: {{{
 @prepend( # {{{
     formDataContractor( # dense contractor 0 {{{
         [
@@ -172,7 +159,7 @@ def formSparseStage2(contractor,stage1_0,stage1_1):
         []
     ), # }}}
 ) # }}}
-def formSparseStage3( # {{{
+def formSparseExpectationStage3( # {{{
     denseContractor0,
     denseContractor1,
     sparseContractor0,
@@ -200,14 +187,16 @@ def formSparseStage3( # {{{
     return multiply
 # }}}
 # }}}
+# }}}
 
 # Exports {{{
 __all__ = [
-    "SparseCorner",
     "SparseSide",
 
-    "formSparseStage1",
-    "formSparseStage2",
-    "formSparseStage3",
+    "absorbSparseSideIntoCornerFromLeft",
+    "absorbSparseSideIntoCornerFromRight",
+    "formSparseExpectationStage1",
+    "formSparseExpectationStage2",
+    "formSparseExpectationStage3",
 ]
 # }}}
