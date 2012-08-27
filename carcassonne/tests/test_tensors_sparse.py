@@ -30,10 +30,10 @@ class TestSparseCorner(TestCase): # {{{
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
         C1 = absorbSparseSideIntoCornerFromLeft(
                 direction,
-                mapSparseChunkValues(DenseCorner,A),
+                A,
                 mapSparseChunkValues(DenseSide,B)
         )
-        C1D = NDArrayData(formDenseTensor(C1,toArray=lambda x: x.data.toArray(),shape=(dc,db*dd*de)))
+        C1D = NDArrayData(formDenseTensor(C1,NDArrayData.toArray,shape=(dc,db*dd*de)))
         C2D = AD.contractWith(BD,(0,2),(1,4)).join(2,(0,3),4,(1,5,6))
         self.assertDataAlmostEqual(C1D,C2D)
     # }}}
@@ -56,10 +56,10 @@ class TestSparseCorner(TestCase): # {{{
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
         C1 = absorbSparseSideIntoCornerFromRight(
                 direction,
-                mapSparseChunkValues(DenseCorner,A),
+                A,
                 mapSparseChunkValues(DenseSide,B)
         )
-        C1D = NDArrayData(formDenseTensor(C1,toArray=lambda x: x.data.toArray(),shape=(da*dd*de,dc)))
+        C1D = NDArrayData(formDenseTensor(C1,NDArrayData.toArray,shape=(da*dd*de,dc)))
         C2D = AD.contractWith(BD,(1,3),(0,3)).join((0,3),2,(1,5,6),4)
         self.assertDataAlmostEqual(C1D,C2D)
     # }}}
@@ -132,7 +132,7 @@ class TestSparseStages(TestCase): # {{{
         B = randomSparseTensor((sb,sc,sd),(db,dc,dd,de),4)
         AD = NDArrayData(formDenseTensor(A,toArray=NDArrayData.toArray))
         BD = NDArrayData(formDenseTensor(B,toArray=NDArrayData.toArray))
-        C1 = formExpectationStage1(mapSparseChunkValues(DenseCorner,A),mapSparseChunkValues(DenseSide,B))
+        C1 = formExpectationStage1(A,mapSparseChunkValues(DenseSide,B))
         C1D = NDArrayData(formDenseTensor(C1,toArray=NDArrayData.toArray,shape=(da,dc,dd,de)))
         C2D = AD.contractWith(BD,(1,3),(0,3)).join(0,2,3,1,4,5,6)
         self.assertDataAlmostEqual(C1D,C2D)

@@ -1,6 +1,6 @@
 # Imports {{{
 from ..sparse import SparseTensor, formSparseContractor, prependSparseContractor
-from ..tensors.dense import DenseCorner, formDenseStage1, formDenseStage2
+from ..tensors.dense import absorbDenseSideIntoCornerFromLeft, absorbDenseSideIntoCornerFromRight, formDenseStage1, formDenseStage2
 from ..utils import FromLeft, FromRight, FromBoth, Join, formDataContractor, prepend
 # }}}
 
@@ -27,7 +27,7 @@ side_right_special_indices = [special_indices[i] for i in   [0,0,1,1]]
     (0,), # corner join indices
     (1,), # side join indices
     (FromRight(0),FromBoth(1,2,**special_indices)),
-    DenseCorner.absorbFromLeft
+    absorbDenseSideIntoCornerFromLeft
 ) for special_indices in corner_left_special_indices])
 def absorbSparseSideIntoCornerFromLeft(contractors,direction,corner,side):
     return contractors[direction](corner,side)
@@ -37,7 +37,7 @@ def absorbSparseSideIntoCornerFromLeft(contractors,direction,corner,side):
     (1,), # corner join indices
     (0,), # side join indices
     (FromBoth(0,2,**special_indices),FromRight(1)),
-    DenseCorner.absorbFromRight
+    absorbDenseSideIntoCornerFromRight
 ) for special_indices in corner_right_special_indices])
 def absorbSparseSideIntoCornerFromRight(contractors,direction,corner,side):
     return contractors[direction](corner,side)

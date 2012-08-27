@@ -18,7 +18,7 @@ class TestDenseCorner(TestCase): # {{{
     ) :
         A = NDArrayData.newRandom(a,b)
         B = NDArrayData.newRandom(c,a,d,e)
-        C1 = DenseCorner(A).absorbFromLeft(DenseSide(B)).data
+        C1 = absorbDenseSideIntoCornerFromLeft(A,DenseSide(B))
         C2 = A.contractWith(B,(0,),(1,)).join(1,(0,2,3))
         self.assertDataAlmostEqual(C1,C2)
     # }}}
@@ -32,7 +32,7 @@ class TestDenseCorner(TestCase): # {{{
     ) :
         A = NDArrayData.newRandom(a,b)
         B = NDArrayData.newRandom(b,c,d,e)
-        C1 = DenseCorner(A).absorbFromRight(DenseSide(B)).data
+        C1 = absorbDenseSideIntoCornerFromRight(A,DenseSide(B))
         C2 = A.contractWith(B,(1,),(0,)).join((0,2,3),1)
         self.assertDataAlmostEqual(C1,C2)
     # }}}
@@ -104,7 +104,7 @@ class TestDenseStages(TestCase): # {{{
     ):
         A = NDArrayData.newRandom(a,b)
         B = NDArrayData.newRandom(b,c,d,e)
-        C1 = formDenseStage1(DenseCorner(A),DenseSide(B))
+        C1 = formDenseStage1(A,DenseSide(B))
         C2 = A.contractWith(B,(1,),(0,))
         self.assertDataAlmostEqual(C1,C2)
     # }}}

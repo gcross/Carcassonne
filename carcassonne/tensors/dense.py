@@ -3,38 +3,6 @@ from ..utils import Join, formDataContractor, prependDataContractor
 # }}}
 
 # Classes {{{
-class DenseCorner: # {{{
-    def __init__(self,data): # {{{
-        self.data = data
-    # }}}
-    def __iadd__(self,other): # {{{
-        self.data += other.data
-        return self
-    # }}}
-    # def absorbFromLeft + friends # {{{
-    _absorbFromLeft = staticmethod(formDataContractor(
-        [Join(0,0,1,1)],
-        [
-            [(1,0)],
-            [(0,1),(1,2)],
-        ]
-    ))
-    def absorbFromLeft(self,side):
-        return DenseCorner(self._absorbFromLeft(self.data,side.data.join(0,1,(2,3))))
-    # }}}
-    # def absorbFromRight + friends # {{{
-    _absorbFromRight = staticmethod(formDataContractor(
-        [Join(0,1,1,0)],
-        [
-            [(0,0),(1,2)],
-            [(1,1)],
-        ]
-    ))
-    def absorbFromRight(self,side):
-        return DenseCorner(self._absorbFromRight(self.data,side.data.join(0,1,(2,3))))
-    # }}}
-# }}}
-
 class DenseSide: # {{{
     def __init__(self,data): # {{{
         self.data = data
@@ -114,6 +82,28 @@ class DenseSide: # {{{
 # }}}
 
 # Functions {{{
+# def absorbDenseSideIntoCornerFromLeft + friends # {{{
+@prependDataContractor(
+    [Join(0,0,1,1)],
+    [
+        [(1,0)],
+        [(0,1),(1,2)],
+    ]
+)
+def absorbDenseSideIntoCornerFromLeft(contractor,corner,side):
+    return contractor(corner,side.data.join(0,1,(2,3)))
+# }}}
+# def absorbDenseSideIntoCornerFromRight + friends # {{{
+@prependDataContractor(
+    [Join(0,1,1,0)],
+    [
+        [(0,0),(1,2)],
+        [(1,1)],
+    ]
+)
+def absorbDenseSideIntoCornerFromRight(contractor,corner,side):
+    return contractor(corner,side.data.join(0,1,(2,3)))
+# }}}
 # def formDenseStage1 + friends {{{
 @prependDataContractor(
     [Join(0,1,1,0)],
@@ -125,7 +115,7 @@ class DenseSide: # {{{
     ]
 )
 def formDenseStage1(contractor,corner,side):
-    return contractor(corner.data,side.data)
+    return contractor(corner,side.data)
 # }}}
 # def formDenseStage2 + friends {{{
 @prependDataContractor(
@@ -168,9 +158,10 @@ def formDenseStage3(contractor,stage2_0,stage2_1):
 
 # Exports {{{
 __all__ = [
-    "DenseCorner",
     "DenseSide",
 
+    "absorbDenseSideIntoCornerFromLeft",
+    "absorbDenseSideIntoCornerFromRight",
     "formDenseStage1",
     "formDenseStage2",
     "formDenseStage3",

@@ -34,7 +34,7 @@ class TestExpectation(TestCase): # {{{
             )
             for i in range(4)
         )
-        corners = tuple(mapSparseChunkValues(DenseCorner,corner_tensor) for corner_tensor in corners_tensor)
+        corners = corners_tensor
         sides = tuple(mapSparseChunkValues(DenseSide,side_tensor) for side_tensor in sides_tensor)
         return corners_tensor, sides_tensor, state_center_data, operator_center_tensor, corners, sides
     # }}}
@@ -48,10 +48,10 @@ class TestExpectation(TestCase): # {{{
         corners[i] = absorbSparseSideIntoCornerFromLeft(i,corners[i],sides[(i+1)%4])
         sides[i] = absorbSparseCenterSOSIntoSide(i,sides[i],state_center_data,operator_center_tensor)
         corners[(i-1)%4] = absorbSparseSideIntoCornerFromRight(i,corners[(i-1)%4],sides[(i-1)%4])
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.corners[0],corners[0])
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.corners[1],corners[1])
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.corners[2],corners[2])
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.corners[3],corners[3])
+        self.assertSparseTensorsAlmostEqual(expectation.corners[0],corners[0])
+        self.assertSparseTensorsAlmostEqual(expectation.corners[1],corners[1])
+        self.assertSparseTensorsAlmostEqual(expectation.corners[2],corners[2])
+        self.assertSparseTensorsAlmostEqual(expectation.corners[3],corners[3])
         self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[0],sides[0])
         self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[1],sides[1])
         self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[2],sides[2])
