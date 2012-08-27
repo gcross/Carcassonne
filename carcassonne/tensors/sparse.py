@@ -21,49 +21,6 @@ side_left_special_indices = [special_indices[i] for i in    [1,1,0,0]]
 side_right_special_indices = [special_indices[i] for i in   [0,0,1,1]]
 # }}}
 
-# Classes {{{
-class SparseSide: # {{{
-    def __init__(self,tensor): # {{{
-        self.tensor = tensor
-    # }}}
-    # def absorbCenterSOS + friends {{{
-    _absorbCenterSOS = [formSparseContractor( 
-        (2,),(i,),(
-            FromBoth(0,(i+1)%4,**side_left_special_indices[i]),
-            FromBoth(1,(i-1)%4,**side_right_special_indices[i]),
-            FromRight((i+2)%4)
-        )
-    ) for i in range(4)]
-    def absorbCenterSOS(self,direction,state_center_data,operator_center_tensor,state_center_data_conj=None):
-        if state_center_data_conj is None:
-            state_center_data_conj = state_center_data.conj()
-        def contractChunks(side,operator_center_data):
-            return side.absorbCenterSOS(direction,state_center_data,operator_center_data,state_center_data_conj)
-        return SparseSide(
-            self._absorbCenterSOS[direction](
-                contractChunks,
-                self.tensor,
-                operator_center_tensor
-            )
-        )
-    # }}}
-    @staticmethod # def formMultiplier {{{
-    def formMultiplier(corners,sides,operator_center_tensor):
-        return formSparseExpectationStage3(
-            formSparseExpectationStage2(
-                formSparseExpectationStage1(corners[0],sides[0]),
-                formSparseExpectationStage1(corners[1],sides[1]),
-            ),
-            formSparseExpectationStage2(
-                formSparseExpectationStage1(corners[2],sides[2]),
-                formSparseExpectationStage1(corners[3],sides[3]),
-            ),
-            operator_center_tensor,
-        )
-    # }}}
-# }}}
-# }}}
-
 # Functions {{{
 # def absorbSparseSideIntoCornerFromLeft + friends # {{{
 @prepend([formSparseContractor(
@@ -73,7 +30,7 @@ class SparseSide: # {{{
     DenseCorner.absorbFromLeft
 ) for special_indices in corner_left_special_indices])
 def absorbSparseSideIntoCornerFromLeft(contractors,direction,corner,side):
-    return contractors[direction](corner,side.tensor)
+    return contractors[direction](corner,side)
 # }}}
 # def absorbSparseSideIntoCornerFromRight + friends # {{{
 @prepend([formSparseContractor(
@@ -83,9 +40,42 @@ def absorbSparseSideIntoCornerFromLeft(contractors,direction,corner,side):
     DenseCorner.absorbFromRight
 ) for special_indices in corner_right_special_indices])
 def absorbSparseSideIntoCornerFromRight(contractors,direction,corner,side):
-    return contractors[direction](corner,side.tensor)
+    return contractors[direction](corner,side)
 # }}}
-# def formSparseExpectationStage1 {{{
+# def absorbSparseCenterSOSIntoSide + friends {{{
+@prepend([formSparseContractor( 
+    (2,),(i,),(
+        FromBoth(0,(i+1)%4,**side_left_special_indices[i]),
+        FromBoth(1,(i-1)%4,**side_right_special_indices[i]),
+        FromRight((i+2)%4)
+    )
+) for i in range(4)])
+def absorbSparseCenterSOSIntoSide(contractors,direction,side_tensor,state_center_data,operator_center_tensor,state_center_data_conj=None):
+    if state_center_data_conj is None:
+        state_center_data_conj = state_center_data.conj()
+    def contractChunks(side,operator_center_data):
+        return side.absorbCenterSOS(direction,state_center_data,operator_center_data,state_center_data_conj)
+    return \
+        contractors[direction](
+            contractChunks,
+            side_tensor,
+            operator_center_tensor
+        )
+# }}}
+def formExpectationMultiplier(corners,sides,operator_center_tensor): # {{{
+    return formExpectationStage3(
+        formExpectationStage2(
+            formExpectationStage1(corners[0],sides[0]),
+            formExpectationStage1(corners[1],sides[1]),
+        ),
+        formExpectationStage2(
+            formExpectationStage1(corners[2],sides[2]),
+            formExpectationStage1(corners[3],sides[3]),
+        ),
+        operator_center_tensor,
+    )
+# }}}
+# def formExpectationStage1 {{{
 @prependSparseContractor(
     (1,),
     (0,),
@@ -96,10 +86,10 @@ def absorbSparseSideIntoCornerFromRight(contractors,direction,corner,side):
     ],
     formDenseStage1
 )
-def formSparseExpectationStage1(contractor,corner,side):
-    return contractor(corner,side.tensor)
+def formExpectationStage1(contractor,corner,side):
+    return contractor(corner,side)
 # }}}
-# def formSparseExpectationStage2: {{{
+# def formExpectationStage2 {{{
 @prependSparseContractor(
     (0,),
     (1,),
@@ -111,10 +101,10 @@ def formSparseExpectationStage1(contractor,corner,side):
     ],
     formDenseStage2
 )
-def formSparseExpectationStage2(contractor,stage1_0,stage1_1):
+def formExpectationStage2(contractor,stage1_0,stage1_1):
     return contractor(stage1_0,stage1_1)
 # }}}
-# def formSparseExpectationStage3: {{{
+# def formExpectationStage3 {{{
 @prepend( # {{{
     formDataContractor( # dense contractor 0 {{{
         [
@@ -159,7 +149,7 @@ def formSparseExpectationStage2(contractor,stage1_0,stage1_1):
         []
     ), # }}}
 ) # }}}
-def formSparseExpectationStage3( # {{{
+def formExpectationStage3( # {{{
     denseContractor0,
     denseContractor1,
     sparseContractor0,
@@ -191,12 +181,9 @@ def formSparseExpectationStage3( # {{{
 
 # Exports {{{
 __all__ = [
-    "SparseSide",
-
     "absorbSparseSideIntoCornerFromLeft",
     "absorbSparseSideIntoCornerFromRight",
-    "formSparseExpectationStage1",
-    "formSparseExpectationStage2",
-    "formSparseExpectationStage3",
+    "absorbSparseCenterSOSIntoSide",
+    "formExpectationMultiplier",
 ]
 # }}}

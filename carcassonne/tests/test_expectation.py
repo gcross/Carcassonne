@@ -35,7 +35,7 @@ class TestExpectation(TestCase): # {{{
             for i in range(4)
         )
         corners = tuple(mapSparseChunkValues(DenseCorner,corner_tensor) for corner_tensor in corners_tensor)
-        sides = tuple(SparseSide(mapSparseChunkValues(DenseSide,side_tensor)) for side_tensor in sides_tensor)
+        sides = tuple(mapSparseChunkValues(DenseSide,side_tensor) for side_tensor in sides_tensor)
         return corners_tensor, sides_tensor, state_center_data, operator_center_tensor, corners, sides
     # }}}
     @with_checker
@@ -46,16 +46,16 @@ class TestExpectation(TestCase): # {{{
         corners = list(corners)
         sides = list(sides)
         corners[i] = absorbSparseSideIntoCornerFromLeft(i,corners[i],sides[(i+1)%4])
-        sides[i] = sides[i].absorbCenterSOS(i,state_center_data,operator_center_tensor)
+        sides[i] = absorbSparseCenterSOSIntoSide(i,sides[i],state_center_data,operator_center_tensor)
         corners[(i-1)%4] = absorbSparseSideIntoCornerFromRight(i,corners[(i-1)%4],sides[(i-1)%4])
         self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.corners[0],corners[0])
         self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.corners[1],corners[1])
         self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.corners[2],corners[2])
         self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.corners[3],corners[3])
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[0].tensor,sides[0].tensor)
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[1].tensor,sides[1].tensor)
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[2].tensor,sides[2].tensor)
-        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[3].tensor,sides[3].tensor)
+        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[0],sides[0])
+        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[1],sides[1])
+        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[2],sides[2])
+        self.assertSparseTensorWithWrappedDataAlmostEqual(expectation.sides[3],sides[3])
     # }}}
     @with_checker
     def test_formMultiplier(self): # {{{

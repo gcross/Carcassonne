@@ -1,5 +1,5 @@
 # Imports {{{
-from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight
+from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationMultiplier
 from .utils import L, R
 # }}}
 
@@ -12,7 +12,7 @@ class Expectation: # {{{
     # }}}
     def absorbCenter(self,direction,state_center_data,state_center_data_conj=None): # {{{
         self.corners[direction] = absorbSparseSideIntoCornerFromLeft(direction,self.corners[direction],self.sides[L(direction)])
-        self.sides[direction] = self.sides[direction].absorbCenterSOS(direction,state_center_data,self.operator_center_tensor,state_center_data_conj)
+        self.sides[direction] = absorbSparseCenterSOSIntoSide(direction,self.sides[direction],state_center_data,self.operator_center_tensor,state_center_data_conj)
         self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(direction,self.corners[R(direction)],self.sides[R(direction)])
     # }}}
     def computeNormalization(self,state_center_data,state_center_data_conj=None): # {{{
@@ -21,7 +21,7 @@ class Expectation: # {{{
         return state_center_data_conj.contractWith(self.formMultiplier()(state_center_data),range(5),range(5)).extractScalar()
     # }}}
     def formMultiplier(self): # {{{
-        return self.sides[0].formMultiplier(self.corners,self.sides,self.operator_center_tensor)
+        return formExpectationMultiplier(self.corners,self.sides,self.operator_center_tensor)
     # }}}
 # }}}
 # }}}
