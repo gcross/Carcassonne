@@ -79,6 +79,20 @@ class SparseSide: # {{{
             )
         )
     # }}}
+    @staticmethod # def formMultiplier {{{
+    def formMultiplier(corners,sides,operator_center_tensor):
+        return formSparseStage3(
+            formSparseStage2(
+                formSparseStage1(corners[0],sides[0]),
+                formSparseStage1(corners[1],sides[1]),
+            ),
+            formSparseStage2(
+                formSparseStage1(corners[2],sides[2]),
+                formSparseStage1(corners[3],sides[3]),
+            ),
+            operator_center_tensor,
+        )
+    # }}}
 # }}}
 # }}}
 
@@ -165,8 +179,9 @@ def formSparseStage3( # {{{
     sparseContractor1,
     stage2_0,
     stage2_1,
+    operator_center_tensor,
 ):
-    def multiply(state_center_data,operator_center_tensor):
+    def multiply(state_center_data):
         result = sparseContractor1(
             denseContractor1,
             stage2_1,
