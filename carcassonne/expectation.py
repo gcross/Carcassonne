@@ -13,7 +13,7 @@ class Expectation: # {{{
     def absorbCenter(self,direction,state_center_data,state_center_data_conj=None): # {{{
         self.corners[direction] = absorbSparseSideIntoCornerFromLeft(direction,self.corners[direction],self.sides[L(direction)])
         self.sides[direction] = absorbSparseCenterSOSIntoSide(direction,self.sides[direction],state_center_data,self.operator_center_tensor,state_center_data_conj)
-        self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(direction,self.corners[R(direction)],self.sides[R(direction)])
+        self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(R(direction),self.corners[R(direction)],self.sides[R(direction)])
     # }}}
     def computeExpectation(self,state_center_data,state_center_data_conj=None): # {{{
         if state_center_data_conj is None:

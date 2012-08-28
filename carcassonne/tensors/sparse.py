@@ -15,10 +15,14 @@ special_indices = [
         "indices_to_redirect": {(0,1):0},
     },
 ]
-corner_left_special_indices = [{}]*4 #[special_indices[i] for i in  [0,0,1,1]]
-corner_right_special_indices = [{}]*4 #[special_indices[i] for i in [1,0,0,1]]
-side_left_special_indices = [{}]*4 #[special_indices[i] for i in    [1,1,0,0]]
-side_right_special_indices = [{}]*4 #[special_indices[i] for i in   [0,0,1,1]]
+corner_left_special_indices = [special_indices[i] for i in  [0,0,1,1]]
+corner_right_special_indices = [special_indices[i] for i in [1,0,0,1]]
+side_left_special_indices = [special_indices[i] for i in    [1,1,0,0]]
+side_right_special_indices = [special_indices[i] for i in   [0,0,1,1]]
+#corner_left_special_indices = [{}]*4
+#corner_right_special_indices = [{}]*4
+#side_left_special_indices = [{}]*4
+#side_right_special_indices = [{}]*4
 # }}}
 
 # Functions {{{
@@ -30,6 +34,7 @@ side_right_special_indices = [{}]*4 #[special_indices[i] for i in   [0,0,1,1]]
     absorbDenseSideIntoCornerFromLeft
 ) for special_indices in corner_left_special_indices])
 def absorbSparseSideIntoCornerFromLeft(contractors,direction,corner,side):
+    print("absorbing from left at",direction,"with specials given by",corner_left_special_indices[direction])
     return contractors[direction](corner,side)
 # }}}
 # def absorbSparseSideIntoCornerFromRight + friends # {{{
@@ -40,6 +45,7 @@ def absorbSparseSideIntoCornerFromLeft(contractors,direction,corner,side):
     absorbDenseSideIntoCornerFromRight
 ) for special_indices in corner_right_special_indices])
 def absorbSparseSideIntoCornerFromRight(contractors,direction,corner,side):
+    print("absorbing from right at",direction,"with specials given by",corner_left_special_indices[direction])
     return contractors[direction](corner,side)
 # }}}
 # def absorbSparseCenterSOSIntoSide + friends {{{
@@ -51,6 +57,7 @@ def absorbSparseSideIntoCornerFromRight(contractors,direction,corner,side):
     )
 ) for i in range(4)])
 def absorbSparseCenterSOSIntoSide(contractors,direction,side_tensor,state_center_data,operator_center_tensor,state_center_data_conj=None):
+    print("absorbing from center at",direction,"with specials given by",side_left_special_indices[direction],side_right_special_indices[direction])
     if state_center_data_conj is None:
         state_center_data_conj = state_center_data.conj()
     def contractChunks(side,operator_center_data):
