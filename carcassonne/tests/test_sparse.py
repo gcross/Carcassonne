@@ -139,26 +139,8 @@ class TestFormSparseTensor(TestCase): # {{{
         zd = formDenseTensor(z)
         self.assertAllClose(zd,dot(xd,yd).ravel())
     # }}}
-    @with_checker(number_of_calls=100)
-    def test_matmul_with_merge_with_ignore(self, # {{{
-        x_chunks={(irange(0,2),)*2: float},
-        y_chunks={(irange(0,2),)*2: float},
-        i=irange(0,2),
-        j=irange(0,2),
-    ):
-        x = SparseTensor((3,)*2,x_chunks)
-        y = SparseTensor((3,)*2,y_chunks)
-        z = formSparseContractor((1,),(0,),(FromBoth(0,1,indices_to_ignore={(i,j)}),),operator.mul)(x,y)
-        xd = formDenseTensor(x)
-        yd = formDenseTensor(y)
-        zd = formDenseTensor(z)
-        zc = dot(xd,yd)
-        zc[i,j] = 0
-        zc = zc.ravel()
-        self.assertAllClose(zd,zc)
-    # }}}
-    @with_checker(number_of_calls=100)
-    def test_matmul_with_merge_with_nontrivial_redirect(self, # {{{
+    @with_checker
+    def test_matmul_with_merge_with_nontrivial_redirect_with_sum(self, # {{{
         x_chunks={(irange(0,2),)*2: float},
         y_chunks={(irange(0,2),)*2: float},
         i=irange(0,2),
@@ -167,7 +149,7 @@ class TestFormSparseTensor(TestCase): # {{{
     ):
         x = SparseTensor((3,)*2,x_chunks)
         y = SparseTensor((3,)*2,y_chunks)
-        z = formSparseContractor((1,),(0,),(FromBoth(0,1,indices_to_redirect={(i,j):k}),),operator.mul)(x,y)
+        z = formSparseContractor((1,),(0,),(FromBoth(0,1,indices_to_redirect={(i,j):(k,True)}),),operator.mul)(x,y)
         xd = formDenseTensor(x)
         yd = formDenseTensor(y)
         zd = formDenseTensor(z)
@@ -193,7 +175,7 @@ class TestFormSparseTensor(TestCase): # {{{
         self.assertAllClose(zd,multiply.outer(xd,yd).ravel())
     # }}}
     @with_checker
-    def test_outer_product_with_merge_with_ignore(self, # {{{
+    def test_outer_product_with_merge_with_trivial_redirect_with_sum(self, # {{{
         x_chunks={(irange(0,2),): float},
         y_chunks={(irange(0,2),): float},
         i=irange(0,2),
@@ -201,25 +183,7 @@ class TestFormSparseTensor(TestCase): # {{{
     ):
         x = SparseTensor((3,),x_chunks)
         y = SparseTensor((3,),y_chunks)
-        z = formSparseContractor((),(),(FromBoth(0,0,indices_to_ignore={(i,j)}),),operator.mul)(x,y)
-        xd = formDenseTensor(x)
-        yd = formDenseTensor(y)
-        zd = formDenseTensor(z)
-        zc = multiply.outer(xd,yd)
-        zc[i,j] = 0
-        zc = zc.ravel()
-        self.assertAllClose(zd,zc)
-    # }}}
-    @with_checker
-    def test_outer_product_with_merge_with_trivial_redirect(self, # {{{
-        x_chunks={(irange(0,2),): float},
-        y_chunks={(irange(0,2),): float},
-        i=irange(0,2),
-        j=irange(0,2),
-    ):
-        x = SparseTensor((3,),x_chunks)
-        y = SparseTensor((3,),y_chunks)
-        z = formSparseContractor((),(),(FromBoth(0,0,indices_to_redirect={(i,j):i*3+j}),),operator.mul)(x,y)
+        z = formSparseContractor((),(),(FromBoth(0,0,indices_to_redirect={(i,j):(i*3+j,True)}),),operator.mul)(x,y)
         xd = formDenseTensor(x)
         yd = formDenseTensor(y)
         zd = formDenseTensor(z)
@@ -228,7 +192,7 @@ class TestFormSparseTensor(TestCase): # {{{
         self.assertAllClose(zd,zc)
     # }}}
     @with_checker
-    def test_outer_product_with_merge_with_nontrivial_redirect(self, # {{{
+    def test_outer_product_with_merge_with_nontrivial_redirect_with_sum(self, # {{{
         x_chunks={(irange(0,2),): float},
         y_chunks={(irange(0,2),): float},
         i=irange(0,2),
@@ -237,7 +201,7 @@ class TestFormSparseTensor(TestCase): # {{{
     ):
         x = SparseTensor((3,),x_chunks)
         y = SparseTensor((3,),y_chunks)
-        z = formSparseContractor((),(),(FromBoth(0,0,indices_to_redirect={(i,j):k}),),operator.mul)(x,y)
+        z = formSparseContractor((),(),(FromBoth(0,0,indices_to_redirect={(i,j):(k,True)}),),operator.mul)(x,y)
         xd = formDenseTensor(x)
         yd = formDenseTensor(y)
         zd = formDenseTensor(z)
@@ -250,6 +214,16 @@ class TestFormSparseTensor(TestCase): # {{{
         self.assertAllClose(zd,zc)
     # }}}
     @with_checker
+    def test_redirect_without_sum(self,
+        a=int,
+        b=int,
+    ): # {{{
+        x = SparseTensor((3,),{(0,):a,(1,):a,(2,):a})
+        y = SparseTensor((3,),{(0,):b,(1,):b,(2,):b})
+        z = formSparseContractor((),(),(FromBoth(0,0,indices_to_redirect={(i,j):(0,False) for i in range(3) for j in range(3)}),),operator.mul)(x,y)
+        self.assertEqual(z.chunks,{(0,):a*b})
+    # }}}
+    @with_checker
     def test_application_of_redirects(self, # {{{
         a=float,
         b=float,
@@ -260,11 +234,11 @@ class TestFormSparseTensor(TestCase): # {{{
     ):
         LA = SparseTensor((2,1),{(0,0):a,(1,0):b})
         LB = SparseTensor((2,2),{(0,0):b,(1,1):a})
-        LC = formSparseContractor((0,),(0,),(FromBoth(1,1,indices_to_ignore={(0,1)}),),operator.mul)(LA,LB)
+        LC = formSparseContractor((0,),(0,),(FromBoth(1,1,indices_to_redirect={(0,1):(0,False)}),),operator.mul)(LA,LB)
 
         RA = SparseTensor((2,1),{(0,0):c,(1,0):d})
         RB = SparseTensor((2,2),{(0,0):e,(1,1):f})
-        RC = formSparseContractor((0,),(0,),(FromBoth(1,1,indices_to_redirect={(0,1):0}),),operator.mul)(RA,RB)
+        RC = formSparseContractor((0,),(0,),(FromBoth(1,1,indices_to_redirect={(0,1):(0,True)}),),operator.mul)(RA,RB)
 
         self.assertAllClose(
             dot(formDenseTensor(LC),formDenseTensor(RC)),

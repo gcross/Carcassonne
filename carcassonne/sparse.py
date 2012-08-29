@@ -130,14 +130,25 @@ def formSparseContractor(left_join_dimensions,right_join_dimensions,result_dimen
         result_chunks = {}
         for indexed_chunk_lists_pair in chunk_lists.items():
             for ((left_indices,left_chunk),(right_indices,right_chunk)) in itertools.product(*indexed_chunk_lists_pair[1]):
-                result_indices = tuple(dimension_source.getResultIndex(right_dimensions,left_indices,right_indices) for dimension_source in result_dimension_sources)
-                if None in result_indices:
+                result_indices = []
+                sum_if_existing = True
+                skip_this_chunk = False
+                for dimension_source in result_dimension_sources:
+                    maybe_index_and_sum_if_existing = dimension_source.getResultIndex(right_dimensions,left_indices,right_indices)
+                    if maybe_index_and_sum_if_existing is None:
+                        skip_this_chunk = True
+                        break
+                    result_index, sum_if_existing_ = maybe_index_and_sum_if_existing
+                    result_indices.append(result_index)
+                    if not sum_if_existing_:
+                        sum_if_existing = False
+                if skip_this_chunk:
                     continue
-                result_chunk = contractChunks(left_chunk,right_chunk)
-                if result_indices in result_chunks:
-                    result_chunks[result_indices] += result_chunk
-                else:
-                    result_chunks[result_indices]  = result_chunk
+                result_indices = tuple(result_indices)
+                if result_indices not in result_chunks:
+                    result_chunks[result_indices]  = contractChunks(left_chunk,right_chunk)
+                elif sum_if_existing:
+                    result_chunks[result_indices] += contractChunks(left_chunk,right_chunk)
         # }}}
         # Return the result {{{
         return SparseTensor(result_dimensions,result_chunks)

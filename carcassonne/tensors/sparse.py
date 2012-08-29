@@ -7,12 +7,10 @@ from ..utils import FromLeft, FromRight, FromBoth, Join, formDataContractor, pre
 # Values {{{
 special_indices = [
     {
-        "indices_to_ignore": {(0,1)},
-        "indices_to_redirect": {(2,3):2},
+        "indices_to_redirect": {(0,0):(0,False),(0,1):(0,False),(2,0):None,(2,1):None,(2,2):(2,False),(2,3):(2,True)},
     },
     {
-        "indices_to_ignore": {(2,3)},
-        "indices_to_redirect": {(0,1):0},
+        "indices_to_redirect": {(0,0):(0,False),(0,1):(0,True),(0,2):None,(1,2):None,(2,2):(2,False),(2,3):(2,False)},
     },
 ]
 corner_left_special_indices = [special_indices[i] for i in  [0,0,1,1]]
@@ -34,7 +32,6 @@ side_right_special_indices = [special_indices[i] for i in   [0,0,1,1]]
     absorbDenseSideIntoCornerFromLeft
 ) for special_indices in corner_left_special_indices])
 def absorbSparseSideIntoCornerFromLeft(contractors,direction,corner,side):
-    print("absorbing from left at",direction,"with specials given by",corner_left_special_indices[direction])
     return contractors[direction](corner,side)
 # }}}
 # def absorbSparseSideIntoCornerFromRight + friends # {{{
@@ -45,7 +42,6 @@ def absorbSparseSideIntoCornerFromLeft(contractors,direction,corner,side):
     absorbDenseSideIntoCornerFromRight
 ) for special_indices in corner_right_special_indices])
 def absorbSparseSideIntoCornerFromRight(contractors,direction,corner,side):
-    print("absorbing from right at",direction,"with specials given by",corner_left_special_indices[direction])
     return contractors[direction](corner,side)
 # }}}
 # def absorbSparseCenterSOSIntoSide + friends {{{
@@ -57,7 +53,6 @@ def absorbSparseSideIntoCornerFromRight(contractors,direction,corner,side):
     )
 ) for i in range(4)])
 def absorbSparseCenterSOSIntoSide(contractors,direction,side_tensor,state_center_data,operator_center_tensor,state_center_data_conj=None):
-    print("absorbing from center at",direction,"with specials given by",side_left_special_indices[direction],side_right_special_indices[direction])
     if state_center_data_conj is None:
         state_center_data_conj = state_center_data.conj()
     def contractChunks(side,operator_center_data):

@@ -105,7 +105,7 @@ class FromLeft: # {{{
         return left_dimensions[self.dimension]
     # }}}
     def getResultIndex(self,right_dimensions,left_indices,right_indices): # {{{
-        return left_indices[self.dimension]
+        return left_indices[self.dimension], True
     # }}}
 # }}}
 class FromRight: # {{{
@@ -127,7 +127,7 @@ class FromRight: # {{{
         return right_dimensions[self.dimension]
     # }}}
     def getResultIndex(self,right_dimensions,left_indices,right_indices): # {{{
-        return right_indices[self.dimension]
+        return right_indices[self.dimension], True
     # }}}
 # }}}
 class FromBoth: # {{{
@@ -139,10 +139,9 @@ class FromBoth: # {{{
     left_dimensions = property(lambda self: (self.left_dimension,))
     right_dimensions = property(lambda self: (self.right_dimension,))
     # }}}
-    def __init__(self,left_dimension,right_dimension,indices_to_ignore=frozenset(),indices_to_redirect=frozenset()): # {{{
+    def __init__(self,left_dimension,right_dimension,indices_to_redirect=frozenset()): # {{{
         self.left_dimension = left_dimension
         self.right_dimension = right_dimension
-        self.indices_to_ignore = indices_to_ignore
         self.indices_to_redirect = indices_to_redirect
     # }}}
     def appendDimensionsToTransposition(self,transposition,left_transpose_offsets,right_transpose_offsets): # {{{
@@ -156,13 +155,10 @@ class FromBoth: # {{{
         left_index = left_indices[self.left_dimension]
         right_index = right_indices[self.right_dimension]
         indices = (left_index,right_index)
-        if indices in self.indices_to_ignore:
-            return None
         if indices in self.indices_to_redirect:
             return self.indices_to_redirect[indices]
-        return left_index * right_dimensions[self.right_dimension] + right_index
+        return left_index * right_dimensions[self.right_dimension] + right_index, True
     # }}}
-# }}}
 # }}}
 # }}}
 
