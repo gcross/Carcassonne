@@ -81,13 +81,19 @@ class TestExpectation(TestCase): # {{{
     # }}}
     @staticmethod
     def makeSillyField(d=1): # {{{
-        corners = [SparseTensor((1,1),{(0,0):NDArrayData.newTrivial((1,1))})]*4
+        D = NDArrayData.newTrivial((1,1))
+        corners = [
+            SparseTensor((4,4),{(2,0):D}),
+            SparseTensor((4,4),{(0,0):D}),
+            SparseTensor((4,4),{(0,2):D}),
+            SparseTensor((4,4),{(2,2):D}),
+        ]
         D = NDArrayData.newTrivial((1,)*4)
         sides = [
-            SparseTensor((1,1,4),{(0,0,2): D, (0,0,3): D}),
-            SparseTensor((1,1,4),{(0,0,0): D, (0,0,1): D}),
-            SparseTensor((1,1,4),{(0,0,0): D, (0,0,1): D}),
-            SparseTensor((1,1,4),{(0,0,2): D, (0,0,3): D}),
+            SparseTensor((4,4,4),{(0,0,2): D, (2,2,2): D, (0,2,3): D}),
+            SparseTensor((4,4,4),{(0,0,0): D, (2,2,0): D, (0,2,1): D}),
+            SparseTensor((4,4,4),{(0,0,0): D, (2,2,0): D, (2,0,1): D}),
+            SparseTensor((4,4,4),{(0,0,2): D, (2,2,2): D, (2,0,3): D}),
         ]
         I = NDArrayData.newTrivial((d,d))
         operator_center_tensor = SparseTensor((4,4,4,4),{
@@ -109,11 +115,20 @@ class TestExpectation(TestCase): # {{{
         expectation = Expectation(corners,sides,operator_center_tensor)
         self.assertEqual(expectation.computeExpectation(state_center_data),1)
     # }}}
-    def dont_test_silly_field_step_0(self): # {{{
+    def test_silly_field_step_0(self): # {{{
         corners, sides, operator_center_tensor = self.makeSillyField()
         state_center_data = NDArrayData.newTrivial((1,)*5)
         expectation = Expectation(corners,sides,operator_center_tensor)
+        print("expectation = ",expectation.computeExpectation(state_center_data))
+        for i, corner in enumerate(expectation.corners):
+            print("#{} corner is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,corner).chunks))
+        for i, side in enumerate(expectation.sides):
+            print("#{} side is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,side).chunks))
         expectation.absorbCenter(0,state_center_data)
+        for i, corner in enumerate(expectation.corners):
+            print("#{} corner is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,corner).chunks))
+        for i, side in enumerate(expectation.sides):
+            print("#{} side is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,side).chunks))
         self.assertEqual(expectation.computeExpectation(state_center_data),2)
     # }}}
     def dont_test_silly_field_step_00(self): # {{{
@@ -134,7 +149,7 @@ class TestExpectation(TestCase): # {{{
             print("#{} side is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,side).chunks))
         self.assertEqual(expectation.computeExpectation(state_center_data),3)
     # }}}
-    def test_silly_field_step_01(self): # {{{
+    def dont_test_silly_field_step_01(self): # {{{
         corners, sides, operator_center_tensor = self.makeSillyField()
         state_center_data = NDArrayData.newTrivial((1,)*5)
         expectation = Expectation(corners,sides,operator_center_tensor)
@@ -159,6 +174,10 @@ class TestExpectation(TestCase): # {{{
         state_center_data = NDArrayData.newTrivial((1,)*5)
         expectation = Expectation(corners,sides,operator_center_tensor)
         expectation.absorbCenter(1,state_center_data)
+        for i, corner in enumerate(expectation.corners):
+            print("#{} corner is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,corner).chunks))
+        for i, side in enumerate(expectation.sides):
+            print("#{} side is {}".format(i,mapSparseChunkValues(NDArrayData.toArray,side).chunks))
         self.assertEqual(expectation.computeExpectation(state_center_data),2)
     # }}}
     def dont_test_silly_field_step_10(self): # {{{
@@ -175,7 +194,7 @@ class TestExpectation(TestCase): # {{{
         expectation.absorbCenter(1,state_center_data)
         self.assertEqual(expectation.computeExpectation(state_center_data),3)
     # }}}
-    def test_silly_field_step_2(self): # {{{
+    def dont_test_silly_field_step_2(self): # {{{
         corners, sides, operator_center_tensor = self.makeSillyField()
         state_center_data = NDArrayData.newTrivial((1,)*5)
         expectation = Expectation(corners,sides,operator_center_tensor)
@@ -198,7 +217,7 @@ class TestExpectation(TestCase): # {{{
         expectation.absorbCenter(3,state_center_data)
         self.assertEqual(expectation.computeExpectation(state_center_data),4)
     # }}}
-    def test_silly_field_step_3(self): # {{{
+    def dont_test_silly_field_step_3(self): # {{{
         corners, sides, operator_center_tensor = self.makeSillyField()
         state_center_data = NDArrayData.newTrivial((1,)*5)
         expectation = Expectation(corners,sides,operator_center_tensor)
