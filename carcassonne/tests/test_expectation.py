@@ -46,7 +46,7 @@ class TestExpectation(TestCase): # {{{
             height += 1
         self.assertEqual(expectation.computeExpectation(state_center_data),width*height)
     # }}}
-    @with_checker
+    @with_checker(number_of_calls=10)
     def test_silly_field_random_walk(self,directions=[irange(0,3)]): # {{{
         expectation, state_center_data = self.makeSillyFieldForASillyState()
         width = 1
