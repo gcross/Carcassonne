@@ -164,7 +164,6 @@ class FromBoth: # {{{
     # }}}
 # }}}
 # }}}
-# }}}
 
 # Decorators {{{
 class prepend: # {{{
