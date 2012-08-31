@@ -9,7 +9,6 @@ from random import randint, shuffle
 import unittest
 
 from ..data import *
-from ..sparse import *
 from ..utils import *
 # }}}
 
@@ -72,13 +71,6 @@ def randomShuffledPartition(elements): # {{{
     elements = list(elements)
     shuffle(elements)
     return randomPartition(elements)
-# }}}
-
-def randomSparseTensor(sparse_dimensions,dense_dimensions,lowest_index=4): # {{{
-    sparse_chunks = {}
-    for _ in range(randint(1,10)):
-        sparse_chunks[tuple(randint(lowest_index,sparse_dimension-1) for sparse_dimension in sparse_dimensions)] = NDArrayData.newRandom(*dense_dimensions)
-    return SparseTensor(sparse_dimensions,sparse_chunks)
 # }}}
 
 def randomTensor(ndim): # {{{
