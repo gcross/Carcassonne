@@ -57,6 +57,9 @@ class NDArrayData(Data): # {{{
     def __setitem__(self,index,value): # {{{
         self._arr[index] = value._arr
     # }}}
+    def __str__(self): # {{{
+        return "NDArrayData({})".format(self._arr)
+    # }}}
     def toArray(self):  #{{{
         return self._arr
     # }}}
