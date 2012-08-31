@@ -501,6 +501,9 @@ def formDataContractor(joins,final_groups,tensor_ranks=None): # {{{
 def invertPermutation(permutation): # {{{
     return [permutation.index(i) for i in range(len(permutation))]
 # }}}
+def multiplyBySingleSiteOperator(state,operator): # {{{
+    return state.contractWith(operator,(4,),(0,))
+# }}}
 def randomComplexSample(shape): # {{{
     return random_sample(shape)*2-1+random_sample(shape)*2j-1j
 # }}}

@@ -40,12 +40,14 @@ def absorbDenseSideIntoCornerFromRight(contractor,corner,side):
             [(2,(i+2)%4)],
         ]
 ) for i in range(4)])
-def absorbDenseCenterSSIntoSide(contractors,direction,side,center):
+def absorbDenseCenterSSIntoSide(contractors,direction,side,center,center_conj=None):
+    if center_conj is None:
+        center_conj = center.conj()
     return \
       contractors[direction](
         side,
         center,
-        center.conj(),
+        center_conj,
       )
 # }}}
 # def absorbDenseCenterSOSIntoSide + friends {{{
@@ -146,5 +148,8 @@ __all__ = [
     "absorbDenseCenterSSIntoSide",
     "absorbDenseCenterSOSIntoSide",
     "formNormalizationMultiplier",
+    "formNormalizationStage1",
+    "formNormalizationStage2",
+    "formNormalizationStage3",
 ]
 # }}}
