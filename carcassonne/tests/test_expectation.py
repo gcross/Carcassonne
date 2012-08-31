@@ -84,4 +84,41 @@ class TestExpectation(TestCase): # {{{
         expectation.absorbCenter(direction,states[s2])
         self.assertEqual(expectation.computeExpectation(states[s3]),spins[s1]+spins[s2]+spins[s3])
     # }}}
+    @with_checker(number_of_calls=10)
+    def test_magnetic_field_random_walk(self, # {{{
+        directions_and_spins=[(irange(0,3),irange(0,1))],
+        final_spin=irange(0,1)
+    ):
+        expectation, states, spins = self.makeMagneticField()
+        UL = 0
+        U  = 0
+        UR = 0
+        L  = 0
+        R  = 0
+        DL = 0
+        D  = 0
+        DR = 0
+        for direction, spin in directions_and_spins:
+            expectation.absorbCenter(direction,states[spin])
+            if direction == 0:
+                R += spins[spin]
+                UR += U
+                DR += D
+            elif direction == 1:
+                U += spins[spin]
+                UL += L
+                UR += R
+            elif direction == 2:
+                L += spins[spin]
+                UL += U
+                DR += D
+            elif direction == 3:
+                D += spins[spin]
+                DL += L
+                DR += R
+        C = spins[final_spin]
+        N = UL+U+UR+L+R+C+DL+D+DR
+        self.assertEqual(expectation.computeExpectation(states[final_spin]),N)
+        self.assertDataAlmostEqual(expectation.formMultiplier()(states[final_spin]),NDArrayData(N*states[final_spin].toArray()))
+    # }}}
 # }}}
