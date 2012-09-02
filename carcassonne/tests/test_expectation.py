@@ -1,5 +1,5 @@
 # Imports {{{
-from numpy import array
+from numpy import array, complex128
 
 from . import *
 from ..expectation import Expectation
@@ -61,13 +61,20 @@ class TestExpectation(TestCase): # {{{
     # }}}
     @staticmethod
     def makeMagneticField(): # {{{
-        corners = [{Identity():NDArrayData.newTrivial((1,1))}]*4
-        sides = [{Identity():NDArrayData.newTrivial((1,1,1,1))}]*4
-        Z = NDArrayData(array([[1,0],[0,-1]]))
+        corners = [{Identity():NDArrayData.newTrivial((1,1),dtype=complex128)}]*4
+        sides = [{Identity():NDArrayData.newTrivial((1,1,1,1),dtype=complex128)}]*4
+        Z = NDArrayData(array([[1,0],[0,-1]],dtype=complex128))
         operator_center_tensor = {Identity():None,Operator():Z}
-        state_up = NDArrayData(array([[[[[1,0]]]]]))
-        state_down = NDArrayData(array([[[[[0,1]]]]]))
+        state_up = NDArrayData(array([[[[[1,0]]]]],dtype=complex128))
+        state_down = NDArrayData(array([[[[[0,1]]]]],dtype=complex128))
         return Expectation(corners, sides, operator_center_tensor), [state_up, state_down], [1,-1]
+    # }}}
+    @with_checker(number_of_calls=10)
+    def test_silly_field_no_steps(self,s1=irange(0,1),s2=irange(0,1)): # {{{
+        expectation, states, spins = self.makeMagneticField()
+        self.assertEqual(expectation.computeExpectation(states[s1]),spins[s1])
+        self.assertEqual(expectation.computeNormalization(states[s1]),1)
+        self.assertDataAlmostEqual(expectation.minimizeStartingWith(states[s2]),states[1])
     # }}}
     @with_checker(number_of_calls=10)
     def test_silly_field_single_step(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1)): # {{{

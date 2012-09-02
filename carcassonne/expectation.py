@@ -1,4 +1,8 @@
 # Imports {{{
+from numpy import prod, zeros
+from numpy.linalg import eigh
+
+from .sparse import Operator
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
 from .utils import L, R
 # }}}
@@ -33,6 +37,18 @@ class Expectation: # {{{
     # }}}
     def formNormalizationMultiplier(self): # {{{
         return self.formExpectationAndNormalizationMultipliers()[1]
+    # }}}
+    def minimizeStartingWith(self,state_center_data): # {{{
+        if prod(state_center_data.shape[:4]) == 1:
+            N = prod(state_center_data.shape)
+            operator = state_center_data.newZeros(shape=(N,N),dtype=state_center_data.dtype)
+            for tag, data in self.operator_center_tensor.items():
+                if isinstance(tag,Operator):
+                    operator += data
+            evals, evecs = eigh(operator.toArray())
+            return type(state_center_data)(evecs[:,0].reshape(state_center_data.shape))
+        else:
+            return state_center_data.minimizeOver(*self.formExpectationAndNormalizationMultipliers())
     # }}}
 # }}}
 # }}}

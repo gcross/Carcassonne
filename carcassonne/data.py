@@ -2,6 +2,7 @@
 from copy import copy
 from functools import reduce
 from numpy import allclose, array, multiply, ones, prod, tensordot, zeros
+from scipy.sparse.linalg import LinearOperator, eigs
 
 from .utils import crand, randomComplexSample
 # }}}
@@ -87,6 +88,18 @@ class NDArrayData(Data): # {{{
             shape.append(prod(_arr.shape[index:index+len(group)]))
             index += len(group)
         return NDArrayData(_arr.reshape(shape))
+    # }}}
+    def minimizeOver(self,multiplyExpectation,multiplyNormalization): # {{{
+        initial = self.toArray().ravel()
+        N = len(initial)
+        print("N =",N)
+        evals, evecs = eigs(
+            A=LinearOperator((N,N),dtype=self.dtype,matvec=lambda v: multiplyExpectation(NDArrayData(v.reshape(self.shape))).toArray()),
+            M=LinearOperator((N,N),dtype=self.dtype,matvec=lambda v: multiplyNormalization(NDArrayData(v.reshape(self.shape))).toArray()),
+            k=1,
+            which='SR',
+        )
+        return NDArrayData(evecs.reshape(self.shape))
     # }}}
     def split(self,*splits): # {{{
         return NDArrayData(self._arr.reshape(splits))

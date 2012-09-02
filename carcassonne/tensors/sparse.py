@@ -82,7 +82,7 @@ def formExpectationStage3(stage2_0,stage2_1,center_operator): # {{{
                 return identity_multiplier(multiplyBySingleSiteOperator(center,operator))
             multipliers.append(partial(operator_multiplier,center_operator[tag]))
     def multiplyExpectation(center):
-        result = center.newZeros(center.shape)
+        result = center.newZeros(center.shape,dtype=center.dtype)
         for multiplier in multipliers:
             result += multiplier(center)
         return result
