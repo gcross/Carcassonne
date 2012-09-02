@@ -16,14 +16,9 @@ class TestExpectation(TestCase): # {{{
         state_center_data = NDArrayData.newTrivial((1,)*5)
         return Expectation(corners, sides, operator_center_tensor), state_center_data
     # }}}
-    def dont_test_silly_field_no_steps(self): # {{{
+    def test_silly_field_no_steps(self): # {{{
         expectation, state_center_data = self.makeSillyFieldForASillyState()
         self.assertEqual(expectation.computeExpectation(state_center_data),1)
-    # }}}
-    def dont_test_silly_field_step_0(self): # {{{
-        expectation, state_center_data = self.makeSillyFieldForASillyState()
-        expectation.absorbCenter(0,state_center_data)
-        self.assertEqual(expectation.computeExpectation(state_center_data),2)
     # }}}
     @with_checker(number_of_calls=10)
     def test_silly_field_single_step(self,direction=irange(0,3)): # {{{
