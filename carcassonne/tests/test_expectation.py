@@ -25,6 +25,7 @@ class TestExpectation(TestCase): # {{{
         expectation, state_center_data = self.makeSillyFieldForASillyState()
         expectation.absorbCenter(direction,state_center_data)
         self.assertEqual(expectation.computeExpectation(state_center_data),2)
+        self.assertEqual(expectation.computeNormalization(state_center_data),2)
     # }}}
     @with_checker(number_of_calls=40)
     def test_silly_field_double_step(self,direction1=irange(0,3),direction2=irange(0,3)): # {{{
@@ -42,6 +43,7 @@ class TestExpectation(TestCase): # {{{
         else:
             height += 1
         self.assertEqual(expectation.computeExpectation(state_center_data),width*height)
+        self.assertEqual(expectation.computeNormalization(state_center_data),1)
     # }}}
     @with_checker(number_of_calls=10)
     def test_silly_field_random_walk(self,directions=[irange(0,3)]): # {{{
@@ -55,6 +57,7 @@ class TestExpectation(TestCase): # {{{
             else:
                 height += 1
         self.assertEqual(expectation.computeExpectation(state_center_data),width*height)
+        self.assertEqual(expectation.computeNormalization(state_center_data),1)
     # }}}
     @staticmethod
     def makeMagneticField(): # {{{
@@ -71,6 +74,7 @@ class TestExpectation(TestCase): # {{{
         expectation, states, spins = self.makeMagneticField()
         expectation.absorbCenter(direction,states[s1])
         self.assertEqual(expectation.computeExpectation(states[s2]),spins[s1]+spins[s2])
+        self.assertEqual(expectation.computeNormalization(states[s2]),1)
     # }}}
     @with_checker(number_of_calls=10)
     def test_silly_field_double_step_same_direction(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1),s3=irange(0,1)): # {{{
@@ -78,6 +82,7 @@ class TestExpectation(TestCase): # {{{
         expectation.absorbCenter(direction,states[s1])
         expectation.absorbCenter(direction,states[s2])
         self.assertEqual(expectation.computeExpectation(states[s3]),spins[s1]+spins[s2]+spins[s3])
+        self.assertEqual(expectation.computeNormalization(states[s3]),1)
     # }}}
     @with_checker(number_of_calls=10)
     def test_magnetic_field_random_walk(self, # {{{
@@ -114,6 +119,8 @@ class TestExpectation(TestCase): # {{{
         C = spins[final_spin]
         N = UL+U+UR+L+R+C+DL+D+DR
         self.assertEqual(expectation.computeExpectation(states[final_spin]),N)
-        self.assertDataAlmostEqual(expectation.formMultiplier()(states[final_spin]),NDArrayData(N*states[final_spin].toArray()))
+        self.assertEqual(expectation.computeNormalization(states[final_spin]),1)
+        self.assertDataAlmostEqual(expectation.formExpectationMultiplier()(states[final_spin]),NDArrayData(N*states[final_spin].toArray()))
+        self.assertDataAlmostEqual(expectation.formNormalizationMultiplier()(states[final_spin]),NDArrayData(states[final_spin].toArray()))
     # }}}
 # }}}

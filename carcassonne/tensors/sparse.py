@@ -37,7 +37,7 @@ def absorbSparseCenterSOSIntoSide(direction,side,center_state,center_operator,ce
             (Identity,Operator): lambda x,y: (Complete(),contractSOS),
     },side,center_operator)
 # }}}
-def formExpectationMultiplier(corners,sides,center_operator): # {{{
+def formExpectationAndNormalizationMultipliers(corners,sides,center_operator): # {{{
     return formExpectationStage3(
         formExpectationStage2(
             formExpectationStage1(corners[0],sides[0]),
@@ -81,11 +81,13 @@ def formExpectationStage3(stage2_0,stage2_1,center_operator): # {{{
             def operator_multiplier(operator,center):
                 return identity_multiplier(multiplyBySingleSiteOperator(center,operator))
             multipliers.append(partial(operator_multiplier,center_operator[tag]))
-    def multiply(center):
+    def multiplyExpectation(center):
         result = center.newZeros(center.shape)
         for multiplier in multipliers:
             result += multiplier(center)
         return result
-    return multiply
+    def multiplyNormalization(center):
+        return identity_multiplier(center)
+    return multiplyExpectation, multiplyNormalization
 # }}}
 # }}}
