@@ -8,7 +8,7 @@ from .utils import L, R
 # }}}
 
 # Classes {{{
-class Expectation: # {{{
+class System: # {{{
     def __init__(self,corners,sides,operator_center_tensor): # {{{
         self.corners = list(corners)
         self.sides = list(sides)
@@ -55,6 +55,6 @@ class Expectation: # {{{
 
 # Exports {{{
 __all__ = [
-    "Expectation",
+    "System",
 ]
 # }}}

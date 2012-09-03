@@ -2,11 +2,11 @@
 from numpy import array, complex128
 
 from . import *
-from ..expectation import Expectation
+from ..system import System
 from ..sparse import Identity, Operator
 # }}}
 
-class TestExpectation(TestCase): # {{{
+class TestSystemSillyFieldWalk(TestCase): # {{{
     @staticmethod
     def makeSillyFieldForASillyState(d=1): # {{{
         corners = [{Identity():NDArrayData.newTrivial((1,1))}]*4
@@ -14,7 +14,7 @@ class TestExpectation(TestCase): # {{{
         I = O = NDArrayData.newTrivial((1,1))
         operator_center_tensor = {Identity():None,Operator():O}
         state_center_data = NDArrayData.newTrivial((1,)*5)
-        return Expectation(corners, sides, operator_center_tensor), state_center_data
+        return System(corners, sides, operator_center_tensor), state_center_data
     # }}}
     def test_silly_field_no_steps(self): # {{{
         expectation, state_center_data = self.makeSillyFieldForASillyState()
@@ -25,7 +25,7 @@ class TestExpectation(TestCase): # {{{
         expectation, state_center_data = self.makeSillyFieldForASillyState()
         expectation.absorbCenter(direction,state_center_data)
         self.assertEqual(expectation.computeExpectation(state_center_data),2)
-        self.assertEqual(expectation.computeNormalization(state_center_data),2)
+        self.assertEqual(expectation.computeNormalization(state_center_data),1)
     # }}}
     @with_checker(number_of_calls=40)
     def test_silly_field_double_step(self,direction1=irange(0,3),direction2=irange(0,3)): # {{{
@@ -59,6 +59,9 @@ class TestExpectation(TestCase): # {{{
         self.assertEqual(expectation.computeExpectation(state_center_data),width*height)
         self.assertEqual(expectation.computeNormalization(state_center_data),1)
     # }}}
+# }}}
+
+class TestSystemMagneticFieldWalk(TestCase): # {{{
     @staticmethod
     def makeMagneticField(): # {{{
         corners = [{Identity():NDArrayData.newTrivial((1,1),dtype=complex128)}]*4
@@ -67,24 +70,24 @@ class TestExpectation(TestCase): # {{{
         operator_center_tensor = {Identity():None,Operator():Z}
         state_up = NDArrayData(array([[[[[1,0]]]]],dtype=complex128))
         state_down = NDArrayData(array([[[[[0,1]]]]],dtype=complex128))
-        return Expectation(corners, sides, operator_center_tensor), [state_up, state_down], [1,-1]
+        return System(corners, sides, operator_center_tensor), [state_up, state_down], [1,-1]
     # }}}
     @with_checker(number_of_calls=10)
-    def test_silly_field_no_steps(self,s1=irange(0,1),s2=irange(0,1)): # {{{
+    def test_magnetic_field_no_steps(self,s1=irange(0,1),s2=irange(0,1)): # {{{
         expectation, states, spins = self.makeMagneticField()
         self.assertEqual(expectation.computeExpectation(states[s1]),spins[s1])
         self.assertEqual(expectation.computeNormalization(states[s1]),1)
         self.assertDataAlmostEqual(expectation.minimizeStartingWith(states[s2]),states[1])
     # }}}
     @with_checker(number_of_calls=10)
-    def test_silly_field_single_step(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1)): # {{{
+    def test_magnetic_field_single_step(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1)): # {{{
         expectation, states, spins = self.makeMagneticField()
         expectation.absorbCenter(direction,states[s1])
         self.assertEqual(expectation.computeExpectation(states[s2]),spins[s1]+spins[s2])
         self.assertEqual(expectation.computeNormalization(states[s2]),1)
     # }}}
     @with_checker(number_of_calls=10)
-    def test_silly_field_double_step_same_direction(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1),s3=irange(0,1)): # {{{
+    def test_magnetic_field_double_step_same_direction(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1),s3=irange(0,1)): # {{{
         expectation, states, spins = self.makeMagneticField()
         expectation.absorbCenter(direction,states[s1])
         expectation.absorbCenter(direction,states[s2])
