@@ -42,7 +42,7 @@ class NDArrayData(Data): # {{{
     def newTrivial(cls,shape,dtype=int):
         return cls(ones(shape,dtype=dtype))
     # }}}
-    @classmethod # newTrivial {{{
+    @classmethod # newZeros {{{
     def newZeros(cls,shape,dtype=int):
         return cls(zeros(shape,dtype=dtype))
     # }}}
