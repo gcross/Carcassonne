@@ -2,7 +2,7 @@
 from copy import copy
 from functools import reduce
 from numpy import allclose, array, identity, multiply, ones, prod, tensordot, zeros
-from numpy.linalg import svd
+from scipy.linalg import svd, qr
 from scipy.sparse.linalg import LinearOperator, eigs
 
 from .utils import crand, randomComplexSample
@@ -22,6 +22,14 @@ class NDArrayData(Data): # {{{
   # Class construction methods {{{
     def __init__(self,_arr): # {{{
         self._arr = _arr
+    # }}}
+    @classmethod # newEnlargener {{{
+    def newEnlargener(cls,old_dimension,new_dimension,dtype=None):
+        if new_dimension == old_dimension:
+            return (cls.newIdentity(new_dimension),)*2
+        else:
+            matrix = cls.newRandom(new_dimension,old_dimension).qr(mode='economic')[0]
+            return matrix, matrix.conj()
     # }}}
     @classmethod # newFilled {{{
     def newFilled(cls,shape,value,dtype=None):
@@ -60,6 +68,9 @@ class NDArrayData(Data): # {{{
     def __getitem__(self,index): # {{{
         return NDArrayData(self._arr[index])
     # }}}
+    def __repr__(self): # {{{
+        return "NDArrayData(" + repr(self._arr) + ")"
+    # }}}
     def __setitem__(self,index,value): # {{{
         self._arr[index] = value._arr
     # }}}
@@ -75,7 +86,7 @@ class NDArrayData(Data): # {{{
         return self.conj().join(1,0)
     # }}}
     def absorbMatrixAt(self,axis,matrix): # {{{
-        return matrix.contractWith(self,(1,),axis).join(tuple(range(1,axis+1)) + (0,) + tuple(range(axis+1,self.ndim)))
+        return matrix.contractWith(self,(1,),axis).join(*tuple(range(1,axis+1)) + (0,) + tuple(range(axis+1,self.ndim)))
     # }}}
     def allcloseTo(self,other,rtol=1e-05,atol=1e-08): # {{{
         return allclose(self._arr,other._arr,rtol=rtol,atol=atol)
@@ -91,22 +102,6 @@ class NDArrayData(Data): # {{{
             raise ValueError("tensor is not a scalar")
         else:
             return self._arr
-    # }}}
-    def increaseDimension(self,axis,by=None,to=None): # {{{
-        old_dimension = self.shape[axis]
-        if by is None and to is None:
-            raise ValueError("Either 'by' or 'to' must not be None.")
-        elif by is not None and to is not None:
-            raise ValueError("Both 'by' ({}) and 'to' ({}) cannot be None.".format(by,to))
-        elif by is not None:
-            new_dimension = self.shape[axis] + by
-        elif to is not None:
-            new_dimension = to
-        assert new_dimension >= old_dimension
-        if new_dimension == old_dimension:
-            return self, self.newIdentity(new_dimension)
-        matrix = self.newRandom(new_dimension,old_dimension).svd(full_matrices=False)[0]
-        return self.absorbMatrixAt(axis,matrix), matrix.conj()
     # }}}
     def join(self,*groups): # {{{
         groups = [[group] if isinstance(group,int) else group for group in groups]
@@ -129,6 +124,10 @@ class NDArrayData(Data): # {{{
             which='SR',
         )
         return NDArrayData(evecs.reshape(self.shape))
+    # }}}
+    def qr(self,mode='full'): # {{{
+        q, r = qr(self._arr,mode=mode)
+        return NDArrayData(q), NDArrayData(r)
     # }}}
     def split(self,*splits): # {{{
         return NDArrayData(self._arr.reshape(splits))

@@ -37,6 +37,25 @@ class System: # {{{
     def formNormalizationMultiplier(self): # {{{
         return self.formExpectationAndNormalizationMultipliers()[1]
     # }}}
+    def increaseBandwidth(self,direction,by=None,to=None): # {{{
+        state_center_data = self.state_center_data
+        direction %= 2
+        old_dimension = state_center_data.shape[direction]
+        if by is None and to is None:
+            raise ValueError("Either 'by' or 'to' must not be None.")
+        elif by is not None and to is not None:
+            raise ValueError("Both 'by' ({}) and 'to' ({}) cannot be None.".format(by,to))
+        elif by is not None:
+            new_dimension = old_dimension + by
+        elif to is not None:
+            new_dimension = to
+        assert new_dimension >= old_dimension
+        matrix, matrix_conj = state_center_data.newEnlargener(old_dimension,new_dimension)
+        self.state_center_data = state_center_data.absorbMatrixAt(direction,matrix).absorbMatrixAt(direction+2,matrix)
+        self.state_center_data_conj = self.state_center_data.conj()
+        for i in (direction,direction+2):
+            self.sides[i] = {tag: data.absorbMatrixAt(2,matrix_conj).absorbMatrixAt(3,matrix) for tag, data in self.sides[i].items()}
+    # }}}
     def minimizeExpectation(self): # {{{
         state_center_data = self.state_center_data
         if prod(state_center_data.shape[:4]) == 1:

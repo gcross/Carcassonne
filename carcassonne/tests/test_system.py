@@ -6,6 +6,35 @@ from ..system import System
 from ..sparse import Identity, Operator
 # }}}
 
+class TestSystem(TestCase): # {{{
+    @staticmethod # randomSystem # {{{
+    def randomInitialSystem(n=2):
+        corners_data = tuple(NDArrayData.newRandom(*(randint(1,n) for _ in range(2))) for _ in range(4))
+        state_center_data = NDArrayData.newRandom(*(randint(1,n),randint(1,n))*2 + (randint(1,n),))
+        sides_data = tuple(NDArrayData.newRandom(corners_data[i].shape[1],corners_data[(i-1)%4].shape[0],state_center_data.shape[i],state_center_data.shape[i]) for i in range(4))
+        O = NDArrayData.newRandom(state_center_data.shape[-1],state_center_data.shape[-1])
+        operator_center_tensor = {Identity():None,Operator():O}
+        return \
+            System(
+                tuple({Identity():corner_data} for corner_data in corners_data),
+                tuple({Identity():side_data} for side_data in sides_data),
+                state_center_data,
+                operator_center_tensor,
+            )
+    # }}}
+    @with_checker(number_of_calls=10) # test_increaseBandwidth_one_step # {{{
+    def test_increaseBandwidth_one_step(self,direction=irange(0,3),increment=irange(0,4)):
+        system = self.randomInitialSystem()
+        expectation1 = system.computeExpectation()
+        normalization1 = system.computeNormalization()
+        system.increaseBandwidth(direction,by=increment)
+        expectation2 = system.computeExpectation()
+        normalization2 = system.computeNormalization()
+        self.assertAlmostEqual(expectation1,expectation2)
+        self.assertAlmostEqual(normalization1,normalization2)
+    # }}}
+# }}}
+
 class TestSystemSillyFieldWalk(TestCase): # {{{
     @staticmethod
     def makeSillySystem(): # {{{
