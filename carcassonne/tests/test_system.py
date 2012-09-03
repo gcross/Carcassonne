@@ -61,6 +61,17 @@ class TestSystem(TestCase): # {{{
                 height += 1
         self.assertAlmostEqual(system.computeExpectation(),width*height)
     # }}}
+    @with_checker # test_minimizer_works_after_some_steps {{{
+    def test_minimizer_works_after_some_steps(self,moves=(irange(0,1),)*4):
+        system = self.randomInitialSystem(makeOperator=lambda N: NDArrayData.newDiagonal([1]*(N-1)+[-1]))
+        N = system.state_center_data.shape[-1]
+        system.minimizeExpectation()
+        self.assertDataAlmostEqual(system.state_center_data,NDArrayData.newOuterProduct([1],[1],[1],[1],[0]*(N-1)+[1]))
+        directions = sum(([i]*moves[i] for i in range(4)),[])
+        for direction in directions:
+            system.absorbCenter(direction)
+            system.increaseBandwidth(direction=direction+1,by=1)
+    # }}}
 # }}}
 
 class TestSystemSillyFieldWalk(TestCase): # {{{

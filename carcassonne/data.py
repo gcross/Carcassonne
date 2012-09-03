@@ -1,7 +1,7 @@
 # Imports {{{
 from copy import copy
 from functools import reduce
-from numpy import allclose, array, identity, multiply, ones, prod, tensordot, zeros
+from numpy import allclose, array, diag, identity, multiply, ones, prod, tensordot, zeros
 from scipy.linalg import svd, qr
 from scipy.sparse.linalg import LinearOperator, eigs
 
@@ -22,6 +22,10 @@ class NDArrayData(Data): # {{{
   # Class construction methods {{{
     def __init__(self,_arr): # {{{
         self._arr = _arr
+    # }}}
+    @classmethod # newDiagonal {{{
+    def newDiagonal(cls,data):
+        return cls(diag(data))
     # }}}
     @classmethod # newEnlargener {{{
     def newEnlargener(cls,old_dimension,new_dimension,dtype=None):
@@ -116,7 +120,6 @@ class NDArrayData(Data): # {{{
     def minimizeOver(self,multiplyExpectation,multiplyNormalization): # {{{
         initial = self.toArray().ravel()
         N = len(initial)
-        print("N =",N)
         evals, evecs = eigs(
             A=LinearOperator((N,N),dtype=self.dtype,matvec=lambda v: multiplyExpectation(NDArrayData(v.reshape(self.shape))).toArray()),
             M=LinearOperator((N,N),dtype=self.dtype,matvec=lambda v: multiplyNormalization(NDArrayData(v.reshape(self.shape))).toArray()),
