@@ -120,11 +120,9 @@ class NDArrayData(Data): # {{{
     # }}}
   # }}}
   # Properties {{{
-
     dtype = property(fget = lambda self: self._arr.dtype)
     ndim = property(fget = lambda self: self._arr.ndim)
     shape = property(fget = lambda self: self._arr.shape)
-
   # }}}
 # }}}
 class ScalarData(Data): # {{{
