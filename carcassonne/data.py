@@ -1,7 +1,8 @@
 # Imports {{{
 from copy import copy
 from functools import reduce
-from numpy import allclose, array, multiply, ones, prod, tensordot, zeros
+from numpy import allclose, array, identity, multiply, ones, prod, tensordot, zeros
+from numpy.linalg import svd
 from scipy.sparse.linalg import LinearOperator, eigs
 
 from .utils import crand, randomComplexSample
@@ -29,6 +30,10 @@ class NDArrayData(Data): # {{{
         _arr = ndarray(shape,dtype)
         _arr[...] = value
         return NDArrayData(_arr)
+    # }}}
+    @classmethod # newIdentity {{{
+    def newIdentity(cls,N,dtype=None):
+        return NDArrayData(identity(N,dtype=dtype))
     # }}}
     @classmethod # newOuterProduct {{{
     def newOuterProduct(cls,*factors):
@@ -64,6 +69,14 @@ class NDArrayData(Data): # {{{
     def toArray(self):  #{{{
         return self._arr
     # }}}
+    def adjoint(self): # {{{
+        if self.ndim != 2:
+            raise ValueError("Adjoint may only be computed for rank 2 tensors.")
+        return self.conj().join(1,0)
+    # }}}
+    def absorbMatrixAt(self,axis,matrix): # {{{
+        return matrix.contractWith(self,(1,),axis).join(tuple(range(1,axis+1)) + (0,) + tuple(range(axis+1,self.ndim)))
+    # }}}
     def allcloseTo(self,other,rtol=1e-05,atol=1e-08): # {{{
         return allclose(self._arr,other._arr,rtol=rtol,atol=atol)
     # }}}
@@ -78,6 +91,22 @@ class NDArrayData(Data): # {{{
             raise ValueError("tensor is not a scalar")
         else:
             return self._arr
+    # }}}
+    def increaseDimension(self,axis,by=None,to=None): # {{{
+        old_dimension = self.shape[axis]
+        if by is None and to is None:
+            raise ValueError("Either 'by' or 'to' must not be None.")
+        elif by is not None and to is not None:
+            raise ValueError("Both 'by' ({}) and 'to' ({}) cannot be None.".format(by,to))
+        elif by is not None:
+            new_dimension = self.shape[axis] + by
+        elif to is not None:
+            new_dimension = to
+        assert new_dimension >= old_dimension
+        if new_dimension == old_dimension:
+            return self, self.newIdentity(new_dimension)
+        matrix = self.newRandom(new_dimension,old_dimension).svd(full_matrices=False)[0]
+        return self.absorbMatrixAt(axis,matrix), matrix.conj()
     # }}}
     def join(self,*groups): # {{{
         groups = [[group] if isinstance(group,int) else group for group in groups]
@@ -114,6 +143,9 @@ class NDArrayData(Data): # {{{
         size = round(self._arr.shape[index]**(1.0/root))
         assert size**root == self._arr.shape[index]
         return self.splitAt(index,(size,)*root)
+    # }}}
+    def svd(self,full_matrices=True): # {{{
+        return tuple(NDArrayData(x) for x in svd(self._arr,full_matrices=full_matrices))
     # }}}
     def transpose(self,*args): # {{{
         return NDArrayData(self._arr.transpose(*args))
