@@ -23,10 +23,16 @@ class System: # {{{
         self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(self.corners[R(direction)],self.sides[R(direction)])
     # }}}
     def computeExpectation(self): # {{{
-        return self.state_center_data_conj.contractWith(self.formExpectationMultiplier()(self.state_center_data),range(5),range(5)).extractScalar()
+        multiplyExpectation, multiplyNormalization = self.formExpectationAndNormalizationMultipliers()
+        unnormalized_expectation = self.computeScalarUsingMultiplier(multiplyExpectation)
+        normalization = self.computeScalarUsingMultiplier(multiplyNormalization)
+        return unnormalized_expectation/normalization
     # }}}
     def computeNormalization(self): # {{{
-        return self.state_center_data_conj.contractWith(self.formNormalizationMultiplier()(self.state_center_data),range(5),range(5)).extractScalar()
+        return self.computeScalarUsingMultiplier(self.formNormalizationMultiplier())
+    # }}}
+    def computeScalarUsingMultiplier(self,multiply): # {{{
+        return self.state_center_data_conj.contractWith(multiply(self.state_center_data),range(5),range(5)).extractScalar()
     # }}}
     def formExpectationAndNormalizationMultipliers(self): # {{{
         return formExpectationAndNormalizationMultipliers(self.corners,self.sides,self.operator_center_tensor)
