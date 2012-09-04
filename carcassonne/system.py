@@ -2,7 +2,8 @@
 from numpy import prod, zeros
 from numpy.linalg import eigh
 
-from .sparse import Operator
+from .sparse import Identity, Operator
+from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
 from .utils import L, R
 # }}}
@@ -41,7 +42,10 @@ class System: # {{{
         return self.formExpectationAndNormalizationMultipliers()[0]
     # }}}
     def formNormalizationMultiplier(self): # {{{
-        return self.formExpectationAndNormalizationMultipliers()[1]
+        return formNormalizationMultiplier(tuple(corner[Identity()] for corner in self.corners),tuple(side[Identity()] for side in self.sides))
+    # }}}
+    def formNormalizationSubmatrix(self): # {{{
+        return formNormalizationSubmatrix(tuple(corner[Identity()] for corner in self.corners),tuple(side[Identity()] for side in self.sides))
     # }}}
     def increaseBandwidth(self,direction,by=None,to=None): # {{{
         state_center_data = self.state_center_data

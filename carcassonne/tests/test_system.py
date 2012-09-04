@@ -1,5 +1,6 @@
 # Imports {{{
 from numpy import array, complex128
+from numpy.linalg import norm
 
 from . import *
 from ..system import System
@@ -60,6 +61,22 @@ class TestSystem(TestCase): # {{{
             else:
                 height += 1
         self.assertAlmostEqual(system.computeExpectation(),width*height)
+    # }}}
+    @with_checker # test_formNormalizationMultiplier_same_both_ways {{{
+    def test_formNormalizationMultiplier_same_both_ways(self):
+        system = self.randomInitialSystem()
+        random_data = NDArrayData.newRandom(*system.state_center_data.shape)
+        m1 = system.formNormalizationMultiplier()(random_data)
+        m2 = system.formExpectationAndNormalizationMultipliers()[1](random_data)
+        self.assertDataAlmostEqual(m1,m2)
+    # }}}
+    @with_checker # test_formNormalizationMultiplier_same_asformNormalizationSubmatrix {{{
+    def test_formNormalizationMultiplier_same_asformNormalizationSubmatrix(self):
+        system = self.randomInitialSystem()
+        random_data = NDArrayData.newRandom(*system.state_center_data.shape)
+        m1 = system.formNormalizationMultiplier()(random_data)
+        m2 = system.formNormalizationSubmatrix().contractWith(random_data.join(range(4),4),(1,),(0,)).split(*random_data.shape)
+        self.assertDataAlmostEqual(m1,m2)
     # }}}
     @with_checker # test_minimizer_works_after_some_steps {{{
     def dont_test_minimizer_works_after_some_steps(self,moves=(irange(0,1),)*4):

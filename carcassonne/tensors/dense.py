@@ -139,6 +139,28 @@ def formNormalizationStage3(contractor,stage2_0,stage2_1):
         return contractor(data0,data1,center)
     return multiply
 # }}}
+# def formNormalizationSubmatrix + friends {{{
+@prependDataContractor(
+    [
+        Join(0,[0,1],1,[1,0]),
+    ],
+    [
+        [(i,j) for i in (0,1) for j in (4,5)],
+        [(i,j) for i in (0,1) for j in (2,3)],
+    ]
+)
+def formNormalizationSubmatrix(contractor,corners,sides):
+    return contractor(
+        formNormalizationStage2(
+            formNormalizationStage1(corners[0],sides[0]),
+            formNormalizationStage1(corners[1],sides[1]),
+        ),
+        formNormalizationStage2(
+            formNormalizationStage1(corners[2],sides[2]),
+            formNormalizationStage1(corners[3],sides[3]),
+        ),
+    )
+# }}}
 # }}}
 
 # Exports {{{
@@ -151,5 +173,6 @@ __all__ = [
     "formNormalizationStage1",
     "formNormalizationStage2",
     "formNormalizationStage3",
+    "formNormalizationSubmatrix",
 ]
 # }}}
