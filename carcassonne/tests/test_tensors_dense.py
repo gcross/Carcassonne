@@ -16,11 +16,14 @@ class TestDenseCorner(TestCase): # {{{
         c = irange(1,10),
         d = irange(1,10),
         e = irange(1,10),
+        f = irange(1,10),
+        g = irange(1,10),
+        h = irange(1,10),
     ) :
-        A = NDArrayData.newRandom(a,b)
-        B = NDArrayData.newRandom(c,a,d,e)
+        A = NDArrayData.newRandom(a,b,c,d)
+        B = NDArrayData.newRandom(e,f,a,b,g,h)
         C1 = absorbDenseSideIntoCornerFromLeft(A,B)
-        C2 = A.contractWith(B,(0,),(1,)).join(1,(0,2,3))
+        C2 = A.contractWith(B,(0,1),(2,3)).join(2,3,(0,4),(1,5))
         self.assertDataAlmostEqual(C1,C2)
     # }}}
     @with_checker
@@ -30,11 +33,14 @@ class TestDenseCorner(TestCase): # {{{
         c = irange(1,10),
         d = irange(1,10),
         e = irange(1,10),
+        f = irange(1,10),
+        g = irange(1,10),
+        h = irange(1,10),
     ) :
-        A = NDArrayData.newRandom(a,b)
-        B = NDArrayData.newRandom(b,c,d,e)
+        A = NDArrayData.newRandom(a,b,c,d)
+        B = NDArrayData.newRandom(c,d,e,f,g,h)
         C1 = absorbDenseSideIntoCornerFromRight(A,B)
-        C2 = A.contractWith(B,(1,),(0,)).join((0,2,3),1)
+        C2 = A.contractWith(B,(2,3,),(0,1)).join((0,4),(1,5),2,3)
         self.assertDataAlmostEqual(C1,C2)
     # }}}
 # }}}
@@ -50,19 +56,19 @@ class TestDenseSide(TestCase): # {{{
         f = irange(1,3),
         g = irange(1,3),
         h = irange(1,3),
+        j = irange(1,3),
+        k = irange(1,3),
         i = irange(0,3),
     ):
-        A = NDArrayData.newRandom(a,b,c,c)
-        B_shape = replaceAt((d,e,f,g,h),i,c)
+        A = NDArrayData.newRandom(a,b,c,d,e,e)
+        B_shape = replaceAt((f,g,h,j,k),i,e)
         B = NDArrayData.newRandom(*B_shape)
         C1 = absorbDenseCenterSSIntoSide(i,A,B)
-        C2 = A.join(0,1,(2,3)).contractWith(
-                (B).contractWith(B.conj(),(4,),(4,)
-                  ).join((0,4),(1,5),(2,6),(3,7)
-                ),
-                (2,),
-                (i,),
-             ).join((0,2+LA(i)),(1,2+RA(i)),2+OA(i)).splitAt(2,B_shape[O(i)],B_shape[O(i)])
+        C2 = A.contractWith(
+                B.contractWith(B.conj(),(4,),(4,)),
+                (4,5),
+                (i,i+4),
+             ).join((0,4+LA(i)),(1,7+LA(i)),(2,4+RA(i)),(3,7+RA(i)),4+OA(i),7+OA(i))
         self.assertDataAlmostEqual(C1,C2)
     # }}}
     @with_checker
@@ -75,21 +81,20 @@ class TestDenseSide(TestCase): # {{{
         f = irange(1,3),
         g = irange(1,3),
         h = irange(1,3),
+        j = irange(1,3),
+        k = irange(1,3),
         i = irange(0,3),
     ):
-        A = NDArrayData.newRandom(a,b,c,c)
-        B_shape = replaceAt((d,e,f,g,h),i,c)
+        A = NDArrayData.newRandom(a,b,c,d,e,e)
+        B_shape = replaceAt((f,g,h,j,k),i,e)
         B = NDArrayData.newRandom(*B_shape)
-        C = NDArrayData.newRandom(h,h)
+        C = NDArrayData.newRandom(k,k)
         D1 = absorbDenseCenterSOSIntoSide(i,A,B,C)
-        D2 = A.join(0,1,(2,3)).contractWith(
-                (B).contractWith(C,(4,),(1,)
-                  ).contractWith(B.conj(),(4,),(4,)
-                  ).join((0,4),(1,5),(2,6),(3,7)
-                ),
-                (2,),
-                (i,),
-             ).join((0,2+LA(i)),(1,2+RA(i)),2+OA(i)).splitAt(2,B_shape[O(i)],B_shape[O(i)])
+        D2 = A.contractWith(
+                (B).contractWith(C,(4,),(1,)).contractWith(B.conj(),(4,),(4,)),
+                (4,5),
+                (i,i+4),
+             ).join((0,4+LA(i)),(1,7+LA(i)),(2,4+RA(i)),(3,7+RA(i)),4+OA(i),7+OA(i))
         self.assertDataAlmostEqual(D1,D2)
     # }}}
 # }}}
@@ -102,11 +107,14 @@ class TestDenseStages(TestCase): # {{{
         c = irange(1,10),
         d = irange(1,10),
         e = irange(1,10),
+        f = irange(1,10),
+        g = irange(1,10),
+        h = irange(1,10),
     ):
-        A = NDArrayData.newRandom(a,b)
-        B = NDArrayData.newRandom(b,c,d,e)
+        A = NDArrayData.newRandom(a,b,c,d)
+        B = NDArrayData.newRandom(c,d,e,f,g,h)
         C1 = formNormalizationStage1(A,B)
-        C2 = A.contractWith(B,(1,),(0,))
+        C2 = A.contractWith(B,(2,3),(0,1)).join((0,1),(2,3),4,5)
         self.assertDataAlmostEqual(C1,C2)
     # }}}
     @with_checker
