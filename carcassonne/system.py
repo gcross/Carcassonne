@@ -7,7 +7,7 @@ from .data import NDArrayData
 from .sparse import Identity, Operator
 from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
-from .utils import L, R
+from .utils import computeNewDimension, L, R
 # }}}
 
 # Classes {{{
@@ -124,15 +124,7 @@ class System: # {{{
         state_center_data = self.state_center_data
         direction %= 2
         old_dimension = state_center_data.shape[direction]
-        if by is None and to is None:
-            raise ValueError("Either 'by' or 'to' must not be None.")
-        elif by is not None and to is not None:
-            raise ValueError("Both 'by' ({}) and 'to' ({}) cannot be None.".format(by,to))
-        elif by is not None:
-            new_dimension = old_dimension + by
-        elif to is not None:
-            new_dimension = to
-        assert new_dimension >= old_dimension
+        new_dimension = computeNewDimension(old_dimension,by,to)
         matrix, matrix_conj = state_center_data.newEnlargener(old_dimension,new_dimension)
         self.state_center_data = state_center_data.absorbMatrixAt(direction,matrix).absorbMatrixAt(direction+2,matrix)
         self.state_center_data_conj = self.state_center_data.conj()

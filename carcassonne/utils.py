@@ -199,6 +199,18 @@ def computeLengthAndCheckForGaps(indices,error_message): # {{{
         raise ValueError(error_message + ": " + str(unobserved_indices))
     return length
 # }}}
+def computeNewDimension(old_dimension,by=None,to=None): # {{{
+    if by is None and to is None:
+        raise ValueError("Either 'by' or 'to' must not be None.")
+    elif by is not None and to is not None:
+        raise ValueError("Both 'by' ({}) and 'to' ({}) cannot be None.".format(by,to))
+    elif by is not None:
+        new_dimension = old_dimension + by
+    elif to is not None:
+        new_dimension = to
+    assert new_dimension >= old_dimension
+    return new_dimension
+# }}}
 def computePostContractionIndexMap(rank,contracted_indices,offset=0): # {{{
     contracted_indices = set(contracted_indices)
     index_map = dict()
@@ -537,6 +549,7 @@ __all__ = [
 
     "applyIndexMapTo",
     "applyPermutation",
+    "computeNewDimension",
     "crand",
     "formAbsorber",
     "formContractor",
