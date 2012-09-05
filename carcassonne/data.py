@@ -1,7 +1,7 @@
 # Imports {{{
 from copy import copy
 from functools import reduce
-from numpy import allclose, array, diag, identity, multiply, ones, prod, tensordot, zeros
+from numpy import allclose, array, complex128, diag, identity, multiply, ndarray, ones, prod, tensordot, zeros
 from scipy.linalg import svd, qr
 from scipy.sparse.linalg import LinearOperator, eigs
 
@@ -106,6 +106,36 @@ class NDArrayData(Data): # {{{
             raise ValueError("tensor is not a scalar")
         else:
             return self._arr
+    # }}}
+    def increaseDimensionAndFillWithRandom(self,axis,new_dimension): # {{{
+        old_shape = self.shape
+        old_dimension = old_shape[axis]
+        new_shape = list(old_shape)
+        if new_dimension < old_dimension:
+            raise ValueError("new dimension for axis {} is less than the old one ({} < {})".format(axis,new_dimension,old_dimension))
+        new_shape[axis] = new_dimension
+        new_arr = ndarray(new_shape,dtype=complex128)
+        old_indices = tuple(slice(0,d) for d in old_shape)
+        new_arr[old_indices] = self._arr
+        random_shape = list(old_shape)
+        random_shape[axis] = new_dimension - old_dimension
+        random_indices = list(old_indices)
+        random_indices[axis] = slice(old_dimension,new_dimension)
+        new_arr[random_indices] = crand(*random_shape)
+        return NDArrayData(new_arr)
+    # }}}
+    def increaseDimensionsAndFillWithZeros(self,*axes_and_new_dimensions): # {{{
+        old_shape = self.shape
+        new_shape = list(old_shape)
+        for axis, new_dimension in axes_and_new_dimensions:
+            old_dimension = old_shape[axis]
+            if new_dimension < old_dimension:
+                raise ValueError("new dimension for axis {} is less than the old one ({} < {})".format(axis,new_dimension,old_dimension))
+            new_shape[axis] = new_dimension
+        new_arr = zeros(new_shape,dtype=complex128)
+        old_indices = tuple(slice(0,d) for d in old_shape)
+        new_arr[old_indices] = self._arr
+        return NDArrayData(new_arr)
     # }}}
     def join(self,*groups): # {{{
         groups = [[group] if isinstance(group,int) else group for group in groups]

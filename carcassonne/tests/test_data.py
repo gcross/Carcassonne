@@ -24,4 +24,32 @@ class TestNDArrayData(TestCase): # {{{
             matrix.contractWith(tensor,(1,),(axis,)).join(*new_axes),
         )
     # }}}
+    @with_checker
+    def test_increaseDimensions(self,
+        shape1 = (irange(1,5),)*5,
+        shape2 = (irange(1,5),)*5,
+        axis1 = irange(0,4),
+        axis2 = irange(0,4),
+        increment = irange(0,10),
+    ):
+        shape1 = list(shape1)
+        shape2 = list(shape2)
+        shape1[axis1] = shape2[axis2]
+        data1 = NDArrayData.newRandom(*shape1)
+        data2 = NDArrayData.newRandom(*shape2)
+        data1_embiggened = data1.increaseDimensionAndFillWithRandom(axis1,shape1[axis1]+increment)
+        data2_embiggened = data2.increaseDimensionsAndFillWithZeros((axis2,shape2[axis2]+increment))
+        for i in range(5):
+            if i == axis1:
+                self.assertEqual(data1_embiggened.shape[i],data1.shape[i]+increment)
+            else:
+                self.assertEqual(data1_embiggened.shape[i],data1.shape[i])
+            if i == axis2:
+                self.assertEqual(data2_embiggened.shape[i],data2.shape[i]+increment)
+            else:
+                self.assertEqual(data2_embiggened.shape[i],data2.shape[i])
+        self.assertDataAlmostEqual(
+            data1.contractWith(data2,(axis1,),(axis2,)),
+            data1_embiggened.contractWith(data2_embiggened,(axis1,),(axis2,)),
+        )
 # }}}
