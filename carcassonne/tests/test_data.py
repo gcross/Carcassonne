@@ -4,7 +4,7 @@ from ..data import *
 # }}}
 
 class TestNDArrayData(TestCase): # {{{
-    @with_checker # newEnlargener {{{
+    @with_checker # text_newEnlargener {{{
     def test_newEnlargener(self,old=irange(1,10),new=irange(10,20)):
         m1, m2 = NDArrayData.newEnlargener(old,new)
         self.assertEqual(m1.shape,(new,old))
@@ -12,7 +12,7 @@ class TestNDArrayData(TestCase): # {{{
         self.assertDataAlmostEqual(m1.contractWith(m2,(0,),(0,)),m1.newIdentity(old))
         self.assertDataAlmostEqual(m2.contractWith(m1,(0,),(0,)),m2.newIdentity(old))
     # }}}
-    @with_checker # absorbMatrixAt {{{
+    @with_checker # test_absorbMatrixAt {{{
     def test_absorbMatrixAt(self,ndim=irange(1,5),n=irange(1,5)):
         axis = randint(0,ndim-1)
         tensor = NDArrayData.newRandom(*(randint(1,n) for _ in range(ndim)))
