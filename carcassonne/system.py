@@ -1,7 +1,9 @@
 # Imports {{{
 from numpy import prod, zeros
 from numpy.linalg import eigh
+from random import randint
 
+from .data import NDArrayData
 from .sparse import Identity, Operator
 from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
@@ -10,6 +12,37 @@ from .utils import L, R
 
 # Classes {{{
 class System: # {{{
+  # Class methods {{{
+    @classmethod # newRandom {{{
+    def newRandom(cls,makeOperator=None,DataClass=NDArrayData,maximum_dimension=2):
+        randomDimension = lambda: randint(1,maximum_dimension)
+        randomDimensions = lambda n: tuple(randomDimension() for _ in range(n))
+        spoke_sizes = randomDimensions(2)*2
+        sides_data = tuple(DataClass.newRandom(*randomDimensions(1)*4+(spoke_sizes[i],)*2) for i in range(4))
+        for side_data in sides_data:
+            side_data += side_data.join(1,0,3,2,5,4).conj()
+        corners_data = tuple(DataClass.newRandom(*(sides_data[(i+1)%4].shape[2],)*2+(sides_data[i].shape[0],)*2) for i in range(4))
+        for corner_data in corners_data:
+            corner_data += corner_data.join(1,0,3,2).conj()
+        state_center_data = DataClass.newRandom(*spoke_sizes + randomDimensions(1))
+        if makeOperator is None:
+            O = DataClass.newRandom(state_center_data.shape[-1],state_center_data.shape[-1])
+            O += O.join(1,0).conj()
+        else:
+            O = makeOperator(state_center_data.shape[-1])
+        operator_center_tensor = {Identity():None,Operator():O}
+        system = cls(
+            tuple({Identity():corner_data} for corner_data in corners_data),
+            tuple({Identity():side_data} for side_data in sides_data),
+            state_center_data,
+            operator_center_tensor,
+        )
+        system.assertDimensionsAreConsistent()
+        system.assertNormalizationIsHermitian()
+        return system
+    # }}}
+  # }}}
+  # Instance methods {{{
     def __init__(self,corners,sides,state_center_data,operator_center_tensor,state_center_data_conj=None): # {{{
         self.corners = list(corners)
         self.sides = list(sides)
@@ -55,6 +88,13 @@ class System: # {{{
                 raise AssertionError("corner {}'s right dimensions do not match side {}'s left dimensions ({} != {})".format(i,i,corner_shape[2],self.sides[i][Identity()].shape[0]))
             if corner_shape[0] != self.sides[L(i)][Identity()].shape[2]:
                 raise AssertionError("corner {}'s left dimensions do not match side {}'s right dimensions ({} != {})".format(i,L(i),corner_shape[0],self.sides[L(i)][Identity()].shape[2]))
+    # }}}
+    def assertNormalizationIsHermitian(self): # {{{
+        for i in range(4):
+            if not self.sides[i][Identity()].allcloseTo(self.sides[i][Identity()].join(1,0,3,2,5,4).conj()):
+                raise AssertionError("side {} is not hermitian".format(i))
+            if not self.corners[i][Identity()].allcloseTo(self.corners[i][Identity()].join(1,0,3,2).conj()):
+                raise AssertionError("corner {} is not hermitian".format(i))
     # }}}
     def computeExpectation(self): # {{{
         multiplyExpectation, multiplyNormalization = self.formExpectationAndNormalizationMultipliers()
@@ -119,6 +159,7 @@ class System: # {{{
         else:
             self.state_center_data_conj = state_center_data_conj
     # }}}
+  # }}}
 # }}}
 # }}}
 

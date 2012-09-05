@@ -8,41 +8,9 @@ from ..sparse import Identity, Operator
 # }}}
 
 class TestSystem(TestCase): # {{{
-    def randomInitialSystem(self,n=2,makeOperator=None): # {{{
-        spoke_sizes = (randint(1,n),randint(1,n))*2
-        sides_data = tuple(NDArrayData.newRandom(*(randint(1,n),)*4+(spoke_sizes[i],)*2) for i in range(4))
-        for side_data in sides_data:
-            side_data += side_data.join(1,0,3,2,5,4).conj()
-            self.assertDataAlmostEqual(side_data,side_data.join(1,0,3,2,5,4).conj())
-        corners_data = tuple(NDArrayData.newRandom(*(sides_data[(i+1)%4].shape[2],)*2+(sides_data[i].shape[0],)*2) for i in range(4))
-        for corner_data in corners_data:
-            corner_data += corner_data.join(1,0,3,2).conj()
-            self.assertDataAlmostEqual(corner_data,corner_data.join(1,0,3,2).conj())
-        state_center_data = NDArrayData.newRandom(*spoke_sizes + (randint(1,n),))
-        for i in range(4):
-            assert sides_data[i].shape[0] == corners_data[i].shape[2]
-            assert sides_data[i].shape[1] == corners_data[i].shape[3]
-            assert sides_data[i].shape[2] == corners_data[(i-1)%4].shape[0]
-            assert sides_data[i].shape[3] == corners_data[(i-1)%4].shape[1]
-            assert sides_data[i].shape[4] == state_center_data.shape[i]
-            assert sides_data[i].shape[5] == state_center_data.shape[i]
-        if makeOperator is None:
-            O = NDArrayData.newRandom(state_center_data.shape[-1],state_center_data.shape[-1])
-        else:
-            O = makeOperator(state_center_data.shape[-1])
-        operator_center_tensor = {Identity():None,Operator():O}
-        system = System(
-            tuple({Identity():corner_data} for corner_data in corners_data),
-            tuple({Identity():side_data} for side_data in sides_data),
-            state_center_data,
-            operator_center_tensor,
-        )
-        system.assertDimensionsAreConsistent()
-        return system
-    # }}}
     @with_checker(number_of_calls=10) # test_increaseBandwidth_one_step # {{{
     def test_increaseBandwidth_one_step(self,direction=irange(0,3),increment=irange(0,4)):
-        system = self.randomInitialSystem()
+        system = System.newRandom()
         expectation1 = system.computeExpectation()
         normalization1 = system.computeNormalization()
         system.increaseBandwidth(direction,by=increment)
@@ -53,20 +21,23 @@ class TestSystem(TestCase): # {{{
     # }}}
     @with_checker # test_expectation_of_identity_after_no_steps # {{{
     def test_expectation_of_sum_of_identities_after_no_steps(self):
-        self.assertAlmostEqual(self.randomInitialSystem(makeOperator=lambda N: NDArrayData.newIdentity(N)).computeExpectation(),1)
+        self.assertAlmostEqual(System.newRandom(makeOperator=lambda N: NDArrayData.newIdentity(N)).computeExpectation(),1)
     # }}}
     @with_checker # test_expectation_of_identity_after_some_steps # {{{
     def test_expectation_of_sum_of_identities_after_some_steps(self,moves=(irange(0,1),)*4):
-        system = self.randomInitialSystem(makeOperator=lambda N: NDArrayData.newIdentity(N))
+        system = System.newRandom(makeOperator=lambda N: NDArrayData.newIdentity(N))
         directions = sum(([i]*moves[i] for i in range(4)),[])
         width = 1
         height = 1
         for direction in directions:
             system.assertDimensionsAreConsistent()
+            system.assertNormalizationIsHermitian()
             system.absorbCenter(direction)
             system.assertDimensionsAreConsistent()
+            system.assertNormalizationIsHermitian()
             system.increaseBandwidth(direction=direction+1,by=1)
             system.assertDimensionsAreConsistent()
+            system.assertNormalizationIsHermitian()
             if direction == 0 or direction == 2:
                 width += 1
             else:
@@ -77,7 +48,7 @@ class TestSystem(TestCase): # {{{
     # }}}
     @with_checker # test_formNormalizationMultiplier_same_both_ways {{{
     def test_formNormalizationMultiplier_same_both_ways(self):
-        system = self.randomInitialSystem()
+        system = System.newRandom()
         random_data = NDArrayData.newRandom(*system.state_center_data.shape)
         m1 = system.formNormalizationMultiplier()(random_data)
         m2 = system.formExpectationAndNormalizationMultipliers()[1](random_data)
@@ -85,7 +56,7 @@ class TestSystem(TestCase): # {{{
     # }}}
     @with_checker # test_formNormalizationMultiplier_same_asformNormalizationSubmatrix {{{
     def test_formNormalizationMultiplier_same_asformNormalizationSubmatrix(self):
-        system = self.randomInitialSystem()
+        system = System.newRandom()
         random_data = NDArrayData.newRandom(*system.state_center_data.shape)
         m1 = system.formNormalizationMultiplier()(random_data)
         m2 = system.formNormalizationSubmatrix().contractWith(random_data.join(range(4),4),(1,),(0,)).split(*random_data.shape)
@@ -93,7 +64,7 @@ class TestSystem(TestCase): # {{{
     # }}}
     @with_checker # test_minimizer_works_after_some_steps {{{
     def dont_test_minimizer_works_after_some_steps(self,moves=(irange(0,1),)*4):
-        system = self.randomInitialSystem(makeOperator=lambda N: NDArrayData.newDiagonal([1]*(N-1)+[-1]))
+        system = System.newRandom(makeOperator=lambda N: NDArrayData.newDiagonal([1]*(N-1)+[-1]))
         N = system.state_center_data.shape[-1]
         system.minimizeExpectation()
         self.assertDataAlmostEqual(system.state_center_data,NDArrayData.newOuterProduct([1],[1],[1],[1],[0]*(N-1)+[1]))
