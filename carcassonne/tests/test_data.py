@@ -53,4 +53,22 @@ class TestNDArrayData(TestCase): # {{{
             data1_embiggened.contractWith(data2_embiggened,(axis1,),(axis2,)),
         )
     # }}}
+    @with_checker # test_normalizeAxis {{{
+    def test_normalizeAxis(self,
+        shape = (irange(1,5),)*5,
+        axis = irange(0,4),
+    ):
+        data = NDArrayData.newRandom(*shape)
+        data_normalized, denormalizer = data.normalizeAxis(axis)
+        self.assertDataAlmostEqual(
+            data_normalized.absorbMatrixAt(axis,denormalizer.join(1,0)),
+            data
+        )
+        indices = list(range(5))
+        del indices[axis]
+        self.assertDataAlmostEqual(
+            data_normalized.contractWith(data_normalized.conj(),indices,indices),
+            NDArrayData.newIdentity(shape[axis])
+        )
+    # }}}
 # }}}

@@ -69,6 +69,10 @@ class NDArrayData(Data): # {{{
         self._arr += other._arr
         return self
     # }}}
+    def __imul__(self,other): # {{{
+        self._arr *= other._arr
+        return self
+    # }}}
     def __getitem__(self,index): # {{{
         return NDArrayData(self._arr[index])
     # }}}
@@ -157,6 +161,18 @@ class NDArrayData(Data): # {{{
             which='SR',
         )
         return NDArrayData(evecs.reshape(self.shape))
+    # }}}
+    def normalizeAxis(self,axis): # {{{
+        svd_axes_to_merge = list(range(self.ndim))
+        del svd_axes_to_merge[axis]
+        U, S, V = self.join(svd_axes_to_merge,axis).svd(full_matrices=False)
+        U_split = list(self.shape)
+        del U_split[axis]
+        U_split.append(U.shape[1])
+        U_join = list(range(self.ndim-1))
+        U_join.insert(axis,self.ndim-1)
+        V *= S.split(S.shape[0],1)
+        return U.split(*U_split).join(*U_join), V
     # }}}
     def qr(self,mode='full'): # {{{
         q, r = qr(self._arr,mode=mode)
