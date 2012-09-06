@@ -24,7 +24,7 @@ class TestNDArrayData(TestCase): # {{{
             matrix.contractWith(tensor,(1,),(axis,)).join(*new_axes),
         )
     # }}}
-    @with_checker
+    @with_checker # test_increaseDimensions {{{
     def test_increaseDimensions(self,
         shape1 = (irange(1,5),)*5,
         shape2 = (irange(1,5),)*5,
@@ -52,4 +52,5 @@ class TestNDArrayData(TestCase): # {{{
             data1.contractWith(data2,(axis1,),(axis2,)),
             data1_embiggened.contractWith(data2_embiggened,(axis1,),(axis2,)),
         )
+    # }}}
 # }}}
