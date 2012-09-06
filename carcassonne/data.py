@@ -1,8 +1,8 @@
 # Imports {{{
 from copy import copy
 from functools import reduce
-from numpy import allclose, array, complex128, diag, identity, multiply, ndarray, ones, prod, tensordot, zeros
-from scipy.linalg import svd, qr
+from numpy import allclose, array, complex128, diag, identity, multiply, ndarray, ones, prod, sqrt, tensordot, zeros
+from scipy.linalg import norm, svd, qr
 from scipy.sparse.linalg import LinearOperator, eigs
 
 from .utils import crand, randomComplexSample
@@ -69,8 +69,15 @@ class NDArrayData(Data): # {{{
         self._arr += other._arr
         return self
     # }}}
+    def __imul__(self,other): # {{{
+        self._arr *= other._arr
+        return self
+    # }}}
     def __getitem__(self,index): # {{{
         return NDArrayData(self._arr[index])
+    # }}}
+    def __mul__(self,other): # {{{
+        return NDArrayData(self._arr * other._arr)
     # }}}
     def __repr__(self): # {{{
         return "NDArrayData(" + repr(self._arr) + ")"
@@ -80,6 +87,9 @@ class NDArrayData(Data): # {{{
     # }}}
     def __str__(self): # {{{
         return "NDArrayData({})".format(self._arr)
+    # }}}
+    def __truediv__(self,other): # {{{
+        return NDArrayData(self._arr / other._arr)
     # }}}
     def toArray(self):  #{{{
         return self._arr
@@ -157,6 +167,21 @@ class NDArrayData(Data): # {{{
             which='SR',
         )
         return NDArrayData(evecs.reshape(self.shape))
+    # }}}
+    def normalizeAxis(self,axis): # {{{
+        if self.shape[axis] == 1:
+            n = (norm(self._arr))
+            return NDArrayData(self._arr/n), NDArrayData(array([[1/n]])), NDArrayData(array([[n]]))
+        svd_axes_to_merge = list(range(self.ndim))
+        del svd_axes_to_merge[axis]
+        U, S, V = self.join(svd_axes_to_merge,axis).svd(full_matrices=False)
+        U_split = list(self.shape)
+        del U_split[axis]
+        U_split.append(U.shape[1])
+        U_join = list(range(self.ndim-1))
+        U_join.insert(axis,self.ndim-1)
+        S = S.split(S.shape[0],1)
+        return U.split(*U_split).join(*U_join), (V/S).conj(), V*S
     # }}}
     def qr(self,mode='full'): # {{{
         q, r = qr(self._arr,mode=mode)
