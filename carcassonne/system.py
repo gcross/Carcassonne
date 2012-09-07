@@ -181,7 +181,11 @@ class System: # {{{
             tag: side_data.absorbMatrixAt(4,normalizer_for_side_axis1).absorbMatrixAt(5,normalizer_for_side_axis2)
             for tag, side_data in self.sides[side_id].items()
         }
-        self.state_center_data = self.state_center_data.absorbMatrixAt(side_id,denormalizer_for_center)
+        self.sides[(2+side_id)%4] = {
+            tag: side_data.absorbMatrixAt(4,denormalizer_for_center).absorbMatrixAt(5,denormalizer_for_center.conj())
+            for tag, side_data in self.sides[(2+side_id)%4].items()
+        }
+        self.state_center_data = self.state_center_data.absorbMatrixAt(side_id,denormalizer_for_center).absorbMatrixAt((2+side_id)%4,normalizer_for_side_axis1)
         self.state_center_data_conj = self.state_center_data.conj()
     # }}}
     def setStateCenter(self,state_center_data,state_center_data_conj=None): # {{{
