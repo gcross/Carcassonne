@@ -73,6 +73,18 @@ class TestSystem(TestCase): # {{{
             system.absorbCenter(direction)
             system.increaseBandwidth(direction=direction+1,by=1)
     # }}}
+    @with_checker # test_normalizeCornerAndDenormalizeSide {{{
+    def test_normalizeCornerAndDenormalizeSide(self,corner_id=irange(0,3),direction=irange(0,1)):
+        system = System.newRandom()
+        normalization1 = system.computeNormalization()
+        expectation1 = system.computeExpectation()
+        system.normalizeCornerAndDenormalizeSide(corner_id,direction)
+        system.assertNormalizationIsHermitian()
+        normalization2 = system.computeNormalization()
+        expectation2 = system.computeExpectation()
+        self.assertAlmostEqual(normalization1,normalization2)
+        self.assertAlmostEqual(expectation1,expectation2)
+    # }}}
 # }}}
 
 class TestSystemSillyFieldWalk(TestCase): # {{{
