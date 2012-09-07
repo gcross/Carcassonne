@@ -145,7 +145,8 @@ class System: # {{{
             self.state_center_data = state_center_data.minimizeOver(*self.formExpectationAndNormalizationMultipliers())
     # }}}
     def normalizeCenterAndDenormalizeSide(self,direction): # {{{
-        self.state_center_data, _, denormalizer_for_side_axis1 = self.state_center_data.normalizeAxis(direction)
+        normalizer_for_center, denormalizer_for_side_axis1 = self.state_center_data.normalizeAxis(direction,True)
+        self.state_center_data = self.state_center_data.absorbMatrixAt(direction,normalizer_for_center)
         self.state_center_data_conj = self.state_center_data.conj()
         denormalizer_for_side_axis2 = denormalizer_for_side_axis1.conj()
         self.sides[direction] = {
