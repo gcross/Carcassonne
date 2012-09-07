@@ -164,6 +164,18 @@ class System: # {{{
             for tag, side_data in self.sides[side_id].items()
         }
     # }}}
+    def normalizeSideAndDenormalizeCenter(self,side_id): # {{{
+        side_data = self.sides[side_id][Identity()]
+        intermediate_side_data, normalizer_for_side_axis1, denormalizer_for_center = side_data.normalizeAxis(4)
+        normalizer_for_side_axis2 = normalizer_for_side_axis1.conj()
+        normalized_side_data = intermediate_side_data.absorbMatrixAt(5,normalizer_for_side_axis2)
+        self.sides[side_id] = {
+            tag: side_data.absorbMatrixAt(4,normalizer_for_side_axis1).absorbMatrixAt(5,normalizer_for_side_axis2) if tag != Identity() else normalized_side_data
+            for tag, side_data in self.sides[side_id].items()
+        }
+        self.state_center_data = self.state_center_data.absorbMatrixAt(side_id,denormalizer_for_center)
+        self.state_center_data_conj = self.state_center_data.conj()
+    # }}}
     def setStateCenter(self,state_center_data,state_center_data_conj=None): # {{{
         self.state_center_data = state_center_data
         if state_center_data_conj is None:

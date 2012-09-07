@@ -85,6 +85,18 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(normalization1,normalization2)
         self.assertAlmostEqual(expectation1,expectation2)
     # }}}
+    @with_checker # test_normalizeSideAndDenormalizeCenter {{{
+    def test_normalizeSideAndDenormalizeCenter(self,side_id=irange(0,3)):
+        system = System.newRandom()
+        normalization1 = system.computeNormalization()
+        expectation1 = system.computeExpectation()
+        system.normalizeSideAndDenormalizeCenter(side_id)
+        system.assertNormalizationIsHermitian()
+        normalization2 = system.computeNormalization()
+        expectation2 = system.computeExpectation()
+        self.assertAlmostEqual(normalization1,normalization2)
+        self.assertAlmostEqual(expectation1,expectation2)
+    # }}}
 # }}}
 
 class TestSystemSillyFieldWalk(TestCase): # {{{
