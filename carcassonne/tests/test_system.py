@@ -112,8 +112,8 @@ class TestSystem(TestCase): # {{{
 # }}}
 
 class TestSystemSillyFieldWalk(TestCase): # {{{
-    @staticmethod
-    def makeSillySystem(): # {{{
+    @staticmethod # def makeSillySystem # {{{
+    def makeSillySystem():
         corners = [{Identity():NDArrayData.newTrivial((1,1,1,1))}]*4
         sides = [{Identity():NDArrayData.newTrivial((1,1,1,1,1,1))}]*4
         I = O = NDArrayData.newTrivial((1,1))
@@ -125,15 +125,15 @@ class TestSystemSillyFieldWalk(TestCase): # {{{
         system = self.makeSillySystem()
         self.assertEqual(system.computeExpectation(),1)
     # }}}
-    @with_checker(number_of_calls=10)
-    def test_silly_field_single_step(self,direction=irange(0,3)): # {{{
+    @with_checker(number_of_calls=10) # test_silly_field_single_step {{{
+    def test_silly_field_single_step(self,direction=irange(0,3)):
         system = self.makeSillySystem()
         system.absorbCenter(direction)
         self.assertEqual(system.computeExpectation(),2)
         self.assertEqual(system.computeNormalization(),1)
     # }}}
-    @with_checker(number_of_calls=40)
-    def test_silly_field_double_step(self,direction1=irange(0,3),direction2=irange(0,3)): # {{{
+    @with_checker(number_of_calls=40) # test_silly_field_double_step {{{
+    def test_silly_field_double_step(self,direction1=irange(0,3),direction2=irange(0,3)):
         system = self.makeSillySystem()
         width = 1
         height = 1
@@ -150,8 +150,8 @@ class TestSystemSillyFieldWalk(TestCase): # {{{
         self.assertEqual(system.computeExpectation(),width*height)
         self.assertEqual(system.computeNormalization(),1)
     # }}}
-    @with_checker(number_of_calls=10)
-    def test_silly_field_random_walk(self,directions=[irange(0,3)]): # {{{
+    @with_checker(number_of_calls=10) # test_silly_field_random_walk {{{
+    def test_silly_field_random_walk(self,directions=[irange(0,3)]):
         system = self.makeSillySystem()
         width = 1
         height = 1
@@ -167,8 +167,8 @@ class TestSystemSillyFieldWalk(TestCase): # {{{
 # }}}
 
 class TestSystemMagneticFieldWalk(TestCase): # {{{
-    @staticmethod
-    def makeMagneticField(): # {{{
+    @staticmethod # def makeMagneticField # {{{
+    def makeMagneticField():
         corners = [{Identity():NDArrayData.newTrivial((1,1,1,1),dtype=complex128)}]*4
         sides = [{Identity():NDArrayData.newTrivial((1,1,1,1,1,1),dtype=complex128)}]*4
         Z = NDArrayData(array([[1,0],[0,-1]],dtype=complex128))
@@ -177,8 +177,8 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
         state_down = NDArrayData(array([[[[[0,1]]]]],dtype=complex128))
         return System(corners, sides, state_up, operator_center_tensor), [state_up, state_down], [1,-1]
     # }}}
-    @with_checker(number_of_calls=10)
-    def test_magnetic_field_no_steps(self,s1=irange(0,1),s2=irange(0,1)): # {{{
+    @with_checker(number_of_calls=10) # test_magnetic_field_no_steps {{{
+    def test_magnetic_field_no_steps(self,s1=irange(0,1),s2=irange(0,1)):
         system, states, spins = self.makeMagneticField()
         system.setStateCenter(states[s1])
         self.assertEqual(system.computeExpectation(),spins[s1])
@@ -187,8 +187,8 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
         system.minimizeExpectation()
         self.assertDataAlmostEqual(system.state_center_data,states[1])
     # }}}
-    @with_checker(number_of_calls=10)
-    def test_magnetic_field_single_step(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1)): # {{{
+    @with_checker(number_of_calls=10) # test_magnetic_field_single_step {{{
+    def test_magnetic_field_single_step(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1)):
         system, states, spins = self.makeMagneticField()
         system.setStateCenter(states[s1])
         system.absorbCenter(direction)
@@ -196,8 +196,8 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
         self.assertEqual(system.computeExpectation(),spins[s1]+spins[s2])
         self.assertEqual(system.computeNormalization(),1)
     # }}}
-    @with_checker(number_of_calls=10)
-    def test_magnetic_field_double_step_same_direction(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1),s3=irange(0,1)): # {{{
+    @with_checker(number_of_calls=10) # test_magnetic_field_double_step_same_direction {{{
+    def test_magnetic_field_double_step_same_direction(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1),s3=irange(0,1)):
         system, states, spins = self.makeMagneticField()
         system.setStateCenter(states[s1])
         system.absorbCenter(direction)
@@ -207,8 +207,8 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
         self.assertEqual(system.computeExpectation(),spins[s1]+spins[s2]+spins[s3])
         self.assertEqual(system.computeNormalization(),1)
     # }}}
-    @with_checker(number_of_calls=10)
-    def test_magnetic_field_random_walk(self, # {{{
+    @with_checker(number_of_calls=10) # test_magnetic_field_random_walk {{{
+    def test_magnetic_field_random_walk(self,
         directions_and_spins=[(irange(0,3),irange(0,1))],
         final_spin=irange(0,1)
     ):
