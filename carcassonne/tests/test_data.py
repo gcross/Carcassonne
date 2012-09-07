@@ -53,8 +53,20 @@ class TestNDArrayData(TestCase): # {{{
             data1_embiggened.contractWith(data2_embiggened,(axis1,),(axis2,)),
         )
     # }}}
-    @with_checker # test_normalizeAxis {{{
-    def test_normalizeAxis(self,
+    @with_checker # test_normalizeAxis_with_sqrt_svals {{{
+    def test_normalizeAxis_with_sqrt_svals(self,
+        shape = (irange(1,5),)*5,
+        axis = irange(0,4),
+    ):
+        data = NDArrayData.newRandom(*shape)
+        normalizer, denormalizer = data.normalizeAxis(axis,True)
+        self.assertDataAlmostEqual(
+            denormalizer.contractWith(normalizer,(1,),(1,)),
+            NDArrayData.newIdentity(normalizer.shape[0])
+        )
+    # }}}
+    @with_checker # test_normalizeAxis_without_sqrt_svals {{{
+    def test_normalizeAxis_without_sqrt_svals(self,
         shape = (irange(1,5),)*5,
         axis = irange(0,4),
     ):

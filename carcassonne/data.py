@@ -168,10 +168,14 @@ class NDArrayData(Data): # {{{
         )
         return NDArrayData(evecs.reshape(self.shape))
     # }}}
-    def normalizeAxis(self,axis): # {{{
+    def normalizeAxis(self,axis,sqrt_svals=False): # {{{
         if self.shape[axis] == 1:
             n = (norm(self._arr))
-            return NDArrayData(self._arr/n), NDArrayData(array([[1/n]])), NDArrayData(array([[n]]))
+            if sqrt_svals:
+                n = sqrt(n)
+                return NDArrayData(array([[1/n]])), NDArrayData(array([[n]]))
+            else:
+                return NDArrayData(self._arr/n), NDArrayData(array([[1/n]])), NDArrayData(array([[n]]))
         svd_axes_to_merge = list(range(self.ndim))
         del svd_axes_to_merge[axis]
         U, S, V = self.join(svd_axes_to_merge,axis).svd(full_matrices=False)
@@ -181,7 +185,11 @@ class NDArrayData(Data): # {{{
         U_join = list(range(self.ndim-1))
         U_join.insert(axis,self.ndim-1)
         S = S.split(S.shape[0],1)
-        return U.split(*U_split).join(*U_join), (V/S).conj(), V*S
+        if sqrt_svals:
+            S = S.sqrt()
+            return (V/S).conj(), V*S
+        else:
+            return U.split(*U_split).join(*U_join), (V/S).conj(), V*S
     # }}}
     def qr(self,mode='full'): # {{{
         q, r = qr(self._arr,mode=mode)
@@ -200,6 +208,9 @@ class NDArrayData(Data): # {{{
         size = round(self._arr.shape[index]**(1.0/root))
         assert size**root == self._arr.shape[index]
         return self.splitAt(index,(size,)*root)
+    # }}}
+    def sqrt(self): # {{{
+        return NDArrayData(sqrt(self._arr))
     # }}}
     def svd(self,full_matrices=True): # {{{
         return tuple(NDArrayData(x) for x in svd(self._arr,full_matrices=full_matrices))

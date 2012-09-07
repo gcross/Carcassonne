@@ -151,12 +151,11 @@ class System: # {{{
         side_axis1 = (1-direction)*2+0
         side_axis2 = (1-direction)*2+1
         corner_data = self.corners[corner_id][Identity()]
-        intermediate_corner_data, normalizer_for_corner_axis1, denormalizer_for_side_axis1 = corner_data.normalizeAxis(corner_axis1)
+        normalizer_for_corner_axis1, denormalizer_for_side_axis1 = corner_data.normalizeAxis(corner_axis1,True)
         normalizer_for_corner_axis2 = normalizer_for_corner_axis1.conj()
         denormalizer_for_side_axis2 = denormalizer_for_side_axis1.conj()
-        normalized_corner_data = intermediate_corner_data.absorbMatrixAt(corner_axis2,normalizer_for_corner_axis2)
         self.corners[corner_id] = {
-            tag: corner_data.absorbMatrixAt(corner_axis1,normalizer_for_corner_axis1).absorbMatrixAt(corner_axis2,normalizer_for_corner_axis2) if tag != Identity() else normalized_corner_data
+            tag: corner_data.absorbMatrixAt(corner_axis1,normalizer_for_corner_axis1).absorbMatrixAt(corner_axis2,normalizer_for_corner_axis2)
             for tag, corner_data in self.corners[corner_id].items()
         }
         self.sides[side_id] = {
@@ -166,11 +165,10 @@ class System: # {{{
     # }}}
     def normalizeSideAndDenormalizeCenter(self,side_id): # {{{
         side_data = self.sides[side_id][Identity()]
-        intermediate_side_data, normalizer_for_side_axis1, denormalizer_for_center = side_data.normalizeAxis(4)
+        normalizer_for_side_axis1, denormalizer_for_center = side_data.normalizeAxis(4,True)
         normalizer_for_side_axis2 = normalizer_for_side_axis1.conj()
-        normalized_side_data = intermediate_side_data.absorbMatrixAt(5,normalizer_for_side_axis2)
         self.sides[side_id] = {
-            tag: side_data.absorbMatrixAt(4,normalizer_for_side_axis1).absorbMatrixAt(5,normalizer_for_side_axis2) if tag != Identity() else normalized_side_data
+            tag: side_data.absorbMatrixAt(4,normalizer_for_side_axis1).absorbMatrixAt(5,normalizer_for_side_axis2)
             for tag, side_data in self.sides[side_id].items()
         }
         self.state_center_data = self.state_center_data.absorbMatrixAt(side_id,denormalizer_for_center)
