@@ -1,7 +1,7 @@
 # Imports {{{
 from copy import copy
 import numpy
-from numpy import all, allclose, array, dot, identity, product, tensordot
+from numpy import all, allclose, array, dot, identity, product, set_printoptions, tensordot
 from numpy.linalg import norm
 from numpy.random import rand
 from paycheck import *
@@ -131,3 +131,5 @@ class TestCase(unittest.TestCase): # {{{
     # }}}
 # }}}
 # }}}
+
+set_printoptions(linewidth=132)

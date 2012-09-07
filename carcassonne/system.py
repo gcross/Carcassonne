@@ -144,6 +144,27 @@ class System: # {{{
         else:
             self.state_center_data = state_center_data.minimizeOver(*self.formExpectationAndNormalizationMultipliers())
     # }}}
+    def normalizeCornerAndDenormalizeToward(self,corner_id,direction): # {{{
+        side_id = (corner_id+1-direction)%4
+        corner_axis1 = direction*2+0
+        corner_axis2 = direction*2+1
+        side_axis1 = (1-direction)*2+0
+        side_axis2 = (1-direction)*2+1
+        corner_data = self.corners[corner_id][Identity()]
+        intermediate_corner_data, denormalizer_for_side_axis1 = corner_data.normalizeAxis(corner_axis1)
+        denormalizer_for_side_axis2 = denormalizer_for_side_axis1.conj()
+        normalizer_for_corner_axis1 = denormalizer_for_side_axis2.join(1,0)
+        normalizer_for_corner_axis2 = denormalizer_for_side_axis1.join(1,0)
+        normalized_corner_data = intermediate_corner_data.absorbMatrixAt(corner_axis2,normalizer_for_corner_axis2)
+        self.corners[corner_id] = {
+            tag: corner_data.absorbMatrixAt(corner_axis1,normalizer_for_corner_axis1).absorbMatrixAt(corner_axis2,normalizer_for_corner_axis2) if tag != Identity() else normalized_corner_data
+            for tag, corner_data in self.corners[corner_id].items()
+        }
+        self.sides[side_id] = {
+            tag: side_data.absorbMatrixAt(side_axis1,denormalizer_for_side_axis1).absorbMatrixAt(side_axis2,denormalizer_for_side_axis2)
+            for tag, side_data in self.sides[side_id].items()
+        }
+    # }}}
     def setStateCenter(self,state_center_data,state_center_data_conj=None): # {{{
         self.state_center_data = state_center_data
         if state_center_data_conj is None:

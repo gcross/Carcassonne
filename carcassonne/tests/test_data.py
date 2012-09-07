@@ -53,22 +53,48 @@ class TestNDArrayData(TestCase): # {{{
             data1_embiggened.contractWith(data2_embiggened,(axis1,),(axis2,)),
         )
     # }}}
-    @with_checker # test_normalizeAxis {{{
+    @with_checker(number_of_calls=9999) # test_normalizeAxis {{{
     def test_normalizeAxis(self,
         shape = (irange(1,5),)*5,
         axis = irange(0,4),
     ):
+        print()
+        print()
         data = NDArrayData.newRandom(*shape)
-        data_normalized, denormalizer = data.normalizeAxis(axis)
+        received = data.normalizeAxis(axis,verbose=shape[axis]==1)
+        data_normalized, normalizer, denormalizer = received
+        #data_normalized, normalizer, denormalizer = data.normalizeAxis(axis,verbose=True)
+        print("RcvReturning =",received[1:])
+        print("N =",normalizer,"D =",denormalizer)
+        print("Rcv1 =",received[1],"D =",received[2])
+        _, X, Y = received
+        print("X =",X,"Y =",Y)
+        print("Rcv1 =",received[1],"D =",received[2])
+        print("A: [1] =",data.normalizeAxis(axis,verbose=False)[1])
         self.assertDataAlmostEqual(
             data_normalized.absorbMatrixAt(axis,denormalizer.join(1,0)),
             data
         )
+        print("B: [1] =",data.normalizeAxis(axis,verbose=False)[1])
         indices = list(range(5))
         del indices[axis]
         self.assertDataAlmostEqual(
             data_normalized.contractWith(data_normalized.conj(),indices,indices),
-            NDArrayData.newIdentity(shape[axis])
+            NDArrayData.newIdentity(data_normalized.shape[axis])
         )
+        print("C: [1] =",data.normalizeAxis(axis,verbose=False)[1])
+        try:
+            self.assertDataAlmostEqual(
+                denormalizer.contractWith(normalizer,(1,),(1,)),
+                NDArrayData.newIdentity(normalizer.shape[0])
+            )
+        except:
+            print("D: [1] =",data.normalizeAxis(axis,verbose=False)[1])
+            print(shape, axis)
+            data.normalizeAxis(axis,verbose=True)
+            print("N =",normalizer,"D =",denormalizer)
+            print("[1] =",data.normalizeAxis(axis,verbose=False)[1])
+            print(denormalizer.contractWith(normalizer,(1,),(1,)))
+            raise
     # }}}
 # }}}

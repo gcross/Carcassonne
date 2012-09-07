@@ -76,6 +76,9 @@ class NDArrayData(Data): # {{{
     def __getitem__(self,index): # {{{
         return NDArrayData(self._arr[index])
     # }}}
+    def __mul__(self,other): # {{{
+        return NDArrayData(self._arr * other._arr)
+    # }}}
     def __repr__(self): # {{{
         return "NDArrayData(" + repr(self._arr) + ")"
     # }}}
@@ -84,6 +87,9 @@ class NDArrayData(Data): # {{{
     # }}}
     def __str__(self): # {{{
         return "NDArrayData({})".format(self._arr)
+    # }}}
+    def __truediv__(self,other): # {{{
+        return NDArrayData(self._arr / other._arr)
     # }}}
     def toArray(self):  #{{{
         return self._arr
@@ -162,17 +168,40 @@ class NDArrayData(Data): # {{{
         )
         return NDArrayData(evecs.reshape(self.shape))
     # }}}
-    def normalizeAxis(self,axis): # {{{
+    def normalizeAxis(self,axis,verbose=False): # {{{
         svd_axes_to_merge = list(range(self.ndim))
         del svd_axes_to_merge[axis]
         U, S, V = self.join(svd_axes_to_merge,axis).svd(full_matrices=False)
+        if verbose:
+            print(U.shape,S,V.shape)
         U_split = list(self.shape)
         del U_split[axis]
         U_split.append(U.shape[1])
         U_join = list(range(self.ndim-1))
         U_join.insert(axis,self.ndim-1)
-        V *= S.split(S.shape[0],1)
-        return U.split(*U_split).join(*U_join), V
+        S = S.split(S.shape[0],1)
+        middle = (V/S).conj()
+        last = V*S
+        sent = ((U.split(*U_split).join(*U_join), (V/S).conj(), last))
+        pair = ((V/S).conj(), V*S)
+        triple = ((U.split(*U_split).join(*U_join), middle, last))
+        if verbose:
+            print("middle =",middle,"last =",last)
+            print("V/S =",(V/S).conj(),"V*S =",V*S)
+            print("types=",type(sent),[type(x) for x in sent])
+            print("SndReturning =",sent[1],sent[2])
+            print("V/S =",(V/S).conj(),"V*S =",V*S)
+            print("pair =",pair)
+            print("triple =",triple[1:])
+        return sent
+        # Note:  The following line of code does not work due to what looks like
+        #        a bug in either Python or Numpy because the following four lines
+        #        of code work like a charm.
+        # return (U.split(*U_split).join(*U_join), (V/S).conj(), V*S
+        #normalized_self = U.split(*U_split).join(*U_join)
+        #denormalizer = V*S
+        #normalizer = (V/S).conj()
+        #return normalized_self, normalizer, denormalizer
     # }}}
     def qr(self,mode='full'): # {{{
         q, r = qr(self._arr,mode=mode)
