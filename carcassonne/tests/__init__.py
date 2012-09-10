@@ -49,6 +49,11 @@ def randomPermutation(size): # {{{
     shuffle(permutation)
     return permutation
 # }}}
+def randomSelectionFrom(n,elements): # {{{
+    elements = list(elements)
+    shuffle(elements)
+    return elements[:n]
+# }}}
 def randomShape(ndim,maximum=5): # {{{
     return tuple(randint(1,maximum) for _ in range(ndim))
 # }}}
