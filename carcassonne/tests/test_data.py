@@ -24,6 +24,37 @@ class TestNDArrayData(TestCase): # {{{
             matrix.contractWith(tensor,(1,),(axis,)).join(*new_axes),
         )
     # }}}
+    @with_checker # test_directSumWith_all_axes_summed {{{
+    def test_directSumWith_all_axes_summed(self,shapes=((irange(1,5),)*5,)*2):
+        datas = [NDArrayData.newRandom(*shape) for shape in shapes]
+        scalars = [data.contractWith(data,range(5),range(5)).extractScalar() for data in datas]
+        datasum = datas[0].directSumWith(datas[1])
+        datasum_scalar = datasum.contractWith(datasum,range(5),range(5)).extractScalar()
+        self.assertAlmostEqual(datasum_scalar,scalars[0]+scalars[1])
+    # }}}
+    @with_checker # test_directSumWith_some_axes_summed {{{
+    def test_directSumWith_some_axes_summed(self,
+        shapes=((irange(1,5),)*5,)*2,
+        number_of_non_summed_axes=irange(0,4)
+    ):
+        non_summed_axes = randomSelectionFrom(number_of_non_summed_axes,range(5))
+        summed_axes = [axis for axis in range(5) if axis not in non_summed_axes]
+
+        shape0, shape1 = map(list,shapes)
+        for axis in non_summed_axes:
+            shape0[axis] = shape1[axis]
+        shapes = (shape0,shape1)
+
+        datas = [NDArrayData.newRandom(*shape) for shape in shapes]
+        sums = [data.contractWith(data,summed_axes,summed_axes) for data in datas]
+        total = sums[0]
+        total += sums[1]
+
+        datasum = datas[0].directSumWith(datas[1],*non_summed_axes)
+        datasum_total = datasum.contractWith(datasum,summed_axes,summed_axes)
+
+        self.assertDataAlmostEqual(datasum_total,total)
+    # }}}
     @with_checker # test_increaseDimensions {{{
     def test_increaseDimensions_both(self,
         shapes = ((irange(1,5),)*5,)*2,

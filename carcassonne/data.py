@@ -111,6 +111,32 @@ class NDArrayData(Data): # {{{
     def contractWith(self,other,self_axes,other_axes): # {{{
         return NDArrayData(tensordot(self._arr,other._arr,(self_axes,other_axes)))
     # }}}
+    def directSumWith(self,other,*non_summed_axes): # {{{
+        if not self.ndim == other.ndim:
+            raise ValueError("In a direct sum the number of axes must match ({} != {})".format(self.ndim,other.ndim))
+        if len(non_summed_axes) >= self.ndim:
+            raise ValueError("At least one axis must be included in the direct sum;  the axes excluded from the sum were {}, counting {} in total, but the total number of axes in the tensors were {}.".format(non_summed_axes,len(non_summed_axes),self.ndim))
+        new_shape = []
+        left_indices = []
+        right_indices = []
+        for axis, m, n in zip(range(self.ndim),self.shape,other.shape):
+            if axis in non_summed_axes:
+                if m != n:
+                    raise ValueError("All non-summed axes must agree in shape, but for axis {} I have dimension {} and oter has dimension {}.".format(axis,m,n))
+                else:
+                    new_shape.append(m)
+                    left_indices.append(slice(0,m))
+                    right_indices.append(slice(0,m))
+            else:
+                new_shape.append(m+n)
+                left_indices.append(slice(0,m))
+                right_indices.append(slice(m,m+n))
+
+        new_data = zeros(new_shape,dtype=self.dtype)
+        new_data[left_indices] = self._arr
+        new_data[right_indices] = other._arr
+        return NDArrayData(new_data)
+    # }}}
     def extractScalar(self): # {{{
         if self.ndim != 0:
             raise ValueError("tensor is not a scalar")
