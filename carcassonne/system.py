@@ -120,16 +120,20 @@ class System: # {{{
     def formNormalizationSubmatrix(self): # {{{
         return formNormalizationSubmatrix(tuple(corner[Identity()] for corner in self.corners),tuple(side[Identity()] for side in self.sides))
     # }}}
-    def increaseBandwidth(self,direction,by=None,to=None): # {{{
-        state_center_data = self.state_center_data
+    def increaseBandwidth(self,direction,by=None,to=None,end_with_zeros=True): # {{{
+        old_state_center_data = self.state_center_data
         direction %= 2
-        old_dimension = state_center_data.shape[direction]
+        old_dimension = old_state_center_data.shape[direction]
         new_dimension = computeNewDimension(old_dimension,by,to)
-        matrix, matrix_conj = state_center_data.newEnlargener(old_dimension,new_dimension)
-        self.state_center_data = state_center_data.absorbMatrixAt(direction,matrix).absorbMatrixAt(direction+2,matrix)
-        self.state_center_data_conj = self.state_center_data.conj()
+        self.setStateCenter(old_state_center_data.increaseDimensionsAndFillWithRandom((direction,new_dimension),(direction+2,new_dimension)))
         for i in (direction,direction+2):
-            self.sides[i] = {tag: data.absorbMatrixAt(4,matrix_conj).absorbMatrixAt(5,matrix) for tag, data in self.sides[i].items()}
+            self.sides[i] = {
+                tag: data.increaseDimensionsAndFillWithZeros((4,new_dimension),(5,new_dimension))
+                for tag, data in self.sides[i].items()
+            }
+            self.absorbCenter(direction)
+        if end_with_zeros:
+            self.setStateCenter(old_state_center_data.increaseDimensionsAndFillWithZeros((direction,new_dimension),(direction+2,new_dimension)))
     # }}}
     def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
         self.increaseBandwidth(direction,by,to)

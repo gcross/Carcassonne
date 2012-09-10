@@ -62,6 +62,23 @@ class TestSystem(TestCase): # {{{
         m2 = system.formNormalizationSubmatrix().contractWith(random_data.join(range(4),4),(1,),(0,)).split(*random_data.shape)
         self.assertDataAlmostEqual(m1,m2)
     # }}}
+    @with_checker # test_increaseBandwidth {{{
+    def test_increaseBandwidth(self,direction=irange(0,3),increment=range(0,2)):
+        system = System.newRandom()
+        old_shape = system.state_center_data.shape
+        expectation1 = system.computeExpectation()
+        normalization1 = system.computeNormalization()
+        system.increaseBandwidth(direction,by=increment)
+        new_shape = system.state_center_data.shape
+        expectation2 = system.computeExpectation()
+        normalization2 = system.computeNormalization()
+        self.assertEqual(new_shape[(direction+0)%4],old_shape[(direction+0)%4]+increment)
+        self.assertEqual(new_shape[(direction+1)%4],old_shape[(direction+1)%4])
+        self.assertEqual(new_shape[(direction+2)%4],old_shape[(direction+2)%4]+increment)
+        self.assertEqual(new_shape[(direction+3)%4],old_shape[(direction+3)%4])
+        self.assertEqual(expectation2,expectation1)
+        self.assertEqual(normalization2,normalization1)
+    # }}}
     @with_checker # test_minimizer_works_after_some_steps {{{
     def dont_test_minimizer_works_after_some_steps(self,moves=(irange(0,1),)*4):
         system = System.newRandom(makeOperator=lambda N: NDArrayData.newDiagonal([1]*(N-1)+[-1]))
