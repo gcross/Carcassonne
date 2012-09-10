@@ -25,32 +25,38 @@ class TestNDArrayData(TestCase): # {{{
         )
     # }}}
     @with_checker # test_increaseDimensions {{{
-    def test_increaseDimensions(self,
-        shape1 = (irange(1,5),)*5,
-        shape2 = (irange(1,5),)*5,
-        axis1 = irange(0,4),
-        axis2 = irange(0,4),
-        increment = irange(0,10),
+    def test_increaseDimensions_both(self,
+        shapes = ((irange(1,5),)*5,)*2,
+        number_of_axes = irange(0,5),
     ):
-        shape1 = list(shape1)
-        shape2 = list(shape2)
-        shape1[axis1] = shape2[axis2]
-        data1 = NDArrayData.newRandom(*shape1)
-        data2 = NDArrayData.newRandom(*shape2)
-        data1_embiggened = data1.increaseDimensionAndFillWithRandom(axis1,shape1[axis1]+increment)
-        data2_embiggened = data2.increaseDimensionsAndFillWithZeros((axis2,shape2[axis2]+increment))
-        for i in range(5):
-            if i == axis1:
-                self.assertEqual(data1_embiggened.shape[i],data1.shape[i]+increment)
-            else:
-                self.assertEqual(data1_embiggened.shape[i],data1.shape[i])
-            if i == axis2:
-                self.assertEqual(data2_embiggened.shape[i],data2.shape[i]+increment)
-            else:
-                self.assertEqual(data2_embiggened.shape[i],data2.shape[i])
+        axeses = [list(range(5)) for _ in range(2)]
+        for axes in axeses:
+            shuffle(axes)
+        axeses = [axes[:number_of_axes] for axes in axeses]
+
+        shapes = [list(shape) for shape in shapes]
+        for axis0, axis1 in zip(*axeses):
+            shapes[0][axis0] = shapes[1][axis1]
+        increments = [randint(0,4) for _ in range(number_of_axes)]
+
+        axes_and_new_dimensions_list = [
+            [(axis,shape[axis]+increment) for axis, increment in zip(axes,increments)]
+            for axes, shape in zip(axeses,shapes)
+        ]
+        data0, data1 = (NDArrayData.newRandom(*shape) for shape in shapes)
+        data0_embiggened = data0.increaseDimensionsAndFillWithRandom(*axes_and_new_dimensions_list[0])
+        data1_embiggened = data1.increaseDimensionsAndFillWithZeros(*axes_and_new_dimensions_list[1])
+        datas = [data0,data1]
+        data_embiggeneds = [data0_embiggened,data1_embiggened]
+        for axes, data, data_embiggened in zip(axeses,datas,data_embiggeneds):
+            for i in range(5):
+                if i in axes:
+                    self.assertEqual(data_embiggened.shape[i],data.shape[i]+increments[axes.index(i)])
+                else:
+                    self.assertEqual(data_embiggened.shape[i],data.shape[i])
         self.assertDataAlmostEqual(
-            data1.contractWith(data2,(axis1,),(axis2,)),
-            data1_embiggened.contractWith(data2_embiggened,(axis1,),(axis2,)),
+            data0.contractWith(data1,axeses[0],axeses[1]),
+            data0_embiggened.contractWith(data1_embiggened,axeses[0],axeses[1]),
         )
     # }}}
     @with_checker # test_normalizeAxis_with_sqrt_svals {{{
