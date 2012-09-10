@@ -131,6 +131,10 @@ class System: # {{{
         for i in (direction,direction+2):
             self.sides[i] = {tag: data.absorbMatrixAt(4,matrix_conj).absorbMatrixAt(5,matrix) for tag, data in self.sides[i].items()}
     # }}}
+    def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
+        self.increaseBandwidth(direction,by,to)
+        self.normalize()
+    # }}}
     def minimizeExpectation(self): # {{{
         state_center_data = self.state_center_data
         if prod(state_center_data.shape[:4]) == 1:
@@ -143,6 +147,13 @@ class System: # {{{
             self.state_center_data = type(state_center_data)(evecs[:,0].reshape(state_center_data.shape))
         else:
             self.state_center_data = state_center_data.minimizeOver(*self.formExpectationAndNormalizationMultipliers())
+    # }}}
+    def normalize(self): # {{{
+        for corner_id in range(4):
+            for direction in range(2):
+                self.normalizeCornerAndDenormalizeSide(corner_id,direction)
+        for side_id in range(4):
+            self.normalizeSideAndDenormalizeCenter(side_id)
     # }}}
     def normalizeCenterAndDenormalizeSide(self,direction): # {{{
         normalizer_for_center, denormalizer_for_side_axis1 = self.state_center_data.normalizeAxis(direction,True)
