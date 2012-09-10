@@ -4,7 +4,7 @@ from ..data import *
 # }}}
 
 class TestNDArrayData(TestCase): # {{{
-    @with_checker # text_newEnlargener {{{
+    @with_checker # test_newEnlargener {{{
     def test_newEnlargener(self,old=irange(1,10),new=irange(10,20)):
         m1, m2 = NDArrayData.newEnlargener(old,new)
         self.assertEqual(m1.shape,(new,old))
