@@ -74,7 +74,7 @@ class System: # {{{
             if side_shape[0] != side_shape[2]:
                 raise AssertionError("side {}'s left and right dimensions do not agree ({} != {})".format(side_shape[0],side_shape[2]))
             if side_shape[4] != self.state_center_data.shape[i]:
-                raise AssertionError("side {}'s center-facing dimensions do not match the corresponding state dimension {} ({} != {})".format(side_shape[4],self.state_center_data.shape[i]))
+                raise AssertionError("side {}'s center-facing dimensions do not match the corresponding state dimension ({} != {})".format(i,side_shape[4],self.state_center_data.shape[i]))
         for i, corner in enumerate(self.corners):
             normalization_data = corner[Identity()]
             for tag, data in corner.items():
