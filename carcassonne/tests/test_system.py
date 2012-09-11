@@ -63,9 +63,6 @@ class TestSystem(TestCase): # {{{
             system.absorbCenter(direction)
             system.assertDimensionsAreConsistent()
             system.assertNormalizationIsHermitian()
-            system.increaseBandwidth(direction=direction+1,by=1)
-            system.assertDimensionsAreConsistent()
-            system.assertNormalizationIsHermitian()
             if direction == 0 or direction == 2:
                 width += 1
             else:
