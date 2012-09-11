@@ -1,5 +1,5 @@
 # Imports {{{
-from numpy import array, complex128, isnan
+from numpy import array, complex128, prod, isnan
 from numpy.linalg import norm
 
 from . import *
@@ -8,17 +8,6 @@ from ..sparse import Identity, Operator
 # }}}
 
 class TestSystem(TestCase): # {{{
-    @with_checker(number_of_calls=10) # test_increaseBandwidth_one_step # {{{
-    def test_increaseBandwidth_one_step(self,direction=irange(0,3),increment=irange(0,4)):
-        system = System.newRandom()
-        expectation1 = system.computeExpectation()
-        normalization1 = system.computeNormalization()
-        system.increaseBandwidth(direction,by=increment)
-        expectation2 = system.computeExpectation()
-        normalization2 = system.computeNormalization()
-        self.assertAlmostEqual(expectation1,expectation2)
-        self.assertAlmostEqual(normalization1,normalization2)
-    # }}}
     def test___add___trivial(self): # test___add___trivial {{{
         O = NDArrayData.newIdentity(1)
         system1 = System.newTrivial(O)
@@ -87,22 +76,33 @@ class TestSystem(TestCase): # {{{
         m2 = system.formNormalizationSubmatrix().contractWith(random_data.join(range(4),4),(1,),(0,)).split(*random_data.shape)
         self.assertDataAlmostEqual(m1,m2)
     # }}}
-    @with_checker # test_increaseBandwidth {{{
-    def test_increaseBandwidth(self,direction=irange(0,3),increment=range(0,2)):
+    @with_checker(number_of_calls=10) # test_increaseBandwidth# {{{
+    def dont_test_increaseBandwidth(self,increments=(irange(1,3),)*2):
+        increments *= 2
         system = System.newRandom()
         old_shape = system.state_center_data.shape
         expectation1 = system.computeExpectation()
         normalization1 = system.computeNormalization()
-        system.increaseBandwidth(direction,by=increment)
+        system.increaseBandwidth(increments)
         new_shape = system.state_center_data.shape
+        self.assertEqual(tuple(new_shape[:4]),tuple(old+inc for old,inc in zip(old_shape[:4],increments)))
+        system.assertDimensionsAreConsistent()
+        system.assertNormalizationIsHermitian()
         expectation2 = system.computeExpectation()
         normalization2 = system.computeNormalization()
-        self.assertEqual(new_shape[(direction+0)%4],old_shape[(direction+0)%4]+increment)
-        self.assertEqual(new_shape[(direction+1)%4],old_shape[(direction+1)%4])
-        self.assertEqual(new_shape[(direction+2)%4],old_shape[(direction+2)%4]+increment)
-        self.assertEqual(new_shape[(direction+3)%4],old_shape[(direction+3)%4])
-        self.assertEqual(expectation2,expectation1)
-        self.assertEqual(normalization2,normalization1)
+        self.assertAlmostEqual(expectation1,expectation2)
+        self.assertAlmostEqual(normalization1,normalization2)
+    # }}}
+    @with_checker(number_of_calls=10) # test_increaseBandwidth_one_step # {{{
+    def dont_test_increaseBandwidth_one_step(self,direction=irange(0,3),increment=irange(0,4)):
+        system = System.newRandom()
+        expectation1 = system.computeExpectation()
+        normalization1 = system.computeNormalization()
+        system.increaseBandwidth(direction,by=increment)
+        expectation2 = system.computeExpectation()
+        normalization2 = system.computeNormalization()
+        self.assertAlmostEqual(expectation1,expectation2)
+        self.assertAlmostEqual(normalization1,normalization2)
     # }}}
     @with_checker # test_minimizer_works_after_some_steps {{{
     def dont_test_minimizer_works_after_some_steps(self,moves=(irange(0,1),)*4):

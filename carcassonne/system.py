@@ -13,6 +13,20 @@ from .utils import computeNewDimension, L, R
 # Classes {{{
 class System: # {{{
   # Class methods {{{
+    @classmethod # newEnlargener {{{
+    def newEnlargener(cls,O,bandwidth_dimensions):
+        system = cls(
+            tuple({Identity():NDArrayData.newTrivial((1,)*4)} for _ in range(4)),
+            tuple({Identity():NDArrayData.newTrivial((1,)*4)+(d,)*2} for d in bandwidth_dimensions),
+            NDArrayData.newRandom(*tuple(bandwidth_dimensions)+tuple(O.shape[:1])),
+            {Identity():None,Operator():O}
+        )
+        system.assertDimensionsAreConsistent()
+        system.assertNormalizationIsHermitian()
+        for direction in [0,2,1,3]:
+            system.absorbCenter(direction)
+        return system
+    # }}}
     @classmethod # newRandom {{{
     def newRandom(cls,makeOperator=None,DataClass=NDArrayData,maximum_dimension=2,O=None):
         assert not (makeOperator is not None and O is not None)
@@ -146,20 +160,23 @@ class System: # {{{
     def formNormalizationSubmatrix(self): # {{{
         return formNormalizationSubmatrix(tuple(corner[Identity()] for corner in self.corners),tuple(side[Identity()] for side in self.sides))
     # }}}
-    def increaseBandwidth(self,direction,by=None,to=None,end_with_zeros=True): # {{{
-        old_state_center_data = self.state_center_data
-        direction %= 2
-        old_dimension = old_state_center_data.shape[direction]
-        new_dimension = computeNewDimension(old_dimension,by,to)
-        self.setStateCenter(old_state_center_data.increaseDimensionsAndFillWithRandom((direction,new_dimension),(direction+2,new_dimension)))
-        for i in (direction,direction+2):
-            self.sides[i] = {
-                tag: data.increaseDimensionsAndFillWithZeros((4,new_dimension),(5,new_dimension))
-                for tag, data in self.sides[i].items()
-            }
-            self.absorbCenter(direction)
-        if end_with_zeros:
-            self.setStateCenter(old_state_center_data.increaseDimensionsAndFillWithZeros((direction,new_dimension),(direction+2,new_dimension)))
+    def increaseBandwidth(self,increments): # {{{
+        state_center_data = self.state_center_data
+        new_sides = []
+        new_bandwidths = []
+        for direction, increment in enumerate(increments):
+            if increment < 1:
+                raise ValueError("All increments must be at least 1;  observed increment of {} for direction {}.".format(increment,direction))
+            new_bandwidths.append(state_center_data.shape[direction]+increment)
+            indices_to_merge = list(range(5))
+            del indices_to_merge[direction]
+            U, S, V = state_center_data.join(indices_to_merge,direction).svd(full_matrices=False)
+            shrinker = V[:increment,:]
+            shrinker_conj = shrinker.conj()
+            new_sides.append(mapOverSparseData(lambda data: data.absorbMatrixAt(4,shrinker).absorbMatrixAt(5,shrinker_conj),self.sides[direction]))
+        self.corners = directSumListsOfSparse(self.corners,self.corners)
+        self.sides = directSumListsOfSparse(self.sides,new_sides)
+        self.setStateCenter(self.state_center_data.increaseDimensionsAndFillWithZeros(*enumerate(new_bandwidths)))
     # }}}
     def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
         self.increaseBandwidth(direction,by,to)
