@@ -19,6 +19,34 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(expectation1,expectation2)
         self.assertAlmostEqual(normalization1,normalization2)
     # }}}
+    def test___add___trivial(self): # test___add___trivial {{{
+        O = NDArrayData.newIdentity(1)
+        system1 = System.newTrivial(O)
+        system2 = system1 + system1
+        self.assertAlmostEqual(system2.computeNormalization(),2)
+        self.assertAlmostEqual(system2.computeExpectation(),1)
+    # }}}
+    @with_checker(number_of_calls=10) # test___add__ {{{
+    def test___add___self(self,moves=(irange(0,1),)*4):
+        system1 = System.newRandom()
+        for direction in sum(([i]*moves[i] for i in range(4)),[]):
+            system1.absorbCenter(direction)
+        system2 = system1 + system1
+        try:
+            self.assertAlmostEqual(
+                system2.computeNormalization(),
+                system1.computeNormalization()*2
+            )
+        except:
+            self.assertAlmostEqual(system2.computeNormalization()/system1.computeNormalization(),2)
+        try:
+            self.assertAlmostEqual(
+                system2.computeExpectation(),
+                system1.computeExpectation()
+            )
+        except:
+            self.assertAlmostEqual(system2.computeExpectation()/system1.computeExpectation(),1)
+    # }}}
     @with_checker # test_expectation_of_identity_after_no_steps # {{{
     def test_expectation_of_sum_of_identities_after_no_steps(self):
         self.assertAlmostEqual(System.newRandom(makeOperator=lambda N: NDArrayData.newIdentity(N)).computeExpectation(),1)

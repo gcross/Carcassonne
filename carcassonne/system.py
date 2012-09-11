@@ -1,10 +1,10 @@
 # Imports {{{
-from numpy import prod, zeros
+from numpy import complex128, prod, zeros
 from numpy.linalg import eigh
 from random import randint
 
 from .data import NDArrayData
-from .sparse import Identity, Operator
+from .sparse import Identity, Operator, directSumListsOfSparse, directSumSparse, mapOverSparseData
 from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
 from .utils import computeNewDimension, L, R
@@ -14,7 +14,8 @@ from .utils import computeNewDimension, L, R
 class System: # {{{
   # Class methods {{{
     @classmethod # newRandom {{{
-    def newRandom(cls,makeOperator=None,DataClass=NDArrayData,maximum_dimension=2):
+    def newRandom(cls,makeOperator=None,DataClass=NDArrayData,maximum_dimension=2,O=None):
+        assert not (makeOperator is not None and O is not None)
         randomDimension = lambda: randint(1,maximum_dimension)
         randomDimensions = lambda n: tuple(randomDimension() for _ in range(n))
         spoke_sizes = randomDimensions(2)*2
@@ -24,12 +25,17 @@ class System: # {{{
         corners_data = tuple(DataClass.newRandom(*(sides_data[(i+1)%4].shape[2],)*2+(sides_data[i].shape[0],)*2) for i in range(4))
         for corner_data in corners_data:
             corner_data += corner_data.join(1,0,3,2).conj()
-        state_center_data = DataClass.newRandom(*spoke_sizes + randomDimensions(1))
-        if makeOperator is None:
-            O = DataClass.newRandom(state_center_data.shape[-1],state_center_data.shape[-1])
-            O += O.join(1,0).conj()
+        if O:
+            physical_dimension = O.shape[0]
         else:
-            O = makeOperator(state_center_data.shape[-1])
+            physical_dimension = randomDimension()
+        state_center_data = DataClass.newRandom(*spoke_sizes + (physical_dimension,))
+        if O is None:
+            if makeOperator is None:
+                O = DataClass.newRandom(physical_dimension,physical_dimension)
+                O += O.join(1,0).conj()
+            else:
+                O = makeOperator(physical_dimension)
         operator_center_tensor = {Identity():None,Operator():O}
         system = cls(
             tuple({Identity():corner_data} for corner_data in corners_data),
@@ -41,6 +47,15 @@ class System: # {{{
         system.assertNormalizationIsHermitian()
         return system
     # }}}
+    @classmethod # newTrivial {{{
+    def newTrivial(cls,O,DataClass=NDArrayData):
+        return cls(
+            tuple({Identity():DataClass.newTrivial((1,)*4,dtype=complex128)} for _ in range(4)),
+            tuple({Identity():DataClass.newTrivial((1,)*6,dtype=complex128)} for _ in range(4)),
+            DataClass.newTrivial((1,1,1,1,O.shape[0]),dtype=complex128),
+            {Identity():None,Operator():O}
+        )
+    # }}}
   # }}}
   # Instance methods {{{
     def __init__(self,corners,sides,state_center_data,operator_center_tensor,state_center_data_conj=None): # {{{
@@ -50,6 +65,14 @@ class System: # {{{
         self.state_center_data = state_center_data
         if state_center_data_conj is None:
             self.state_center_data_conj = self.state_center_data.conj()
+    # }}}
+    def __add__(self,other): # {{{
+        return System(
+            directSumListsOfSparse(self.corners,other.corners),
+            directSumListsOfSparse(self.sides,other.sides),
+            self.state_center_data.directSumWith(other.state_center_data,4),
+            self.operator_center_tensor
+        )
     # }}}
     def absorbCenter(self,direction): # {{{
         self.corners[direction] = absorbSparseSideIntoCornerFromLeft(self.corners[direction],self.sides[L(direction)])
@@ -107,6 +130,9 @@ class System: # {{{
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.state_center_data_conj.contractWith(multiply(self.state_center_data),range(5),range(5)).extractScalar()
+    # }}}
+    def computeUnnormalizedExpectation(self): # {{{
+        return self.computeScalarUsingMultiplier(self.formExpectationMultipliers())
     # }}}
     def formExpectationAndNormalizationMultipliers(self): # {{{
         return formExpectationAndNormalizationMultipliers(self.corners,self.sides,self.operator_center_tensor)
