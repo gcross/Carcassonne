@@ -1,7 +1,7 @@
 # Imports {{{
 from copy import copy
 from functools import reduce
-from numpy import allclose, array, complex128, diag, identity, multiply, ndarray, ones, prod, sqrt, tensordot, zeros
+from numpy import allclose, any, array, complex128, diag, identity, isnan, multiply, ndarray, ones, prod, sqrt, tensordot, zeros
 from scipy.linalg import norm, svd, qr
 from scipy.sparse.linalg import LinearOperator, eigs
 
@@ -168,6 +168,9 @@ class NDArrayData(Data): # {{{
         old_indices = tuple(slice(0,d) for d in old_shape)
         new_arr[old_indices] = self._arr
         return NDArrayData(new_arr)
+    # }}}
+    def hasNaN(self): # {{{
+        return any(isnan(self._arr))
     # }}}
     def join(self,*groups): # {{{
         groups = [[group] if isinstance(group,int) else group for group in groups]

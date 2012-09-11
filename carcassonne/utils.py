@@ -185,6 +185,10 @@ def applyIndexMapTo(index_map,indices): # {{{
 def applyPermutation(permutation,values): # {{{
     return [values[i] for i in permutation]
 # }}}
+def checkForNaNsIn(data): # {{{
+    assert not data.hasNaN()
+    return data
+# }}}
 def crand(*shape): # {{{
     return rand(*shape)*2-1+rand(*shape)*2j-1j
 # }}}
@@ -549,6 +553,7 @@ __all__ = [
 
     "applyIndexMapTo",
     "applyPermutation",
+    "checkForNaNsIn",
     "computeNewDimension",
     "crand",
     "formAbsorber",
