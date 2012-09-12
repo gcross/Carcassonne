@@ -53,7 +53,7 @@ class TestSystem(TestCase): # {{{
     def test_expectation_of_sum_of_identities_after_no_steps(self):
         self.assertAlmostEqual(System.newRandom(makeOperator=lambda N: NDArrayData.newIdentity(N)).computeExpectation(),1)
     # }}}
-    @with_checker # test_expectation_of_identity_after_some_steps # {{{
+    @with_checker(number_of_calls=10) # test_expectation_of_identity_after_some_steps # {{{
     def test_expectation_of_sum_of_identities_after_some_steps(self,moves=(irange(0,1),)*4):
         system = System.newRandom(makeOperator=lambda N: NDArrayData.newIdentity(N))
         directions = sum(([i]*moves[i] for i in range(4)),[])
@@ -140,7 +140,7 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(normalization1,normalization2)
         self.assertAlmostEqual(expectation1,expectation2)
     # }}}
-    @with_checker # test_normalizeCornerAndDenormalizeSide {{{
+    @with_checker(number_of_calls=10) # test_normalizeCornerAndDenormalizeSide {{{
     def test_normalizeCornerAndDenormalizeSide(self,corner_id=irange(0,3),direction=irange(0,1)):
         system = System.newRandom()
         normalization1 = system.computeNormalization()
