@@ -36,7 +36,7 @@ class TestSystem(TestCase): # {{{
         except:
             self.assertAlmostEqual(system2.computeExpectation()/system1.computeExpectation(),1)
     # }}}
-    @with_checker(number_of_calls=4) # test_compressCornerTowards_new_same_as_old {{{
+    @with_checker(number_of_calls=10) # test_compressCornerTowards_new_same_as_old {{{
     def test_compressCornerTowards_new_same_as_old(self,corner_id=irange(0,3),direction=irange(0,1)):
         system = System.newRandom(maximum_dimension=4)
         normalization1 = system.computeNormalization()
