@@ -36,6 +36,19 @@ class TestSystem(TestCase): # {{{
         except:
             self.assertAlmostEqual(system2.computeExpectation()/system1.computeExpectation(),1)
     # }}}
+    @with_checker(number_of_calls=100) # test_compressCornerTowards_down_to_1 {{{
+    def test_compressCornerTowards_new_same_as_old(self,corner_id=irange(0,3),direction=irange(0,1)):
+        system = System.newRandom(maximum_dimension=4)
+        normalization1 = system.computeNormalization()
+        expectation1 = system.computeExpectation()
+        system.compressCornerTowards(corner_id,direction,1)
+        normalization2 = system.computeNormalization()
+        expectation2 = system.computeExpectation()
+        if isnan(normalization1) or isnan(normalization2) or isnan(expectation1) or isnan(expectation2):
+            return
+        self.assertAlmostEqual(normalization2/normalization1,1)
+        self.assertAlmostEqual(expectation2/expectation1,1)
+    # }}}
     @with_checker(number_of_calls=10) # test_compressCornerTowards_new_same_as_old {{{
     def test_compressCornerTowards_new_same_as_old(self,corner_id=irange(0,3),direction=irange(0,1)):
         system = System.newRandom(maximum_dimension=4)
