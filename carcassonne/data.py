@@ -143,6 +143,11 @@ class NDArrayData(Data): # {{{
         else:
             return self._arr
     # }}}
+    def fold(self,axis): # {{{
+        others = list(range(self.ndim))
+        del others[axis]
+        return self.join(axis,others)
+    # }}}
     def increaseDimensionsAndFillWithRandom(self,*axes_and_new_dimensions): # {{{
         old_shape = self.shape
         new_shape = list(old_shape)

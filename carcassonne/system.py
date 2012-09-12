@@ -1,5 +1,5 @@
 # Imports {{{
-from numpy import complex128, prod, zeros
+from numpy import complex128, dot, prod, zeros
 from numpy.linalg import eigh
 from random import randint
 
@@ -132,6 +132,40 @@ class System: # {{{
                 raise AssertionError("side {} is not hermitian".format(i))
             if not self.corners[i][Identity()].allcloseTo(self.corners[i][Identity()].join(1,0,3,2).conj()):
                 raise AssertionError("corner {} is not hermitian".format(i))
+    # }}}
+    def compressCornerTowards(self,corner_id,direction,new_dimension,normalize=False): # {{{
+        axis = 2*direction
+        corner_data = self.corners[corner_id][Identity()]
+        old_dimension = corner_data.shape[axis]
+        matrix = corner_data.fold(axis).toArray().transpose()
+        matrix_dagger = matrix.transpose().conj()
+        if new_dimension > old_dimension // 2:
+            full_matrix = dot(matrix_dagger,matrix)
+            del matrix
+            del matrix_dagger
+            evals, evecs = eigh(full_matrix)
+            evals = evals[-new_dimension:]
+            evecs = evecs[:,-new_dimension:]
+        else:
+            operator = LinearOperator((old_dimension,)*2,matvec=lambda v: dot(matrix_dagger,dot(matrix,v)))
+            evals, evecs = eigsh(operator,k=new_dimension)
+        if normalize:
+            evals = sqrt(evals).reshape(1,new_dimension)
+            corner_multiplier = evecs * evals
+            side_multiplier_conj = evecs / evals
+        else:
+            corner_multiplier = evecs
+            side_multiplier_conj = evecs
+        del evals
+        del evecs
+        corner_multiplier = NDArrayData(corner_multiplier)
+        side_multiplier_conj = NDArrayData(side_multiplier_conj)
+        corner_multiplier_conj = corner_multiplier.conj()
+        side_multiplier = side_multiplier_conj.conj()
+        self.corners[corner_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,corner_multiplier).absorbMatrixAt(axis+1,corner_multiplier_conj),self.corners[corner_id])
+        side_id = (corner_id+1-direction)%4
+        axis = 2-axis
+        self.sides[side_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,side_multiplier).absorbMatrixAt(axis+1,side_multiplier_conj),self.sides[side_id])
     # }}}
     def computeExpectation(self): # {{{
         multiplyExpectation, multiplyNormalization = self.formExpectationAndNormalizationMultipliers()
