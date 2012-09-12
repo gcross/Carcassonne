@@ -59,6 +59,7 @@ class System: # {{{
         )
         system.assertDimensionsAreConsistent()
         system.assertNormalizationIsHermitian()
+        system.assertHasNoNaNs()
         return system
     # }}}
     @classmethod # newTrivial {{{
@@ -126,6 +127,20 @@ class System: # {{{
             if corner_shape[0] != self.sides[L(i)][Identity()].shape[2]:
                 raise AssertionError("corner {}'s left dimensions do not match side {}'s right dimensions ({} != {})".format(i,L(i),corner_shape[0],self.sides[L(i)][Identity()].shape[2]))
     # }}}
+    def assertHasNoNaNs(self):
+        for i, corner in enumerate(self.corners):
+            for tag, data in corner.items():
+                if data.hasNaN():
+                    raise AssertionError("corner {} has a NaN in component {}".format(i,tag))
+        for i, side in enumerate(self.sides):
+            for tag, data in side.items():
+                if data.hasNaN():
+                    raise AssertionError("side {} has a NaN in component {}".format(i,tag))
+        if self.state_center_data.hasNaN():
+            raise AssertionError("state center has a NaN")
+        for tag, data in self.operator_center_tensor.items():
+            if data is not None and data.hasNaN():
+                raise AssertionError("operator center has a NaN in component {}".format(tag))
     def assertNormalizationIsHermitian(self): # {{{
         for i in range(4):
             if not self.sides[i][Identity()].allcloseTo(self.sides[i][Identity()].join(1,0,3,2,5,4).conj()):
