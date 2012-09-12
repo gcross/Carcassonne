@@ -3,8 +3,8 @@ from numpy import array, complex128, prod, isnan
 from numpy.linalg import norm
 
 from . import *
-from ..system import System
-from ..sparse import Identity, Operator
+from ..system import *
+from ..sparse import Identity, Operator, mapOverSparseData
 # }}}
 
 class TestSystem(TestCase): # {{{
@@ -36,25 +36,45 @@ class TestSystem(TestCase): # {{{
         except:
             self.assertAlmostEqual(system2.computeExpectation()/system1.computeExpectation(),1)
     # }}}
-    @with_checker(number_of_calls=100) # test_compressCornerTowards_down_to_1 {{{
-    def test_compressCornerTowards_new_same_as_old(self,corner_id=irange(0,3),direction=irange(0,1)):
-        system = System.newRandom(maximum_dimension=4)
+    @with_checker(number_of_calls=10) # test_compressCornerTowards_down_by_half {{{
+    def test_compressCornerTowards_down_by_half(self,corner_id=irange(0,3),direction=irange(0,1),normalize=bool):
+        system = System.newRandom()
+        for i in range(4):
+            system.absorbCenter(i)
         normalization1 = system.computeNormalization()
         expectation1 = system.computeExpectation()
-        system.compressCornerTowards(corner_id,direction,1)
+
+        corner_data = system.corners[corner_id][Identity()]
+        axis = 2*direction
+        old_dimension = corner_data.shape[axis]
+        new_dimension = 2*(old_dimension+1)
+        enlargener, enlargener_conj = NDArrayData.newEnlargener(old_dimension,new_dimension)
+        system.corners[corner_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,enlargener).absorbMatrixAt(axis+1,enlargener_conj),system.corners[corner_id])
+        side_id = sideFromCorner(corner_id,direction)
+
+        axis = 2-axis
+        side_enlargener = enlargener_conj
+        side_enlargener_conj = enlargener
+        system.sides[side_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,side_enlargener).absorbMatrixAt(axis+1,side_enlargener_conj),system.sides[side_id])
+
         normalization2 = system.computeNormalization()
         expectation2 = system.computeExpectation()
-        if isnan(normalization1) or isnan(normalization2) or isnan(expectation1) or isnan(expectation2):
-            return
         self.assertAlmostEqual(normalization2/normalization1,1)
         self.assertAlmostEqual(expectation2/expectation1,1)
+
+        system.compressCornerTowards(corner_id,direction,old_dimension,normalize)
+        normalization3 = system.computeNormalization()
+        expectation3 = system.computeExpectation()
+        self.assertAlmostEqual(normalization3/normalization1,1)
+        self.assertAlmostEqual(expectation3/expectation1,1)
     # }}}
     @with_checker(number_of_calls=10) # test_compressCornerTowards_new_same_as_old {{{
-    def test_compressCornerTowards_new_same_as_old(self,corner_id=irange(0,3),direction=irange(0,1)):
+    def test_compressCornerTowards_new_same_as_old(self,corner_id=irange(0,3),direction=irange(0,1),normalize=bool):
         system = System.newRandom(maximum_dimension=4)
         normalization1 = system.computeNormalization()
         expectation1 = system.computeExpectation()
-        system.compressCornerTowards(corner_id,direction,system.corners[corner_id][Identity()].shape[2*direction])
+        dimension = system.corners[corner_id][Identity()].shape[2*direction]
+        system.compressCornerTowards(corner_id,direction,dimension,normalize)
         normalization2 = system.computeNormalization()
         expectation2 = system.computeExpectation()
         if isnan(normalization1) or isnan(normalization2) or isnan(expectation1) or isnan(expectation2):

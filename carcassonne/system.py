@@ -1,7 +1,8 @@
 # Imports {{{
-from numpy import complex128, dot, prod, zeros
+from numpy import complex128, dot, prod, sqrt, zeros
 from numpy.linalg import eigh
 from random import randint
+from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 
 from .data import NDArrayData
 from .sparse import Identity, Operator, directSumListsOfSparse, directSumSparse, mapOverSparseData
@@ -163,10 +164,16 @@ class System: # {{{
             evals = evals[-new_dimension:]
             evecs = evecs[:,-new_dimension:]
         else:
-            operator = LinearOperator((old_dimension,)*2,matvec=lambda v: dot(matrix_dagger,dot(matrix,v)))
+            operator = \
+                LinearOperator(
+                    shape=(old_dimension,)*2,
+                    matvec=lambda v: dot(matrix_dagger,dot(matrix,v)),
+                    dtype=corner_data.dtype
+                )
             evals, evecs = eigsh(operator,k=new_dimension)
+        evecs = evecs.transpose()
         if normalize:
-            evals = sqrt(evals).reshape(1,new_dimension)
+            evals = sqrt(evals).reshape(new_dimension,1)
             corner_multiplier = evecs * evals
             side_multiplier_conj = evecs / evals
         else:
@@ -179,7 +186,7 @@ class System: # {{{
         corner_multiplier_conj = corner_multiplier.conj()
         side_multiplier = side_multiplier_conj.conj()
         self.corners[corner_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,corner_multiplier).absorbMatrixAt(axis+1,corner_multiplier_conj),self.corners[corner_id])
-        side_id = (corner_id+1-direction)%4
+        side_id = sideFromCorner(corner_id,direction)
         axis = 2-axis
         self.sides[side_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,side_multiplier).absorbMatrixAt(axis+1,side_multiplier_conj),self.sides[side_id])
     # }}}
@@ -263,7 +270,7 @@ class System: # {{{
         }
     # }}}
     def normalizeCornerAndDenormalizeSide(self,corner_id,direction): # {{{
-        side_id = (corner_id+1-direction)%4
+        side_id = sideFromCorner(corner_id,direction)
         corner_axis1 = direction*2+0
         corner_axis2 = direction*2+1
         side_axis1 = (1-direction)*2+0
@@ -303,8 +310,16 @@ class System: # {{{
 # }}}
 # }}}
 
+# Functions {{{
+def sideFromCorner(corner_id,direction): # {{{
+    return (corner_id+1-direction)%4
+# }}}
+# }}}
+
 # Exports {{{
 __all__ = [
     "System",
+
+    "sideFromCorner",
 ]
 # }}}
