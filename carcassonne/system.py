@@ -127,7 +127,7 @@ class System: # {{{
             if corner_shape[0] != self.sides[L(i)][Identity()].shape[2]:
                 raise AssertionError("corner {}'s left dimensions do not match side {}'s right dimensions ({} != {})".format(i,L(i),corner_shape[0],self.sides[L(i)][Identity()].shape[2]))
     # }}}
-    def assertHasNoNaNs(self):
+    def assertHasNoNaNs(self): # {{{
         for i, corner in enumerate(self.corners):
             for tag, data in corner.items():
                 if data.hasNaN():
@@ -141,6 +141,7 @@ class System: # {{{
         for tag, data in self.operator_center_tensor.items():
             if data is not None and data.hasNaN():
                 raise AssertionError("operator center has a NaN in component {}".format(tag))
+    # }}}
     def assertNormalizationIsHermitian(self): # {{{
         for i in range(4):
             if not self.sides[i][Identity()].allcloseTo(self.sides[i][Identity()].join(1,0,3,2,5,4).conj()):
