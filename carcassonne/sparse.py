@@ -1,4 +1,5 @@
 # Imports {{{
+from collections import namedtuple
 from functools import partial
 # }}}
 
@@ -26,6 +27,14 @@ class Complete(Singleton): # {{{
 # }}}
 class OneSiteOperator(Singleton): # {{{
     __slots__ = []
+# }}}
+class TwoSiteOperator: # {{{
+    __slots__ = ["direction","position"]
+    def __init__(self,direction,position=None):
+        self.direction = direction
+        self.position = position
+    def moveOut(self):
+        return TwoSiteOperator(self.direction,self.position+1)
 # }}}
 # }}}
 
@@ -66,6 +75,20 @@ def directSumSparse(sparse1,sparse2): # {{{
 def formSparseContractor(dense_contractors): # {{{
     return partial(contractSparseTensors,dense_contractors)
 # }}}
+def makeSparseOperator(O=None,OO_UD=None,OO_LR=None): # {{{
+    operator = {Identity():None}
+    if O is not None:
+        operator[OneSiteOperator()] = O
+    if OO_UD is not None:
+        O_U, O_D = OO_UD
+        operator[TwoSiteOperator(3,0)] = O_U
+        operator[TwoSiteOperator(1,0)] = O_D
+    if OO_LR is not None:
+        O_L, O_R = OO_LR
+        operator[TwoSiteOperator(0,0)] = O_L
+        operator[TwoSiteOperator(2,0)] = O_R
+    return operator
+# }}}
 def mapOverSparseData(f,sparse): # {{{
     return {tag: f(data) for tag, data in sparse.items()}
 # }}}
@@ -83,6 +106,7 @@ __all__ = [
     "directSumListsOfSparse",
     "directSumSparse",
     "formSparseContractor",
+    "makeSparseOperator",
     "mapOverSparseData",
 ]
 # }}}
