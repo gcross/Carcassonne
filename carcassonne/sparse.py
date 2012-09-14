@@ -36,16 +36,16 @@ def contractSparseTensors(dense_contractors,tensor_1,tensor_2): # {{{
         tag_1_type = type(tag_1)
         for tag_2, data_2 in tensor_2.items():
             tag_2_type = type(tag_2)
-            result_tag = None
-            contractDenseTensors = None
             if (tag_1_type,tag_2_type) in dense_contractors:
-                result_tag, contractDenseTensors = dense_contractors[tag_1_type,tag_2_type](tag_1,tag_2)
-            if result_tag is not None:
-                result_data = contractDenseTensors(data_1,data_2)
-                if result_tag in result_tensor:
-                    result_tensor[result_tag] += result_data
-                else:
-                    result_tensor[result_tag]  = result_data
+                handler = dense_contractors[tag_1_type,tag_2_type](tag_1,tag_2)
+                if handler is not None:
+                    result_tag, contractDenseTensors = handler
+                    if result_tag is not None:
+                        result_data = contractDenseTensors(data_1,data_2)
+                        if result_tag in result_tensor:
+                            result_tensor[result_tag] += result_data
+                        else:
+                            result_tensor[result_tag]  = result_data
     return result_tensor
 # }}}
 def directSumListsOfSparse(list1,list2): # {{{
