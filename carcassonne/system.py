@@ -5,7 +5,7 @@ from random import randint
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 
 from .data import NDArrayData
-from .sparse import Identity, Operator, directSumListsOfSparse, directSumSparse, mapOverSparseData
+from .sparse import Identity, OneSiteOperator, directSumListsOfSparse, directSumSparse, mapOverSparseData
 from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
 from .utils import computeNewDimension, L, R
@@ -20,7 +20,7 @@ class System: # {{{
             tuple({Identity():NDArrayData.newTrivial((1,)*4)} for _ in range(4)),
             tuple({Identity():NDArrayData.newTrivial((1,)*4)+(d,)*2} for d in bandwidth_dimensions),
             NDArrayData.newRandom(*tuple(bandwidth_dimensions)+tuple(O.shape[:1])),
-            {Identity():None,Operator():O}
+            {Identity():None,OneSiteOperator():O}
         )
         system.assertDimensionsAreConsistent()
         system.assertNormalizationIsHermitian()
@@ -51,7 +51,7 @@ class System: # {{{
                 O += O.join(1,0).conj()
             else:
                 O = makeOperator(physical_dimension)
-        operator_center_tensor = {Identity():None,Operator():O}
+        operator_center_tensor = {Identity():None,OneSiteOperator():O}
         system = cls(
             tuple({Identity():corner_data} for corner_data in corners_data),
             tuple({Identity():side_data} for side_data in sides_data),
@@ -69,7 +69,7 @@ class System: # {{{
             tuple({Identity():DataClass.newTrivial((1,)*4,dtype=complex128)} for _ in range(4)),
             tuple({Identity():DataClass.newTrivial((1,)*6,dtype=complex128)} for _ in range(4)),
             DataClass.newTrivial((1,1,1,1,O.shape[0]),dtype=complex128),
-            {Identity():None,Operator():O}
+            {Identity():None,OneSiteOperator():O}
         )
     # }}}
   # }}}
@@ -245,7 +245,7 @@ class System: # {{{
             N = prod(state_center_data.shape)
             operator = state_center_data.newZeros(shape=(N,N),dtype=state_center_data.dtype)
             for tag, data in self.operator_center_tensor.items():
-                if isinstance(tag,Operator):
+                if isinstance(tag,OneSiteOperator):
                     operator += data
             evals, evecs = eigh(operator.toArray())
             self.state_center_data = type(state_center_data)(evecs[:,0].reshape(state_center_data.shape))

@@ -24,7 +24,7 @@ class Identity(Singleton): # {{{
 class Complete(Singleton): # {{{
     __slots__ = []
 # }}}
-class Operator(Singleton): # {{{
+class OneSiteOperator(Singleton): # {{{
     __slots__ = []
 # }}}
 # }}}
@@ -77,7 +77,7 @@ __all__ = [
 
     "Identity",
     "Complete",
-    "Operator",
+    "OneSiteOperator",
 
     "contractSparseTensors",
     "directSumListsOfSparse",

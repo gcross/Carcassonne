@@ -2,7 +2,7 @@
 from functools import partial
 
 from .dense import *
-from ..sparse import Identity, Complete, Operator, contractSparseTensors, formSparseContractor
+from ..sparse import Identity, Complete, OneSiteOperator, contractSparseTensors, formSparseContractor
 from ..utils import multiplyBySingleSiteOperator
 # }}}
 
@@ -34,7 +34,7 @@ def absorbSparseCenterSOSIntoSide(direction,side,center_state,center_operator,ce
     return contractSparseTensors({
             (Identity,Identity): lambda x,y: (Identity(),contractSS),
             (Complete,Identity): lambda x,y: (Complete(),contractSS),
-            (Identity,Operator): lambda x,y: (Complete(),contractSOS),
+            (Identity,OneSiteOperator): lambda x,y: (Complete(),contractSOS),
     },side,center_operator)
 # }}}
 def formExpectationAndNormalizationMultipliers(corners,sides,center_operator): # {{{
@@ -77,7 +77,7 @@ def formExpectationStage3(stage2_0,stage2_1,center_operator): # {{{
     for tag in center_operator:
         if isinstance(tag,Identity):
             multipliers += complete_multipliers
-        elif isinstance(tag,Operator):
+        elif isinstance(tag,OneSiteOperator):
             def operator_multiplier(operator,center):
                 return identity_multiplier(multiplyBySingleSiteOperator(center,operator))
             multipliers.append(partial(operator_multiplier,center_operator[tag]))

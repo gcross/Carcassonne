@@ -4,7 +4,7 @@ from numpy.linalg import norm
 
 from . import *
 from ..system import *
-from ..sparse import Identity, Operator, mapOverSparseData
+from ..sparse import Identity, OneSiteOperator, mapOverSparseData
 # }}}
 
 class TestSystem(TestCase): # {{{
@@ -205,7 +205,7 @@ class TestSystemSillyFieldWalk(TestCase): # {{{
         corners = [{Identity():NDArrayData.newTrivial((1,1,1,1))}]*4
         sides = [{Identity():NDArrayData.newTrivial((1,1,1,1,1,1))}]*4
         I = O = NDArrayData.newTrivial((1,1))
-        operator_center_tensor = {Identity():None,Operator():O}
+        operator_center_tensor = {Identity():None,OneSiteOperator():O}
         state_center_data = NDArrayData.newTrivial((1,)*5)
         return System(corners, sides, state_center_data, operator_center_tensor)
     # }}}
@@ -260,7 +260,7 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
         corners = [{Identity():NDArrayData.newTrivial((1,1,1,1),dtype=complex128)}]*4
         sides = [{Identity():NDArrayData.newTrivial((1,1,1,1,1,1),dtype=complex128)}]*4
         Z = NDArrayData(array([[1,0],[0,-1]],dtype=complex128))
-        operator_center_tensor = {Identity():None,Operator():Z}
+        operator_center_tensor = {Identity():None,OneSiteOperator():Z}
         state_up = NDArrayData(array([[[[[1,0]]]]],dtype=complex128))
         state_down = NDArrayData(array([[[[[0,1]]]]],dtype=complex128))
         return System(corners, sides, state_up, operator_center_tensor), [state_up, state_down], [1,-1]
