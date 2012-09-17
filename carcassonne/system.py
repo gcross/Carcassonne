@@ -5,7 +5,7 @@ from random import randint
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 
 from .data import NDArrayData
-from .sparse import Identity, OneSiteOperator, directSumListsOfSparse, directSumSparse, mapOverSparseData
+from .sparse import Identity, OneSiteOperator, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData
 from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
 from .utils import computeNewDimension, L, R
@@ -78,6 +78,10 @@ class System: # {{{
             DataClass.newTrivial((1,1,1,1,physical_dimension),dtype=complex128),
             operator_center_tensor,
         )
+    # }}}
+    @classmethod # newTrivialWithSparseOperator {{{
+    def newTrivialWithSparseOperator(cls,O=None,OO_UD=None,OO_LR=None):
+        return cls.newTrivial(makeSparseOperator(O=O,OO_UD=OO_UD,OO_LR=OO_LR))
     # }}}
   # }}}
   # Instance methods {{{
