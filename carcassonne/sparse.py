@@ -21,17 +21,17 @@ class Singleton: # {{{
 # Tags {{{
 class Identity(Singleton): # {{{
     __slots__ = []
-    def __str__(self):
+    def __repr__(self):
         return "Identity()"
 # }}}
 class Complete(Singleton): # {{{
     __slots__ = []
-    def __str__(self):
+    def __repr__(self):
         return "Complete()"
 # }}}
 class OneSiteOperator(Singleton): # {{{
     __slots__ = []
-    def __str__(self):
+    def __repr__(self):
         return "OneSiteOperator()"
 # }}}
 class TwoSiteOperator: # {{{
@@ -41,8 +41,8 @@ class TwoSiteOperator: # {{{
         self.position = position
     def moveOut(self):
         return TwoSiteOperator(self.direction,self.position+1)
-    def __str__(self):
-        return "TwoSiteOperator({},{})".format(direction,position)
+    def __repr__(self):
+        return "TwoSiteOperator({},{})".format(self.direction,self.position)
 # }}}
 # }}}
 
