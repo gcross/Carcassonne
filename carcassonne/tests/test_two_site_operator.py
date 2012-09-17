@@ -1,4 +1,6 @@
 # Imports {{{
+import pdb
+
 from . import *
 from ..system import System
 # }}}
@@ -233,4 +235,66 @@ class TestTwoSiteOperator(TestCase):
         E2 = E2M*E2D
 
         self.assertAlmostEqual(system.computeExpectation(),E1+E2)
+    # }}}
+    @with_checker # def test_LR_step_horizontal_than_vertical {{{
+    def test_LR_step_horizontal_than_vertical(self,
+        physical_dimension=irange(1,5),
+        horizontal_direction=choiceof((0,2)),
+        vertical_direction=choiceof((1,3)),
+    ):
+        OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
+        OO_L, OO_R = OO_LR
+        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        SL = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+        SR = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+
+        EL = OO_L.contractWith(SL.ravel(),(1,),(0,)).contractWith(SL.ravel().conj(),(0,),(0,)).extractScalar()
+        ER = OO_R.contractWith(SR.ravel(),(1,),(0,)).contractWith(SR.ravel().conj(),(0,),(0,)).extractScalar()
+        E = EL*ER
+ 
+        if horizontal_direction == 0:
+            S1 = SR
+            S2 = SL
+        else:
+            S1 = SL
+            S2 = SR
+
+        self.assertAlmostEqual(system.computeExpectation(),0)
+        system.setStateCenter(S1)
+        system.absorbCenter(horizontal_direction)
+        system.setStateCenter(S2)
+        self.assertAlmostEqual(system.computeExpectation(),E)
+        system.absorbCenter(vertical_direction)
+        self.assertAlmostEqual(system.computeExpectation(),2*E)
+    # }}}
+    @with_checker # def test_UD_step_vertical_than_horizontal {{{
+    def test_UD_step_vertical_than_horizontal(self,
+        physical_dimension=irange(1,5),
+        vertical_direction=choiceof((1,3)),
+        horizontal_direction=choiceof((0,2)),
+    ):
+        OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
+        OO_U, OO_D = OO_UD
+        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        SU = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+        SD = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+
+        EU = OO_U.contractWith(SU.ravel(),(1,),(0,)).contractWith(SU.ravel().conj(),(0,),(0,)).extractScalar()
+        ED = OO_D.contractWith(SD.ravel(),(1,),(0,)).contractWith(SD.ravel().conj(),(0,),(0,)).extractScalar()
+        E = EU*ED
+ 
+        if vertical_direction == 1:
+            S1 = SU
+            S2 = SD
+        else:
+            S1 = SD
+            S2 = SU
+
+        self.assertAlmostEqual(system.computeExpectation(),0)
+        system.setStateCenter(S1)
+        system.absorbCenter(vertical_direction)
+        system.setStateCenter(S2)
+        self.assertAlmostEqual(system.computeExpectation(),E)
+        system.absorbCenter(horizontal_direction)
+        self.assertAlmostEqual(system.computeExpectation(),2*E)
     # }}}

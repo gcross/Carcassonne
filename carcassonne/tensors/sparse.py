@@ -120,8 +120,8 @@ formExpectationStage2 = formSparseContractor({
          formNormalizationStage2
         ),
     (TwoSiteOperator,TwoSiteOperator): lambda r,l:
-        (Complete(),formNormalizationStage1)
-            if l.direction == 0 and r.direction == 1 and l.position == r.position else None,
+        (Complete(),formNormalizationStage2)
+            if l.direction == 1 and r.direction == 0 and l.position == r.position else None,
 })
 # }}}
 def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
