@@ -61,6 +61,12 @@ class NDArrayData(Data): # {{{
         data += data.transpose().conj()
         return data
     # }}}
+    @classmethod # newNormalizedRandom {{{
+    def newNormalizedRandom(cls,*shape):
+        sample = randomComplexSample(shape)
+        sample /= norm(sample)
+        return cls(sample)
+    # }}}
     @classmethod # newTrivial {{{
     def newTrivial(cls,shape,dtype=int):
         return cls(ones(shape,dtype=dtype))
@@ -231,6 +237,9 @@ class NDArrayData(Data): # {{{
         q, r = qr(self._arr,mode=mode)
         return NDArrayData(q), NDArrayData(r)
     # }}}
+    def ravel(self): # {{{
+        return NDArrayData(self._arr.ravel())
+    # }}}
     def split(self,*splits): # {{{
         return NDArrayData(self._arr.reshape(splits))
     # }}}
@@ -259,6 +268,12 @@ class NDArrayData(Data): # {{{
     dtype = property(fget = lambda self: self._arr.dtype)
     ndim = property(fget = lambda self: self._arr.ndim)
     shape = property(fget = lambda self: self._arr.shape)
+  # }}}
+  # Constants {{{
+NDArrayData.I = NDArrayData(array([[1,0],[0,1]],dtype=complex128))
+NDArrayData.X = NDArrayData(array([[0,1],[1,0]],dtype=complex128))
+NDArrayData.Y = NDArrayData(array([[0,1j],[1j,0]],dtype=complex128))
+NDArrayData.Z = NDArrayData(array([[1,0],[0,-1]],dtype=complex128))
   # }}}
 # }}}
 class ScalarData(Data): # {{{
