@@ -64,12 +64,19 @@ class System: # {{{
         return system
     # }}}
     @classmethod # newTrivial {{{
-    def newTrivial(cls,O,DataClass=NDArrayData):
+    def newTrivial(cls,operator_center_tensor,DataClass=NDArrayData):
+        physical_dimension = None
+        for data in operator_center_tensor.values():
+            if data is not None:
+                physical_dimension = data.shape[0]
+                break
+        if physical_dimension is None:
+            raise ValueError("Operator tensor must have at least one non-identity component.")
         return cls(
             tuple({Identity():DataClass.newTrivial((1,)*4,dtype=complex128)} for _ in range(4)),
             tuple({Identity():DataClass.newTrivial((1,)*6,dtype=complex128)} for _ in range(4)),
-            DataClass.newTrivial((1,1,1,1,O.shape[0]),dtype=complex128),
-            {Identity():None,OneSiteOperator():O}
+            DataClass.newTrivial((1,1,1,1,physical_dimension),dtype=complex128),
+            operator_center_tensor,
         )
     # }}}
   # }}}

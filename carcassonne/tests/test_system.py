@@ -4,13 +4,13 @@ from numpy.linalg import norm
 
 from . import *
 from ..system import *
-from ..sparse import Identity, OneSiteOperator, mapOverSparseData
+from ..sparse import *
 # }}}
 
 class TestSystem(TestCase): # {{{
     def test___add___trivial(self): # test___add___trivial {{{
         O = NDArrayData.newIdentity(1)
-        system1 = System.newTrivial(O)
+        system1 = System.newTrivial(makeSparseOperator(O))
         system2 = system1 + system1
         self.assertAlmostEqual(system2.computeNormalization(),2)
         self.assertAlmostEqual(system2.computeExpectation(),1)
