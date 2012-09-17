@@ -96,11 +96,10 @@ def mapOverSparseData(f,sparse): # {{{
 
 # Exports {{{
 __all__ = [
-    "Side",
-
     "Identity",
     "Complete",
     "OneSiteOperator",
+    "TwoSiteOperator",
 
     "contractSparseTensors",
     "directSumListsOfSparse",
