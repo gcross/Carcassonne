@@ -55,6 +55,12 @@ class NDArrayData(Data): # {{{
     def newRandom(cls,*shape):
         return cls(randomComplexSample(shape))
     # }}}
+    @classmethod # newRandomHermitian {{{
+    def newRandomHermitian(cls,*shape):
+        data = cls.newRandom(*shape)
+        data += data.transpose().conj()
+        return data
+    # }}}
     @classmethod # newTrivial {{{
     def newTrivial(cls,shape,dtype=int):
         return cls(ones(shape,dtype=dtype))
