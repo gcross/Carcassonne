@@ -91,8 +91,8 @@ formExpectationStage1 = formSparseContractor({
     (Identity,Identity): lambda l,r: (Identity(),formNormalizationStage1),
     (Complete,Identity): lambda l,r: (Complete(),formNormalizationStage1),
     (Identity,Complete): lambda l,r: (Complete(),formNormalizationStage1),
-    (TwoSiteOperator,Identity): lambda l,r: (l,formNormalizationStage) if l.direction == 0 else None,
-    (Identity,TwoSiteOperator): lambda l,r: (r,formNormalizationStage) if r.direction != 0 else None,
+    (TwoSiteOperator,Identity): lambda l,r: (l,formNormalizationStage1) if l.direction == 0 else None,
+    (Identity,TwoSiteOperator): lambda l,r: (r,formNormalizationStage1) if r.direction != 0 else None,
     (TwoSiteOperator,TwoSiteOperator): lambda l,r:
         (Complete(),formNormalizationStage1)
             if l.direction == 1 and r.direction == 0 and l.position == r.position else None,
@@ -130,7 +130,7 @@ def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
         (Identity,Complete,Identity): lambda x,y,z: True,
         (Identity,Identity,OneSiteOperator): lambda x,y,z: True,
         (TwoSiteOperator,Identity,TwoSiteOperator): lambda x,y,z: x.direction == 2 and x.position == z.direction,
-        (Identity,TwoSiteOperator,TwoSiteOperator): lambda x,y,z: x.direction == 2 and x.position+2 == z.direction,
+        (Identity,TwoSiteOperator,TwoSiteOperator): lambda x,y,z: y.direction == 2 and y.position+2 == z.direction,
         (TwoSiteOperator,TwoSiteOperator,Identity): lambda x,y,z: (x.direction,y.direction) in ((0,1),(1,0)) and x.position == y.position,
     }
 
