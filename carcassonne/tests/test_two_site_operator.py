@@ -54,3 +54,22 @@ class TestTwoSiteOperator(TestCase):
             system.absorbCenter(direction)
         self.assertAlmostEqual(system.computeExpectation(),0)
     # }}}
+    @with_checker # def test_LR_one_step_right {{{
+    def test_LR_one_step_right(self,physical_dimension=irange(1,5)):
+        OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
+        OO_L, OO_R = OO_LR
+        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        state_center_data_L = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+        state_center_data_R = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+        system.setStateCenter(state_center_data_R)
+        self.assertAlmostEqual(system.computeNormalization(),1)
+        system.absorbCenter(0)
+        system.setStateCenter(state_center_data_L)
+        self.assertAlmostEqual(system.computeNormalization(),1)
+
+        correct_expectation_L = OO_L.contractWith(state_center_data_L.ravel(),(1,),(0,)).contractWith(state_center_data_L.ravel().conj(),(0,),(0,)).extractScalar()
+        correct_expectation_R = OO_R.contractWith(state_center_data_R.ravel(),(1,),(0,)).contractWith(state_center_data_R.ravel().conj(),(0,),(0,)).extractScalar()
+        correct_expectation = correct_expectation_L*correct_expectation_R/system.computeNormalization()
+
+        self.assertAlmostEqual(system.computeExpectation(),correct_expectation)
+    # }}}

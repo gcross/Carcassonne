@@ -518,7 +518,7 @@ def invertPermutation(permutation): # {{{
     return [permutation.index(i) for i in range(len(permutation))]
 # }}}
 def multiplyBySingleSiteOperator(state,operator): # {{{
-    return state.contractWith(operator,(4,),(0,))
+    return state.absorbMatrixAt(4,operator)
 # }}}
 def randomComplexSample(shape): # {{{
     return random_sample(shape)*2-1+random_sample(shape)*2j-1j
