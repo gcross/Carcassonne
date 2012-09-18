@@ -298,3 +298,98 @@ class TestTwoSiteOperator(TestCase):
         system.absorbCenter(horizontal_direction)
         self.assertAlmostEqual(system.computeExpectation(),2*E)
     # }}}
+    @with_checker(number_of_calls=10) # def test_LR_many_steps_uniform {{{
+    def test_LR_many_steps_uniform(self,
+        physical_dimension=irange(1,5),
+        directions=[irange(0,3)]
+    ):
+        OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
+        OO_L, OO_R = OO_LR
+        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        S = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+        system.setStateCenter(S)
+
+        EL = OO_L.contractWith(S.ravel(),(1,),(0,)).contractWith(S.ravel().conj(),(0,),(0,)).extractScalar()
+        ER = OO_R.contractWith(S.ravel(),(1,),(0,)).contractWith(S.ravel().conj(),(0,),(0,)).extractScalar()
+        E = EL*ER
+
+        width = 0
+        height = 1
+        for direction in directions:
+            system.absorbCenter(direction)
+            if direction in (0,2):
+                width += 1
+            else:
+                height += 1
+        self.assertAlmostEqual(system.computeExpectation(),width*height*E)
+    # }}}
+    @with_checker(number_of_calls=10) # def test_UD_many_steps_uniform {{{
+    def test_UD_many_steps_uniform(self,
+        physical_dimension=irange(1,5),
+        directions=[irange(0,3)]
+    ):
+        OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
+        OO_U, OO_D = OO_UD
+        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        S = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+        system.setStateCenter(S)
+
+        EU = OO_U.contractWith(S.ravel(),(1,),(0,)).contractWith(S.ravel().conj(),(0,),(0,)).extractScalar()
+        ED = OO_D.contractWith(S.ravel(),(1,),(0,)).contractWith(S.ravel().conj(),(0,),(0,)).extractScalar()
+        E = EU*ED
+
+        width = 1
+        height = 0
+        for direction in directions:
+            system.absorbCenter(direction)
+            if direction in (0,2):
+                width += 1
+            else:
+                height += 1
+        self.assertAlmostEqual(system.computeExpectation(),width*height*E)
+    # }}}
+    @with_checker(number_of_calls=10) # def test_many_steps_uniform {{{
+    def test_many_steps_uniform(self,
+        physical_dimension=irange(1,5),
+        directions=[irange(0,3)]
+    ):
+        OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
+        OO_L, OO_R = OO_LR
+        OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
+        OO_U, OO_D = OO_UD
+        O = NDArrayData.newRandomHermitian(physical_dimension,physical_dimension)
+        system = System.newTrivialWithSparseOperator(O=O,OO_LR=OO_LR,OO_UD=OO_UD)
+        S = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+        system.setStateCenter(S)
+
+        EL = OO_L.contractWith(S.ravel(),(1,),(0,)).contractWith(S.ravel().conj(),(0,),(0,)).extractScalar()
+        ER = OO_R.contractWith(S.ravel(),(1,),(0,)).contractWith(S.ravel().conj(),(0,),(0,)).extractScalar()
+        ELR = EL*ER
+
+        EU = OO_U.contractWith(S.ravel(),(1,),(0,)).contractWith(S.ravel().conj(),(0,),(0,)).extractScalar()
+        ED = OO_D.contractWith(S.ravel(),(1,),(0,)).contractWith(S.ravel().conj(),(0,),(0,)).extractScalar()
+        EUD = EU*ED
+
+        E1 = O.contractWith(S.ravel(),(1,),(0,)).contractWith(S.ravel().conj(),(0,),(0,)).extractScalar()
+
+        width = 1
+        height = 1
+        LR_width = 0
+        LR_height = 1
+        UD_width = 1
+        UD_height = 0
+        for direction in directions:
+            system.absorbCenter(direction)
+            if direction in (0,2):
+                width += 1
+                LR_width += 1
+                UD_width += 1
+            else:
+                height += 1
+                LR_height += 1
+                UD_height += 1
+        self.assertAlmostEqual(
+            system.computeExpectation(),
+            LR_width*LR_height*ELR + UD_width*UD_height*EUD + width*height*E1
+        )
+    # }}}
