@@ -48,8 +48,8 @@ class TestTwoSiteOperator(TestCase):
         system.absorbCenter(3)
         self.assertAlmostEqual(system.computeExpectation(),0)
     # }}}
-    @with_checker(number_of_calls=10) # def test_LR_horizontal_steps {{{
-    def test_LR_horizontal_steps(self,physical_dimension=irange(1,5),directions=[choiceof((1,3))]):
+    @with_checker(number_of_calls=10) # def test_LR_vertical_steps {{{
+    def test_LR_vertical_steps(self,physical_dimension=irange(1,5),directions=[choiceof((1,3))]):
         OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
         for direction in directions:
