@@ -267,6 +267,34 @@ class TestTwoSiteOperator(TestCase):
         system.absorbCenter(vertical_direction)
         self.assertAlmostEqual(system.computeExpectation(),2*E)
     # }}}
+    @with_checker # def test_LR_step_vertical_than_horizontal {{{
+    def test_LR_step_vertical_than_horizontal(self,
+        physical_dimension=irange(1,5),
+        vertical_direction=choiceof((1,3)),
+        horizontal_direction=choiceof((0,2)),
+    ):
+        OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
+        OO_L, OO_R = OO_LR
+        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        S1 = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+        S2 = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+
+        E1L = OO_L.contractWith(S1.ravel(),(1,),(0,)).contractWith(S1.ravel().conj(),(0,),(0,)).extractScalar()
+        E1R = OO_R.contractWith(S1.ravel(),(1,),(0,)).contractWith(S1.ravel().conj(),(0,),(0,)).extractScalar()
+        E1LR = E1L*E1R
+
+        E2L = OO_L.contractWith(S2.ravel(),(1,),(0,)).contractWith(S2.ravel().conj(),(0,),(0,)).extractScalar()
+        E2R = OO_R.contractWith(S2.ravel(),(1,),(0,)).contractWith(S2.ravel().conj(),(0,),(0,)).extractScalar()
+        E2LR = E2L*E2R
+
+        self.assertAlmostEqual(system.computeExpectation(),0)
+        system.setStateCenter(S1)
+        system.absorbCenter(vertical_direction)
+        system.setStateCenter(S2)
+        self.assertAlmostEqual(system.computeExpectation(),0)
+        system.absorbCenter(horizontal_direction)
+        self.assertAlmostEqual(system.computeExpectation(),E1LR+E2LR)
+    # }}}
     @with_checker # def test_UD_step_vertical_than_horizontal {{{
     def test_UD_step_vertical_than_horizontal(self,
         physical_dimension=irange(1,5),
@@ -297,6 +325,34 @@ class TestTwoSiteOperator(TestCase):
         self.assertAlmostEqual(system.computeExpectation(),E)
         system.absorbCenter(horizontal_direction)
         self.assertAlmostEqual(system.computeExpectation(),2*E)
+    # }}}
+    @with_checker # def test_UD_step_horizontal_than_vertical {{{
+    def test_UD_step_horizontal_than_vertical(self,
+        physical_dimension=irange(1,5),
+        horizontal_direction=choiceof((0,2)),
+        vertical_direction=choiceof((1,3)),
+    ):
+        OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
+        OO_U, OO_D = OO_UD
+        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        S1 = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+        S2 = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
+
+        E1U = OO_U.contractWith(S1.ravel(),(1,),(0,)).contractWith(S1.ravel().conj(),(0,),(0,)).extractScalar()
+        E1D = OO_D.contractWith(S1.ravel(),(1,),(0,)).contractWith(S1.ravel().conj(),(0,),(0,)).extractScalar()
+        E1UD = E1U*E1D
+
+        E2U = OO_U.contractWith(S2.ravel(),(1,),(0,)).contractWith(S2.ravel().conj(),(0,),(0,)).extractScalar()
+        E2D = OO_D.contractWith(S2.ravel(),(1,),(0,)).contractWith(S2.ravel().conj(),(0,),(0,)).extractScalar()
+        E2UD = E2U*E2D
+
+        self.assertAlmostEqual(system.computeExpectation(),0)
+        system.setStateCenter(S1)
+        system.absorbCenter(horizontal_direction)
+        system.setStateCenter(S2)
+        self.assertAlmostEqual(system.computeExpectation(),0)
+        system.absorbCenter(vertical_direction)
+        self.assertAlmostEqual(system.computeExpectation(),E1UD+E2UD)
     # }}}
     @with_checker(number_of_calls=10) # def test_LR_many_steps_uniform {{{
     def test_LR_many_steps_uniform(self,
