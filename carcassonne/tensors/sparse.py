@@ -9,45 +9,25 @@ from ..utils import multiplyBySingleSiteOperator, L, R, O
 
 # Functions {{{
 # def absorbSparseSideIntoCornerFromLeft(corner,side) {{{
+absorbDSL = absorbDenseSideIntoCornerFromLeft
 absorbSparseSideIntoCornerFromLeft = formSparseContractor({
-    (Identity,Identity): lambda r,l: (Identity(),absorbDenseSideIntoCornerFromLeft),
-    (Complete,Identity): lambda r,l: (Complete(),absorbDenseSideIntoCornerFromLeft),
-    (Identity,Complete): lambda r,l: (Complete(),absorbDenseSideIntoCornerFromLeft),
-    (TwoSiteOperator,Identity): lambda r,l:
-        (r.moveOut(),absorbDenseSideIntoCornerFromLeft)
-            if r.direction == 1 else None,
-    (Identity,TwoSiteOperator): lambda r,l:
-        ({
-            0:l,
-            1:None,
-            2:TwoSiteOperator(1,0)
-         }[l.direction],
-         absorbDenseSideIntoCornerFromLeft
-        ),
-    (TwoSiteOperator,TwoSiteOperator): lambda r,l:
-        (Complete(),absorbDenseSideIntoCornerFromLeft)
-            if l.direction == 1 and r.direction == 0 and l.position == r.position else None,
+    (Identity,Identity): lambda r,l: (Identity(),absorbDSL),
+    (Complete,Identity): lambda r,l: (Complete(),absorbDSL),
+    (Identity,Complete): lambda r,l: (Complete(),absorbDSL),
+    (TwoSiteOperator,Identity): lambda r,l: (r.matchesSideIdentityOnLeft(),absorbDSL),
+    (Identity,TwoSiteOperator): lambda r,l: (l.matchesCornerIdentityOnRight(),absorbDSL),
+    (TwoSiteOperator,TwoSiteOperator): lambda r,l: (l.matches(r),absorbDSL),
 })
 # }}}
 # def absorbSparseSideIntoCornerFromRight(corner,side) {{{
+absorbDSR = absorbDenseSideIntoCornerFromRight
 absorbSparseSideIntoCornerFromRight = formSparseContractor({
-    (Identity,Identity): lambda l,r: (Identity(),absorbDenseSideIntoCornerFromRight),
-    (Complete,Identity): lambda l,r: (Complete(),absorbDenseSideIntoCornerFromRight),
-    (Identity,Complete): lambda l,r: (Complete(),absorbDenseSideIntoCornerFromRight),
-    (TwoSiteOperator,Identity): lambda l,r:
-        (l.moveOut(),absorbDenseSideIntoCornerFromRight)
-            if l.direction == 0 else None,
-    (Identity,TwoSiteOperator): lambda l,r:
-        ({
-            0:None,
-            1:r,
-            2:TwoSiteOperator(0,0)
-         }[r.direction],
-         absorbDenseSideIntoCornerFromRight
-        ),
-    (TwoSiteOperator,TwoSiteOperator): lambda l,r:
-        (Complete(),absorbDenseSideIntoCornerFromRight)
-            if l.direction == 1 and r.direction == 0 and l.position == r.position else None,
+    (Identity,Identity): lambda l,r: (Identity(),absorbDSR),
+    (Complete,Identity): lambda l,r: (Complete(),absorbDSR),
+    (Identity,Complete): lambda l,r: (Complete(),absorbDSR),
+    (TwoSiteOperator,Identity): lambda l,r: (l.matchesSideIdentityOnRight(),absorbDSR),
+    (Identity,TwoSiteOperator): lambda l,r: (r.matchesCornerIdentityOnLeft(),absorbDSR),
+    (TwoSiteOperator,TwoSiteOperator): lambda l,r: (l.matches(r),absorbDSR),
 })
 # }}}
 # def absorbSparseCenterSOSIntoSide {{{
@@ -58,19 +38,13 @@ def absorbSparseCenterSOSIntoSide(direction,side,center_state,center_operator,ce
         return absorbDenseCenterSSIntoSide(direction,side_data,center_state,center_state_conj)
     def contractSOS(side_data,center_operator_data):
         return absorbDenseCenterSOSIntoSide(direction,side_data,center_state,center_operator_data,center_state_conj)
-    identity_tags = {
-        L(direction): TwoSiteOperator(0,0),
-        R(direction): TwoSiteOperator(1,0),
-        O(direction): TwoSiteOperator(2),
-        direction: None
-    }
     return contractSparseTensors({
             (Identity,Identity): lambda s,c: (Identity(),contractSS),
             (Complete,Identity): lambda s,c: (Complete(),contractSS),
             (Identity,OneSiteOperator): lambda s,c: (Complete(),contractSOS),
-            (TwoSiteOperator,Identity): lambda s,c: (s.moveOut(),contractSS) if s.direction != 2 else None,
-            (Identity,TwoSiteOperator): lambda s,c: (identity_tags[c.direction],contractSOS),
-            (TwoSiteOperator,TwoSiteOperator): lambda s,c: (Complete(),contractSOS) if s.direction == 2 and c.direction == direction else None
+            (TwoSiteOperator,Identity): lambda s,c: (s.matchesCenterIdentity(),contractSS),
+            (Identity,TwoSiteOperator): lambda s,c: (c.matchesSideIdentity(direction),contractSOS),
+            (TwoSiteOperator,TwoSiteOperator): lambda s,c: (s.matchesCenter(direction,c),contractSOS),
     },side,center_operator)
 # }}}
 def formExpectationAndNormalizationMultipliers(corners,sides,center_operator): # {{{
@@ -87,41 +61,25 @@ def formExpectationAndNormalizationMultipliers(corners,sides,center_operator): #
     )
 # }}}
 # def formExpectationStage1(corner,side) {{{
+formNorm1 = formNormalizationStage1
 formExpectationStage1 = formSparseContractor({
-    (Identity,Identity): lambda l,r: (Identity(),formNormalizationStage1),
-    (Complete,Identity): lambda l,r: (Complete(),formNormalizationStage1),
-    (Identity,Complete): lambda l,r: (Complete(),formNormalizationStage1),
-    (TwoSiteOperator,Identity): lambda l,r: (l,formNormalizationStage1) if l.direction == 0 else None,
-    (Identity,TwoSiteOperator): lambda l,r: (r,formNormalizationStage1) if r.direction != 0 else None,
-    (TwoSiteOperator,TwoSiteOperator): lambda l,r:
-        (Complete(),formNormalizationStage1)
-            if l.direction == 1 and r.direction == 0 and l.position == r.position else None,
+    (Identity,Identity): lambda l,r: (Identity(),formNorm1),
+    (Complete,Identity): lambda l,r: (Complete(),formNorm1),
+    (Identity,Complete): lambda l,r: (Complete(),formNorm1),
+    (TwoSiteOperator,Identity): lambda l,r: (l.matchesSideIdentityOnRightForStage1(),formNorm1),
+    (Identity,TwoSiteOperator): lambda l,r: (r.matchesCornerIdentityOnLeftForStage1(),formNorm1),
+    (TwoSiteOperator,TwoSiteOperator): lambda l,r: (l.matches(r),formNorm1),
 })
 # }}}
 # def formExpectationStage2(stage1_0,stage1_1) {{{
+formNorm2 = formNormalizationStage2
 formExpectationStage2 = formSparseContractor({
-    (Identity,Identity): lambda r,l: (Identity(),formNormalizationStage2),
-    (Complete,Identity): lambda r,l: (Complete(),formNormalizationStage2),
-    (Identity,Complete): lambda r,l: (Complete(),formNormalizationStage2),
-    (TwoSiteOperator,Identity): lambda r,l:
-        ({
-            0:None,
-            1:r,
-            2:TwoSiteOperator(2,0)
-         }[r.direction],
-         formNormalizationStage2
-        ),
-    (Identity,TwoSiteOperator): lambda r,l:
-        ({
-            0:l,
-            1:None,
-            2:TwoSiteOperator(2,1)
-         }[l.direction],
-         formNormalizationStage2
-        ),
-    (TwoSiteOperator,TwoSiteOperator): lambda r,l:
-        (Complete(),formNormalizationStage2)
-            if l.direction == 1 and r.direction == 0 and l.position == r.position else None,
+    (Identity,Identity): lambda r,l: (Identity(),formNorm2),
+    (Complete,Identity): lambda r,l: (Complete(),formNorm2),
+    (Identity,Complete): lambda r,l: (Complete(),formNorm2),
+    (TwoSiteOperator,Identity): lambda r,l: (r.matchesStage1IdentityOnLeft(),formNorm2),
+    (Identity,TwoSiteOperator): lambda r,l: (l.matchesStage1IdentityOnRight(),formNorm2),
+    (TwoSiteOperator,TwoSiteOperator): lambda r,l: (l.matches(r),formNorm2)
 })
 # }}}
 def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
@@ -129,9 +87,9 @@ def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
         (Complete,Identity,Identity): lambda x,y,z: True,
         (Identity,Complete,Identity): lambda x,y,z: True,
         (Identity,Identity,OneSiteOperator): lambda x,y,z: True,
-        (TwoSiteOperator,Identity,TwoSiteOperator): lambda x,y,z: x.direction == 2 and x.position == z.direction,
-        (Identity,TwoSiteOperator,TwoSiteOperator): lambda x,y,z: y.direction == 2 and y.position+2 == z.direction,
-        (TwoSiteOperator,TwoSiteOperator,Identity): lambda x,y,z: (x.direction,y.direction) in ((0,1),(1,0)) and x.position == y.position,
+        (TwoSiteOperator,Identity,TwoSiteOperator): lambda x,y,z: x.matchesCenterForStage3(0,z),
+        (Identity,TwoSiteOperator,TwoSiteOperator): lambda x,y,z: y.matchesCenterForStage3(1,z),
+        (TwoSiteOperator,TwoSiteOperator,Identity): lambda x,y,z: x.matchesForStage3(y)
     }
 
     def makeMultiplier(stage2_0_data,stage2_1_data,operator_center_data):

@@ -1,6 +1,8 @@
 # Imports {{{
 from collections import namedtuple
 from functools import partial
+
+from .utils import L,R,O
 # }}}
 
 # Base classes {{{
@@ -36,13 +38,83 @@ class OneSiteOperator(Singleton): # {{{
 # }}}
 class TwoSiteOperator: # {{{
     __slots__ = ["direction","position"]
-    def __init__(self,direction,position=None):
+    def __init__(self,direction,position=None): # {{{
         self.direction = direction
         self.position = position
-    def moveOut(self):
-        return TwoSiteOperator(self.direction,self.position+1)
-    def __repr__(self):
+    # }}}
+    def __repr__(self): # {{{
         return "TwoSiteOperator({},{})".format(self.direction,self.position)
+    # }}}
+    def matches(left,right): # {{{
+        if left.direction == 1 and right.direction == 0 and left.position == right.position:
+            return Complete()
+    # }}}
+    def matchesCenter(self,side_direction,center): # {{{
+        if self.direction == 2 and side_direction == center.direction:
+            return Complete()
+    # }}}
+    def matchesCenterIdentity(self): # {{{
+        if self.direction != 2:
+            return self.moveOut()
+    # }}}
+    def matchesCenterForStage3(self,direction,other): # {{{
+        return self.direction == 2 and self.position + 2*direction == other.direction
+    # }}}
+    def matchesCornerIdentityOnLeft(self): # {{{
+        if self.direction == 1:
+            return self
+        if self.direction == 2:
+            return TwoSiteOperator(0,0)
+    # }}}
+    def matchesCornerIdentityOnLeftForStage1(self): # {{{
+        if self.direction == 1 or self.direction == 2:
+            return self
+    # }}}
+    def matchesCornerIdentityOnRight(self): # {{{
+        if self.direction == 0:
+            return self
+        if self.direction == 2:
+            return TwoSiteOperator(1,0)
+    # }}}
+    def matchesSideIdentityOnLeft(self): # {{{
+        if self.direction == 1:
+            return self.moveOut()
+    # }}}
+    def matchesSideIdentityOnRight(self): # {{{
+        if self.direction == 0:
+            return self.moveOut()
+    # }}}
+    def matchesSideIdentityOnRightForStage1(self): # {{{
+        if self.direction == 0:
+            return self
+    # }}}
+    def matchesSideIdentity(self,direction): # {{{
+        if self.direction == L(direction):
+            return TwoSiteOperator(0,0)
+        if self.direction == R(direction):
+            return TwoSiteOperator(1,0)
+        if self.direction == O(direction):
+            return TwoSiteOperator(2)
+    # }}}
+    def matchesStage1IdentityOnLeft(self): # {{{
+        if self.direction == 1:
+            return self
+        if self.direction == 2:
+            return TwoSiteOperator(2,0)
+    # }}}
+    def matchesStage1IdentityOnRight(self): # {{{
+        if self.direction == 0:
+            return self
+        if self.direction == 2:
+            return TwoSiteOperator(2,1)
+    # }}}
+    def matchesForStage3(x,y): # {{{
+        return (x.direction,y.direction) in ((0,1),(1,0)) and x.position == y.position
+    # }}}
+    def moveOut(self): # {{{
+        return TwoSiteOperator(self.direction,self.position+1)
+    # }}}
+    # }}}
 # }}}
 # }}}
 
