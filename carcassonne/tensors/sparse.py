@@ -43,7 +43,7 @@ def absorbSparseCenterSOSIntoSide(direction,side,center_state,center_operator,ce
             (Complete,Identity): lambda s,c: (Complete(),contractSS),
             (Identity,OneSiteOperator): lambda s,c: (Complete(),contractSOS),
             (TwoSiteOperator,Identity): lambda s,c: (s.matchesCenterIdentity(),contractSS),
-            (Identity,TwoSiteOperator): lambda s,c: (c.matchesSideIdentity(direction),contractSOS),
+            (Identity,TwoSiteOperator): lambda s,c: (c.matchesSideIdentityOutward(direction),contractSOS),
             (TwoSiteOperator,TwoSiteOperator): lambda s,c: (s.matchesCenter(direction,c),contractSOS),
     },side,center_operator)
 # }}}

@@ -88,7 +88,7 @@ class TwoSiteOperator: # {{{
         if self.direction == 0:
             return self
     # }}}
-    def matchesSideIdentity(self,direction): # {{{
+    def matchesSideIdentityOutward(self,direction): # {{{
         if self.direction == L(direction):
             return TwoSiteOperator(0,0)
         if self.direction == R(direction):
