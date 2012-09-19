@@ -114,7 +114,6 @@ class TwoSiteOperator: # {{{
     def moveOut(self): # {{{
         return TwoSiteOperator(self.direction,self.position+1)
     # }}}
-    # }}}
 # }}}
 # }}}
 
