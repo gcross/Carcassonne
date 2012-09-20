@@ -45,14 +45,14 @@ class TestSystem(TestCase): # {{{
         expectation1 = system.computeExpectation()
 
         corner_data = system.corners[corner_id][Identity()]
-        axis = 2*direction
+        axis = 3*direction
         old_dimension = corner_data.shape[axis]
         new_dimension = 2*(old_dimension+1)
         enlargener, enlargener_conj = NDArrayData.newEnlargener(old_dimension,new_dimension)
         system.corners[corner_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,enlargener).absorbMatrixAt(axis+1,enlargener_conj),system.corners[corner_id])
         side_id = sideFromCorner(corner_id,direction)
 
-        axis = 2-axis
+        axis = 3-axis
         side_enlargener = enlargener_conj
         side_enlargener_conj = enlargener
         system.sides[side_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,side_enlargener).absorbMatrixAt(axis+1,side_enlargener_conj),system.sides[side_id])
@@ -73,7 +73,7 @@ class TestSystem(TestCase): # {{{
         system = System.newRandom(maximum_dimension=4)
         normalization1 = system.computeNormalization()
         expectation1 = system.computeExpectation()
-        dimension = system.corners[corner_id][Identity()].shape[2*direction]
+        dimension = system.corners[corner_id][Identity()].shape[3*direction]
         system.compressCornerTowards(corner_id,direction,dimension,normalize)
         normalization2 = system.computeNormalization()
         expectation2 = system.computeExpectation()
@@ -202,12 +202,9 @@ class TestSystem(TestCase): # {{{
 class TestSystemSillyFieldWalk(TestCase): # {{{
     @staticmethod # def makeSillySystem # {{{
     def makeSillySystem():
-        corners = [{Identity():NDArrayData.newTrivial((1,1,1,1))}]*4
-        sides = [{Identity():NDArrayData.newTrivial((1,1,1,1,1,1))}]*4
-        I = O = NDArrayData.newTrivial((1,1))
-        operator_center_tensor = {Identity():None,OneSiteOperator():O}
-        state_center_data = NDArrayData.newTrivial((1,)*5)
-        return System(corners, sides, state_center_data, operator_center_tensor)
+        system = System.newTrivialWithSparseOperator(O=NDArrayData.newIdentity(1))
+        system.assertDimensionsAreConsistent()
+        return system
     # }}}
     def test_silly_field_no_steps(self): # {{{
         system = self.makeSillySystem()
@@ -257,13 +254,11 @@ class TestSystemSillyFieldWalk(TestCase): # {{{
 class TestSystemMagneticFieldWalk(TestCase): # {{{
     @staticmethod # def makeMagneticField # {{{
     def makeMagneticField():
-        corners = [{Identity():NDArrayData.newTrivial((1,1,1,1),dtype=complex128)}]*4
-        sides = [{Identity():NDArrayData.newTrivial((1,1,1,1,1,1),dtype=complex128)}]*4
-        Z = NDArrayData(array([[1,0],[0,-1]],dtype=complex128))
-        operator_center_tensor = {Identity():None,OneSiteOperator():Z}
+        system = System.newTrivialWithSparseOperator(O=NDArrayData.Z)
+        system.assertDimensionsAreConsistent()
         state_up = NDArrayData(array([[[[[1,0]]]]],dtype=complex128))
         state_down = NDArrayData(array([[[[[0,1]]]]],dtype=complex128))
-        return System(corners, sides, state_up, operator_center_tensor), [state_up, state_down], [1,-1]
+        return system, (state_up, state_down), (1,-1)
     # }}}
     @with_checker(number_of_calls=10) # test_magnetic_field_no_steps {{{
     def test_magnetic_field_no_steps(self,s1=irange(0,1),s2=irange(0,1)):

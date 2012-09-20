@@ -1,49 +1,37 @@
 # Imports {{{
-from ..utils import Join, formDataContractor, prepend, prependDataContractor
+from ..utils import Join, formDataContractor, prepend, prependDataContractor, L, R, O
 # }}}
 
 # Functions {{{
-# def absorbDenseSideIntoCornerFromLeft + friends # {{{
-@prependDataContractor(
-    [Join(0,(0,1),1,(2,3))],
-    [
-        [(1,0)],
-        [(1,1)],
-        [(0,2),(1,4)],
-        [(0,3),(1,5)],
-    ]
+# def absorbDenseSideIntoCornerFromLeft(corner,side) # {{{
+absorbDenseSideIntoCornerFromLeft = formDataContractor(
+    [Join(0,range(3),1,range(3,6))],
+    [[(1,i)] for i in range(3)] + [[(0,3+i),(1,6+i)] for i in range(2)] + [[(0,5)]]
 )
-def absorbDenseSideIntoCornerFromLeft(contractor,corner,side):
-    return contractor(corner,side)
 # }}}
-# def absorbDenseSideIntoCornerFromRight + friends # {{{
-@prependDataContractor(
-    [Join(0,(2,3),1,(0,1))],
-    [
-        [(0,0),(1,4)],
-        [(0,1),(1,5)],
-        [(1,2)],
-        [(1,3)],
-    ]
+# def absorbDenseSideIntoCornerFromRight(corner,side) # {{{
+absorbDenseSideIntoCornerFromRight = formDataContractor(
+    [Join(0,range(3,6),1,range(3))],
+    [[(0,i),(1,6+i)] for i in range(2)] + [[(0,2)]] + [[(1,i)] for i in range(3,6)]
 )
-def absorbDenseSideIntoCornerFromRight(contractor,corner,side):
-    return contractor(corner,side)
 # }}}
-# def absorbDenseCenterSSIntoSide + friends # {{{
+# def absorbDenseCenterSSIntoSide(direction,side,center,center_conj=None) # {{{
 @prepend([formDataContractor(
     # 0 = side, 1 = center, 2 = center*
     [
-        Join(0,4,1,i),
-        Join(0,5,2,i),
+        Join(0,6,1,i),
+        Join(0,7,2,i),
         Join(1,4,2,4),
     ],
     [
-        [(0,0),(1,(i+1)%4)],
-        [(0,1),(2,(i+1)%4)],
-        [(0,2),(1,(i-1)%4)],
-        [(0,3),(2,(i-1)%4)],
-        [(1,(i+2)%4)],
-        [(2,(i+2)%4)],
+        [(0,0),(1,L(i))],
+        [(0,1),(2,L(i))],
+        [(0,2)],
+        [(0,3),(1,R(i))],
+        [(0,4),(2,R(i))],
+        [(0,5)],
+        [(1,O(i))],
+        [(2,O(i))],
     ]
 ) for i in range(4)])
 def absorbDenseCenterSSIntoSide(contractors,direction,side,center,center_conj=None):
@@ -56,22 +44,24 @@ def absorbDenseCenterSSIntoSide(contractors,direction,side,center,center_conj=No
         center_conj,
       )
 # }}}
-# def absorbDenseCenterSOSIntoSide + friends {{{
+# def absorbDenseCenterSOSIntoSide(side,center,center_conj=None) {{{
 @prepend([formDataContractor(
     # 0 = side, 1 = state, 2 = state*, 3 = operator
     [
         Join(3,0,2,4),
         Join(3,1,1,4),
-        Join(0,4,1,i),
-        Join(0,5,2,i),
+        Join(0,6,1,i),
+        Join(0,7,2,i),
     ],
     [
-        [(0,0),(1,(i+1)%4)],
-        [(0,1),(2,(i+1)%4)],
-        [(0,2),(1,(i-1)%4)],
-        [(0,3),(2,(i-1)%4)],
-        [(1,(i+2)%4)],
-        [(2,(i+2)%4)],
+        [(0,0),(1,L(i))],
+        [(0,1),(2,L(i))],
+        [(0,2)],
+        [(0,3),(1,R(i))],
+        [(0,4),(2,R(i))],
+        [(0,5)],
+        [(1,O(i))],
+        [(2,O(i))],
     ]
 ) for i in range(4)])
 def absorbDenseCenterSOSIntoSide(contractors,direction,side,center_state,center_operator,center_state_conj=None):
@@ -97,21 +87,14 @@ def formNormalizationMultiplier(corners,sides): # {{{
         ),
     )
 # }}}
-# def formNormalizationStage1 + friends {{{
-@prependDataContractor(
-    [Join(0,(2,3),1,(0,1))],
-    [
-        [(0,0),(0,1)],
-        [(1,2),(1,3)],
-        [(1,4)],
-        [(1,5)],
-    ]
+# def formNormalizationStage1(corner,side) {{{
+formNormalizationStage1 = formDataContractor(
+    [Join(0,range(3,6),1,range(3))],
+    [[(0,i) for i in range(3)]] + [[(1,i) for i in range(3,6)]] + [[(1,i)] for i in range(6,8)]
 )
-def formNormalizationStage1(contractor,corner,side):
-    return contractor(corner,side)
 # }}}
-# def formNormalizationStage2 + friends {{{
-@prependDataContractor(
+# def formNormalizationStage2(stage1_0,stage1_1) {{{
+formNormalizationStage2 = formDataContractor(
     [Join(0,0,1,1)],
     [
         [(1,0)],
@@ -122,10 +105,8 @@ def formNormalizationStage1(contractor,corner,side):
         [(1,3)],
     ]
 )
-def formNormalizationStage2(contractor,stage1_0,stage1_1):
-    return contractor(stage1_0,stage1_1)
 # }}}
-# def formNormalizationStage3 + friends {{{
+# def formNormalizationStage3(stage2_0,stage2_1) {{{
 @prependDataContractor(
     [
         Join(0,[3,4],2,[0,1]),

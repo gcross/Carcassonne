@@ -17,8 +17,8 @@ class System: # {{{
     @classmethod # newEnlargener {{{
     def newEnlargener(cls,O,bandwidth_dimensions):
         system = cls(
-            tuple({Identity():NDArrayData.newTrivial((1,)*4)} for _ in range(4)),
-            tuple({Identity():NDArrayData.newTrivial((1,)*4)+(d,)*2} for d in bandwidth_dimensions),
+            tuple({Identity():NDArrayData.newTrivial((1,)*6)} for _ in range(4)),
+            tuple({Identity():NDArrayData.newTrivial((1,)*6)+(d,)*2} for d in bandwidth_dimensions),
             NDArrayData.newRandom(*tuple(bandwidth_dimensions)+tuple(O.shape[:1])),
             {Identity():None,OneSiteOperator():O}
         )
@@ -34,12 +34,13 @@ class System: # {{{
         randomDimension = lambda: randint(1,maximum_dimension)
         randomDimensions = lambda n: tuple(randomDimension() for _ in range(n))
         spoke_sizes = randomDimensions(2)*2
-        sides_data = tuple(DataClass.newRandom(*randomDimensions(1)*4+(spoke_sizes[i],)*2) for i in range(4))
+        sides_dimensions = [randomDimension() for _ in range(4)]
+        sides_data = tuple(DataClass.newRandom(*((sides_dimensions[i],)*2+(1,))*2+(spoke_sizes[i],)*2) for i in range(4))
         for side_data in sides_data:
-            side_data += side_data.join(1,0,3,2,5,4).conj()
-        corners_data = tuple(DataClass.newRandom(*(sides_data[(i+1)%4].shape[2],)*2+(sides_data[i].shape[0],)*2) for i in range(4))
+            side_data += side_data.join(1,0,2,4,3,5,7,6).conj()
+        corners_data = tuple(DataClass.newRandom(*(sides_data[L(i)].shape[3],)*2+(1,)+(sides_data[i].shape[0],)*2+(1,)) for i in range(4))
         for corner_data in corners_data:
-            corner_data += corner_data.join(1,0,3,2).conj()
+            corner_data += corner_data.join(1,0,2,4,3,5).conj()
         if O:
             physical_dimension = O.shape[0]
         else:
@@ -73,8 +74,8 @@ class System: # {{{
         if physical_dimension is None:
             raise ValueError("Operator tensor must have at least one non-identity component.")
         return cls(
-            tuple({Identity():DataClass.newTrivial((1,)*4,dtype=complex128)} for _ in range(4)),
             tuple({Identity():DataClass.newTrivial((1,)*6,dtype=complex128)} for _ in range(4)),
+            tuple({Identity():DataClass.newTrivial((1,)*8,dtype=complex128)} for _ in range(4)),
             DataClass.newTrivial((1,1,1,1,physical_dimension),dtype=complex128),
             operator_center_tensor,
         )
@@ -114,30 +115,34 @@ class System: # {{{
             raise AssertionError("state center's up and down dimensions do not agree ({} != {})".format(self.state_center_data.shape[1] != self.state_center_data.shape[3]))
         for i, side in enumerate(self.sides):
             normalization_data = side[Identity()]
+            if normalization_data.ndim != 8:
+                raise AssertionError("for side {} the normalization data has rank {} instead of rank 8".format(i,normalization_data.ndim))
             for tag, data in side.items():
                 if data.shape != normalization_data.shape:
                     raise AssertionError("for side {} the data tagged with {} does not match the shape of the data tagged with Identity() ({} != {})".format(i,tag,data.shape,normalization_data.shape))
             side_shape = normalization_data.shape
-            for d in (0,2,4):
+            for d in (0,3,6):
                 if side_shape[d] != side_shape[d+1]:
                     raise AssertionError("side {}'s dimension {} does not match its dimension {} ({} != {})".format(i,d,d+1,side_shape[d],side_shape[d+1]))
-            if side_shape[0] != side_shape[2]:
-                raise AssertionError("side {}'s left and right dimensions do not agree ({} != {})".format(side_shape[0],side_shape[2]))
-            if side_shape[4] != self.state_center_data.shape[i]:
-                raise AssertionError("side {}'s center-facing dimensions do not match the corresponding state dimension ({} != {})".format(i,side_shape[4],self.state_center_data.shape[i]))
+            if side_shape[0] != side_shape[3]:
+                raise AssertionError("side {}'s left and right dimensions do not agree ({} != {})".format(side_shape[0],side_shape[3]))
+            if side_shape[6] != self.state_center_data.shape[i]:
+                raise AssertionError("side {}'s center-facing dimensions do not match the corresponding state dimension ({} != {})".format(i,side_shape[6],self.state_center_data.shape[i]))
         for i, corner in enumerate(self.corners):
             normalization_data = corner[Identity()]
+            if normalization_data.ndim != 6:
+                raise AssertionError("for corner {} the normalization data has rank {} instead of rank 8".format(i,normalization_data.ndim))
             for tag, data in corner.items():
                 if data.shape != normalization_data.shape:
                     raise AssertionError("for corner {} the data tagged with {} does not match the shape of the data tagged with Identity() ({} != {})".format(i,tag,data.shape,normalization_data.shape))
             corner_shape = normalization_data.shape
-            for d in (0,2):
+            for d in (0,3):
                 if corner_shape[d] != corner_shape[d+1]:
                     raise AssertionError("corner {}'s dimension {} does not match its dimension {} ({} != {})".format(i,d,d+1,corner_shape[d],corner_shape[d+1]))
-            if corner_shape[2] != self.sides[i][Identity()].shape[0]:
-                raise AssertionError("corner {}'s right dimensions do not match side {}'s left dimensions ({} != {})".format(i,i,corner_shape[2],self.sides[i][Identity()].shape[0]))
-            if corner_shape[0] != self.sides[L(i)][Identity()].shape[2]:
-                raise AssertionError("corner {}'s left dimensions do not match side {}'s right dimensions ({} != {})".format(i,L(i),corner_shape[0],self.sides[L(i)][Identity()].shape[2]))
+            if corner_shape[3] != self.sides[i][Identity()].shape[0]:
+                raise AssertionError("corner {}'s right dimensions do not match side {}'s left dimensions ({} != {})".format(i,i,corner_shape[3],self.sides[i][Identity()].shape[0]))
+            if corner_shape[0] != self.sides[L(i)][Identity()].shape[3]:
+                raise AssertionError("corner {}'s left dimensions do not match side {}'s right dimensions ({} != {})".format(i,L(i),corner_shape[0],self.sides[L(i)][Identity()].shape[3]))
     # }}}
     def assertHasNoNaNs(self): # {{{
         for i, corner in enumerate(self.corners):
@@ -156,13 +161,13 @@ class System: # {{{
     # }}}
     def assertNormalizationIsHermitian(self): # {{{
         for i in range(4):
-            if not self.sides[i][Identity()].allcloseTo(self.sides[i][Identity()].join(1,0,3,2,5,4).conj()):
+            if not self.sides[i][Identity()].allcloseTo(self.sides[i][Identity()].join(1,0,2,4,3,5,7,6).conj()):
                 raise AssertionError("side {} is not hermitian".format(i))
-            if not self.corners[i][Identity()].allcloseTo(self.corners[i][Identity()].join(1,0,3,2).conj()):
+            if not self.corners[i][Identity()].allcloseTo(self.corners[i][Identity()].join(1,0,2,4,3,5).conj()):
                 raise AssertionError("corner {} is not hermitian".format(i))
     # }}}
     def compressCornerTowards(self,corner_id,direction,new_dimension,normalize=False): # {{{
-        axis = 2*direction
+        axis = 3*direction
         corner_data = self.corners[corner_id][Identity()]
         old_dimension = corner_data.shape[axis]
         matrix = corner_data.fold(axis).toArray().transpose()
@@ -198,7 +203,7 @@ class System: # {{{
         side_multiplier = side_multiplier_conj.conj()
         self.corners[corner_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,corner_multiplier).absorbMatrixAt(axis+1,corner_multiplier_conj),self.corners[corner_id])
         side_id = sideFromCorner(corner_id,direction)
-        axis = 2-axis
+        axis = 3-axis
         self.sides[side_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,side_multiplier).absorbMatrixAt(axis+1,side_multiplier_conj),self.sides[side_id])
     # }}}
     def computeExpectation(self): # {{{
@@ -241,7 +246,7 @@ class System: # {{{
             U, S, V = state_center_data.join(indices_to_merge,direction).svd(full_matrices=False)
             shrinker = V[:increment,:]
             shrinker_conj = shrinker.conj()
-            new_sides.append(mapOverSparseData(lambda data: data.absorbMatrixAt(4,shrinker).absorbMatrixAt(5,shrinker_conj),self.sides[direction]))
+            new_sides.append(mapOverSparseData(lambda data: data.absorbMatrixAt(6,shrinker).absorbMatrixAt(7,shrinker_conj),self.sides[direction]))
         self.corners = directSumListsOfSparse(self.corners,self.corners)
         self.sides = directSumListsOfSparse(self.sides,new_sides)
         self.setStateCenter(self.state_center_data.increaseDimensionsAndFillWithZeros(*enumerate(new_bandwidths)))
@@ -276,16 +281,16 @@ class System: # {{{
         self.state_center_data_conj = self.state_center_data.conj()
         denormalizer_for_side_axis2 = denormalizer_for_side_axis1.conj()
         self.sides[direction] = {
-            tag: side_data.absorbMatrixAt(4,denormalizer_for_side_axis1).absorbMatrixAt(5,denormalizer_for_side_axis2)
+            tag: side_data.absorbMatrixAt(6,denormalizer_for_side_axis1).absorbMatrixAt(7,denormalizer_for_side_axis2)
             for tag, side_data in self.sides[direction].items()
         }
     # }}}
     def normalizeCornerAndDenormalizeSide(self,corner_id,direction): # {{{
         side_id = sideFromCorner(corner_id,direction)
-        corner_axis1 = direction*2+0
-        corner_axis2 = direction*2+1
-        side_axis1 = (1-direction)*2+0
-        side_axis2 = (1-direction)*2+1
+        corner_axis1 = direction*3+0
+        corner_axis2 = direction*3+1
+        side_axis1 = (1-direction)*3+0
+        side_axis2 = (1-direction)*3+1
         corner_data = self.corners[corner_id][Identity()]
         normalizer_for_corner_axis1, denormalizer_for_side_axis1 = corner_data.normalizeAxis(corner_axis1,True)
         normalizer_for_corner_axis2 = normalizer_for_corner_axis1.conj()
@@ -301,10 +306,10 @@ class System: # {{{
     # }}}
     def normalizeSideAndDenormalizeCenter(self,side_id): # {{{
         side_data = self.sides[side_id][Identity()]
-        normalizer_for_side_axis1, denormalizer_for_center = side_data.normalizeAxis(4,True)
+        normalizer_for_side_axis1, denormalizer_for_center = side_data.normalizeAxis(6,True)
         normalizer_for_side_axis2 = normalizer_for_side_axis1.conj()
         self.sides[side_id] = {
-            tag: side_data.absorbMatrixAt(4,normalizer_for_side_axis1).absorbMatrixAt(5,normalizer_for_side_axis2)
+            tag: side_data.absorbMatrixAt(6,normalizer_for_side_axis1).absorbMatrixAt(7,normalizer_for_side_axis2)
             for tag, side_data in self.sides[side_id].items()
         }
         self.state_center_data = self.state_center_data.absorbMatrixAt(side_id,denormalizer_for_center)

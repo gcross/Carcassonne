@@ -9,45 +9,51 @@ from . import *
 # }}}
 
 class TestDenseCorner(TestCase): # {{{
-    @with_checker
-    def test_absorbFromLeft(self, # {{{
-        a = irange(1,10),
-        b = irange(1,10),
-        c = irange(1,10),
-        d = irange(1,10),
-        e = irange(1,10),
-        f = irange(1,10),
-        g = irange(1,10),
-        h = irange(1,10),
+    @with_checker # test_absorbFromLeft {{{
+    def test_absorbFromLeft(self,
+        a = irange(1,5),
+        b = irange(1,5),
+        c = irange(1,5),
+        d = irange(1,5),
+        e = irange(1,5),
+        f = irange(1,5),
+        g = irange(1,5),
+        h = irange(1,5),
+        i = irange(1,5),
+        j = irange(1,5),
+        k = irange(1,5),
     ) :
-        A = NDArrayData.newRandom(a,b,c,d)
-        B = NDArrayData.newRandom(e,f,a,b,g,h)
+        A = NDArrayData.newRandom(a,b,c,d,e,f)
+        B = NDArrayData.newRandom(g,h,i,a,b,c,j,k)
         C1 = absorbDenseSideIntoCornerFromLeft(A,B)
-        C2 = A.contractWith(B,(0,1),(2,3)).join(2,3,(0,4),(1,5))
+        C2 = A.contractWith(B,(0,1,2),(3,4,5)).join(3,4,5,(0,6),(1,7),2)
         self.assertDataAlmostEqual(C1,C2)
     # }}}
-    @with_checker
-    def test_absorbFromRight(self, # {{{
-        a = irange(1,10),
-        b = irange(1,10),
-        c = irange(1,10),
-        d = irange(1,10),
-        e = irange(1,10),
-        f = irange(1,10),
-        g = irange(1,10),
-        h = irange(1,10),
+    @with_checker # test_absorbFromRight {{{
+    def test_absorbFromRight(self,
+        a = irange(1,5),
+        b = irange(1,5),
+        c = irange(1,5),
+        d = irange(1,5),
+        e = irange(1,5),
+        f = irange(1,5),
+        g = irange(1,5),
+        h = irange(1,5),
+        i = irange(1,5),
+        j = irange(1,5),
+        k = irange(1,5),
     ) :
-        A = NDArrayData.newRandom(a,b,c,d)
-        B = NDArrayData.newRandom(c,d,e,f,g,h)
+        A = NDArrayData.newRandom(a,b,c,d,e,f)
+        B = NDArrayData.newRandom(d,e,f,g,h,i,j,k)
         C1 = absorbDenseSideIntoCornerFromRight(A,B)
-        C2 = A.contractWith(B,(2,3,),(0,1)).join((0,4),(1,5),2,3)
+        C2 = A.contractWith(B,(3,4,5),(0,1,2)).join((0,6),(1,7),2,3,4,5)
         self.assertDataAlmostEqual(C1,C2)
     # }}}
 # }}}
 
 class TestDenseSide(TestCase): # {{{
-    @with_checker
-    def test_absorbCenterSS(self, # {{{
+    @with_checker # test_absorbCenterSS {{{
+    def test_absorbCenterSS(self,
         a = irange(1,3),
         b = irange(1,3),
         c = irange(1,3),
@@ -58,21 +64,32 @@ class TestDenseSide(TestCase): # {{{
         h = irange(1,3),
         j = irange(1,3),
         k = irange(1,3),
+        l = irange(1,3),
+        m = irange(1,3),
         i = irange(0,3),
     ):
-        A = NDArrayData.newRandom(a,b,c,d,e,e)
-        B_shape = replaceAt((f,g,h,j,k),i,e)
+        A = NDArrayData.newRandom(a,b,c,d,e,f,g,g)
+        B_shape = replaceAt((h,j,k,l,m),i,g)
         B = NDArrayData.newRandom(*B_shape)
         C1 = absorbDenseCenterSSIntoSide(i,A,B)
         C2 = A.contractWith(
                 B.contractWith(B.conj(),(4,),(4,)),
-                (4,5),
+                (6,7),
                 (i,i+4),
-             ).join((0,4+LA(i)),(1,7+LA(i)),(2,4+RA(i)),(3,7+RA(i)),4+OA(i),7+OA(i))
+             ).join(
+                (0,6+LA(i)),
+                (1,9+LA(i)),
+                2,
+                (3,6+RA(i)),
+                (4,9+RA(i)),
+                5,
+                6+OA(i),
+                9+OA(i)
+             )
         self.assertDataAlmostEqual(C1,C2)
     # }}}
-    @with_checker
-    def test_absorbCenterSOS(self, # {{{
+    @with_checker # test_absorbCenterSOS {{{
+    def test_absorbCenterSOS(self,
         a = irange(1,3),
         b = irange(1,3),
         c = irange(1,3),
@@ -83,42 +100,56 @@ class TestDenseSide(TestCase): # {{{
         h = irange(1,3),
         j = irange(1,3),
         k = irange(1,3),
+        l = irange(1,3),
+        m = irange(1,3),
         i = irange(0,3),
     ):
-        A = NDArrayData.newRandom(a,b,c,d,e,e)
-        B_shape = replaceAt((f,g,h,j,k),i,e)
+        A = NDArrayData.newRandom(a,b,c,d,e,f,g,g)
+        B_shape = replaceAt((h,j,k,l,m),i,g)
         B = NDArrayData.newRandom(*B_shape)
-        C = NDArrayData.newRandom(k,k)
+        C = NDArrayData.newRandom(m,m)
         D1 = absorbDenseCenterSOSIntoSide(i,A,B,C)
         D2 = A.contractWith(
                 (B).contractWith(C,(4,),(1,)).contractWith(B.conj(),(4,),(4,)),
-                (4,5),
+                (6,7),
                 (i,i+4),
-             ).join((0,4+LA(i)),(1,7+LA(i)),(2,4+RA(i)),(3,7+RA(i)),4+OA(i),7+OA(i))
+             ).join(
+                (0,6+LA(i)),
+                (1,9+LA(i)),
+                2,
+                (3,6+RA(i)),
+                (4,9+RA(i)),
+                5,
+                6+OA(i),
+                9+OA(i)
+             )
         self.assertDataAlmostEqual(D1,D2)
     # }}}
 # }}}
 
 class TestDenseStages(TestCase): # {{{
-    @with_checker
-    def test_stage_1(self, # {{{
-        a = irange(1,10),
-        b = irange(1,10),
-        c = irange(1,10),
-        d = irange(1,10),
-        e = irange(1,10),
-        f = irange(1,10),
-        g = irange(1,10),
-        h = irange(1,10),
+    @with_checker # test_stage_1 {{{
+    def test_stage_1(self,
+        a = irange(1,5),
+        b = irange(1,5),
+        c = irange(1,5),
+        d = irange(1,5),
+        e = irange(1,5),
+        f = irange(1,5),
+        g = irange(1,5),
+        h = irange(1,5),
+        j = irange(1,5),
+        k = irange(1,5),
+        l = irange(1,5),
     ):
-        A = NDArrayData.newRandom(a,b,c,d)
-        B = NDArrayData.newRandom(c,d,e,f,g,h)
+        A = NDArrayData.newRandom(a,b,c,d,e,f)
+        B = NDArrayData.newRandom(d,e,f,g,h,j,k,l)
         C1 = formNormalizationStage1(A,B)
-        C2 = A.contractWith(B,(2,3),(0,1)).join((0,1),(2,3),4,5)
+        C2 = A.contractWith(B,(3,4,5),(0,1,2)).join((0,1,2),(3,4,5),6,7)
         self.assertDataAlmostEqual(C1,C2)
     # }}}
-    @with_checker
-    def test_stage_2(self, # {{{
+    @with_checker # test_stage_2 {{{
+    def test_stage_2(self,
         a = irange(1,10),
         b = irange(1,10),
         c = irange(1,10),
@@ -133,8 +164,8 @@ class TestDenseStages(TestCase): # {{{
         C2 = A.contractWith(B,(0,),(1,)).join(3,0,1,4,2,5)
         self.assertDataAlmostEqual(C1,C2)
     # }}}
-    @with_checker
-    def test_stage_3(self, # {{{
+    @with_checker # test_stage_3 {{{
+    def test_stage_3(self,
         a = irange(1,5),
         b = irange(1,5),
         c = irange(1,5),
