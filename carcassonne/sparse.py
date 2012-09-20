@@ -118,6 +118,11 @@ class TwoSiteOperator: # {{{
 # }}}
 
 # Functions {{{
+def addStandardCompleteAndIdentityTerms(terms,dense): # {{{
+    terms[Identity,Identity] = lambda x,y: (Identity(),dense)
+    terms[Complete,Identity] = lambda x,y: (Complete(),dense)
+    terms[Identity,Complete] = lambda x,y: (Complete(),dense)
+# }}}
 def contractSparseTensors(dense_contractors,tensor_1,tensor_2): # {{{
     result_tensor = {}
     for tag_1, data_1 in tensor_1.items():
@@ -180,6 +185,7 @@ __all__ = [
     "OneSiteOperator",
     "TwoSiteOperator",
 
+    "addStandardCompleteAndIdentityTerms",
     "contractSparseTensors",
     "directSumListsOfSparse",
     "directSumSparse",
