@@ -115,6 +115,10 @@ class TwoSiteOperator: # {{{
         return TwoSiteOperator(self.direction,self.position+1)
     # }}}
 # }}}
+class TwoSiteOperatorCompressed:
+    __slots__ = ["direction"]
+    def __init__(self,direction):
+        self.direction = direction
 # }}}
 
 # Functions {{{
@@ -184,6 +188,7 @@ __all__ = [
     "Complete",
     "OneSiteOperator",
     "TwoSiteOperator",
+    "TwoSiteOperatorCompressed",
 
     "addStandardCompleteAndIdentityTerms",
     "contractSparseTensors",
