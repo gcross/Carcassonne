@@ -36,8 +36,8 @@ class TestSystem(TestCase): # {{{
         except:
             self.assertAlmostEqual(system2.computeExpectation()/system1.computeExpectation(),1)
     # }}}
-    @with_checker(number_of_calls=10) # test_compressCornerTowards_down_by_half {{{
-    def test_compressCornerTowards_down_by_half(self,corner_id=irange(0,3),direction=irange(0,1),normalize=bool):
+    @with_checker(number_of_calls=10) # test_compressCornerStateTowards_down_by_half {{{
+    def test_compressCornerStateTowards_down_by_half(self,corner_id=irange(0,3),direction=irange(0,1),normalize=bool):
         system = System.newRandom()
         for i in range(4):
             system.absorbCenter(i)
@@ -62,19 +62,19 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(normalization2/normalization1,1)
         self.assertAlmostEqual(expectation2/expectation1,1)
 
-        system.compressCornerTowards(corner_id,direction,old_dimension,normalize)
+        system.compressCornerStateTowards(corner_id,direction,old_dimension,normalize)
         normalization3 = system.computeNormalization()
         expectation3 = system.computeExpectation()
         self.assertAlmostEqual(normalization3/normalization1,1)
         self.assertAlmostEqual(expectation3/expectation1,1)
     # }}}
-    @with_checker(number_of_calls=10) # test_compressCornerTowards_new_same_as_old {{{
-    def test_compressCornerTowards_new_same_as_old(self,corner_id=irange(0,3),direction=irange(0,1),normalize=bool):
+    @with_checker(number_of_calls=10) # test_compressCornerStateTowards_new_same_as_old {{{
+    def test_compressCornerStateTowards_new_same_as_old(self,corner_id=irange(0,3),direction=irange(0,1),normalize=bool):
         system = System.newRandom(maximum_dimension=4)
         normalization1 = system.computeNormalization()
         expectation1 = system.computeExpectation()
         dimension = system.corners[corner_id][Identity()].shape[3*direction]
-        system.compressCornerTowards(corner_id,direction,dimension,normalize)
+        system.compressCornerStateTowards(corner_id,direction,dimension,normalize)
         normalization2 = system.computeNormalization()
         expectation2 = system.computeExpectation()
         if isnan(normalization1) or isnan(normalization2) or isnan(expectation1) or isnan(expectation2):

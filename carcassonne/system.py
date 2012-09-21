@@ -166,7 +166,7 @@ class System: # {{{
             if not self.corners[i][Identity()].allcloseTo(self.corners[i][Identity()].join(1,0,2,4,3,5).conj()):
                 raise AssertionError("corner {} is not hermitian".format(i))
     # }}}
-    def compressCornerTowards(self,corner_id,direction,new_dimension,normalize=False): # {{{
+    def compressCornerStateTowards(self,corner_id,direction,new_dimension,normalize=False): # {{{
         axis = 3*direction
         corner_data = self.corners[corner_id][Identity()]
         old_dimension = corner_data.shape[axis]
