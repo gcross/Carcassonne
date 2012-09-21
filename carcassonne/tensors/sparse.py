@@ -10,20 +10,24 @@ from ..utils import multiplyBySingleSiteOperator, L, R, O
 # Functions {{{
 def absorbSparseSideIntoCornerFromLeft(corner,side): # {{{
     terms = {}
-    addStandardCompleteAndIdentityTerms(terms,absorbDenseSideIntoCornerFromLeft)
-    for T, absorb in [(TwoSiteOperator,absorbDenseSideIntoCornerFromLeft)]:
-        terms[T,Identity] = lambda r,l: (r.matchesSideIdentityOnLeft(),absorb)
-        terms[Identity,T] = lambda r,l: (l.matchesCornerIdentityOnRight(),absorb)
-        terms[T,T] = lambda r,l: (l.matches(r),absorb)
+    absorb = absorbDenseSideIntoCornerFromLeft
+    addStandardCompleteAndIdentityTerms(terms,absorb)
+    terms.update({
+        (TwoSiteOperator,Identity): lambda r,l: (r.matchesSideIdentityOnLeft(),absorb),
+        (Identity,TwoSiteOperator): lambda r,l: (l.matchesCornerIdentityOnRight(),absorb),
+        (TwoSiteOperator,TwoSiteOperator): lambda r,l: (l.matches(r),absorb),
+    })
     return contractSparseTensors(terms,corner,side)
 # }}}
 def absorbSparseSideIntoCornerFromRight(corner,side): # {{{
     terms = {}
-    addStandardCompleteAndIdentityTerms(terms,absorbDenseSideIntoCornerFromRight)
-    for T, absorb in [(TwoSiteOperator,absorbDenseSideIntoCornerFromRight)]:
-        terms[T,Identity] = lambda l,r: (l.matchesSideIdentityOnRight(),absorb)
-        terms[Identity,T] = lambda l,r: (r.matchesCornerIdentityOnLeft(),absorb)
-        terms[T,T] = lambda l,r: (l.matches(r),absorb)
+    absorb = absorbDenseSideIntoCornerFromRight
+    addStandardCompleteAndIdentityTerms(terms,absorb)
+    terms.update({
+        (TwoSiteOperator,Identity): lambda l,r: (l.matchesSideIdentityOnRight(),absorb),
+        (Identity,TwoSiteOperator): lambda l,r: (r.matchesCornerIdentityOnLeft(),absorb),
+        (TwoSiteOperator,TwoSiteOperator): lambda l,r: (l.matches(r),absorb),
+    })
     return contractSparseTensors(terms,corner,side)
 # }}}
 def absorbSparseCenterSOSIntoSide(direction,side,center_state,center_operator,center_state_conj=None): # {{{
@@ -34,14 +38,18 @@ def absorbSparseCenterSOSIntoSide(direction,side,center_state,center_operator,ce
     def contractSOS(side_data,center_operator_data):
         return absorbDenseCenterSOSIntoSide(direction,side_data,center_state,center_operator_data,center_state_conj)
     terms = {
+        # Complete/Identity terms
         (Identity,Identity): lambda s,c: (Identity(),contractSS),
         (Complete,Identity): lambda s,c: (Complete(),contractSS),
+
+        # OneSiteOperator term
         (Identity,OneSiteOperator): lambda s,c: (Complete(),contractSOS),
+
+        # TwoSiteOperator terms
+        (TwoSiteOperator,Identity): lambda s,c: (s.matchesCenterIdentity(),contractSS),
+        (Identity,TwoSiteOperator): lambda s,c: (c.matchesSideIdentityOutward(direction),contractSOS),
+        (TwoSiteOperator,TwoSiteOperator): lambda s,c: (s.matchesCenter(direction,c),contractSOS),
     }
-    for T, absorb in [(TwoSiteOperator,contractSOS)]:
-        terms[T,Identity] = lambda s,c: (s.matchesCenterIdentity(),contractSS)
-        terms[Identity,T] = lambda s,c: (c.matchesSideIdentityOutward(direction),contractSOS)
-        terms[T,T] = lambda s,c: (s.matchesCenter(direction,c),contractSOS)
     return contractSparseTensors(terms,side,center_operator)
 # }}}
 def formExpectationAndNormalizationMultipliers(corners,sides,center_operator): # {{{
@@ -59,32 +67,40 @@ def formExpectationAndNormalizationMultipliers(corners,sides,center_operator): #
 # }}}
 def formExpectationStage1(corner,side): # {{{
     terms = {}
-    addStandardCompleteAndIdentityTerms(terms,formNormalizationStage1)
-    for T, absorb in [(TwoSiteOperator,formNormalizationStage1)]:
-        terms[T,Identity] = lambda l,r: (l.matchesSideIdentityOnRightForStage1(),absorb)
-        terms[Identity,T] = lambda l,r: (r.matchesCornerIdentityOnLeftForStage1(),absorb)
-        terms[T,T] = lambda l,r: (l.matches(r),absorb)
+    formStage = formNormalizationStage1
+    addStandardCompleteAndIdentityTerms(terms,formStage)
+    terms.update({
+        (TwoSiteOperator,Identity): lambda l,r: (l.matchesSideIdentityOnRightForStage1(),formStage),
+        (Identity,TwoSiteOperator): lambda l,r: (r.matchesCornerIdentityOnLeftForStage1(),formStage),
+        (TwoSiteOperator,TwoSiteOperator): lambda l,r: (l.matches(r),formStage),
+    })
     return contractSparseTensors(terms,corner,side)
 # }}}
 def formExpectationStage2(corner,side): # {{{
     terms = {}
-    addStandardCompleteAndIdentityTerms(terms,formNormalizationStage2)
-    for T, absorb in [(TwoSiteOperator,formNormalizationStage2)]:
-        terms[T,Identity] = lambda r,l: (r.matchesStage1IdentityOnLeft(),absorb)
-        terms[Identity,T] = lambda r,l: (l.matchesStage1IdentityOnRight(),absorb)
-        terms[T,T] = lambda r,l: (l.matches(r),absorb)
+    formStage = formNormalizationStage2
+    addStandardCompleteAndIdentityTerms(terms,formStage)
+    terms.update({
+        (TwoSiteOperator,Identity): lambda r,l: (r.matchesStage1IdentityOnLeft(),formStage),
+        (Identity,TwoSiteOperator): lambda r,l: (l.matchesStage1IdentityOnRight(),formStage),
+        (TwoSiteOperator,TwoSiteOperator): lambda r,l: (l.matches(r),formStage),
+    })
     return contractSparseTensors(terms,corner,side)
 # }}}
 def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
     rules = {
+        # Complete and Identity rules
         (Complete,Identity,Identity): lambda x,y,z: True,
         (Identity,Complete,Identity): lambda x,y,z: True,
+
+        # OneSiteOperator rules
         (Identity,Identity,OneSiteOperator): lambda x,y,z: True,
+
+        # TwoSiteOperator rules
+        (TwoSiteOperator,Identity,TwoSiteOperator): lambda x,y,z: x.matchesCenterForStage3(0,z),
+        (Identity,TwoSiteOperator,TwoSiteOperator): lambda x,y,z: y.matchesCenterForStage3(1,z),
+        (TwoSiteOperator,TwoSiteOperator,Identity): lambda x,y,z: x.matchesForStage3(y),
     }
-    for T in [TwoSiteOperator]:
-        rules[T,Identity,T] = lambda x,y,z: x.matchesCenterForStage3(0,z)
-        rules[Identity,T,T] = lambda x,y,z: y.matchesCenterForStage3(1,z)
-        rules[T,T,Identity] = lambda x,y,z: x.matchesForStage3(y)
 
     def makeMultiplier(stage2_0_data,stage2_1_data,operator_center_data):
         dense_multiplier = formNormalizationStage3(stage2_0_data,stage2_1_data)
