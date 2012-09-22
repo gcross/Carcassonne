@@ -8,7 +8,7 @@ from .data import NDArrayData
 from .sparse import Identity, OneSiteOperator, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData
 from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
-from .utils import computeNewDimension, L, R
+from .utils import computeCompressor, computeNewDimension, L, R
 # }}}
 
 # Classes {{{
@@ -172,31 +172,17 @@ class System: # {{{
         old_dimension = corner_data.shape[axis]
         matrix = corner_data.fold(axis).toArray().transpose()
         matrix_dagger = matrix.transpose().conj()
-        if new_dimension > old_dimension // 2:
-            full_matrix = dot(matrix_dagger,matrix)
-            del matrix
-            del matrix_dagger
-            evals, evecs = eigh(full_matrix)
-            evals = evals[-new_dimension:]
-            evecs = evecs[:,-new_dimension:]
-        else:
-            operator = \
-                LinearOperator(
-                    shape=(old_dimension,)*2,
-                    matvec=lambda v: dot(matrix_dagger,dot(matrix,v)),
-                    dtype=corner_data.dtype
-                )
-            evals, evecs = eigsh(operator,k=new_dimension)
-        evecs = evecs.transpose()
-        if normalize:
-            evals = sqrt(evals).reshape(new_dimension,1)
-            corner_multiplier = evecs * evals
-            side_multiplier_conj = evecs / evals
-        else:
-            corner_multiplier = evecs
-            side_multiplier_conj = evecs
-        del evals
-        del evecs
+        corner_multiplier, side_multiplier_conj = \
+            computeCompressor(
+                old_dimension,
+                new_dimension,
+                lambda v: dot(matrix_dagger,dot(matrix,v)),
+                corner_data.dtype,
+                lambda: dot(matrix_dagger,matrix),
+                normalize
+            )
+        del matrix
+        del matrix_dagger
         corner_multiplier = NDArrayData(corner_multiplier)
         side_multiplier_conj = NDArrayData(side_multiplier_conj)
         corner_multiplier_conj = corner_multiplier.conj()

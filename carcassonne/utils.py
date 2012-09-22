@@ -1,8 +1,10 @@
 # Imports {{{
 from collections import defaultdict
 from functools import partial
-from numpy import tensordot
+from numpy import sqrt, tensordot
+from numpy.linalg import eigh
 from numpy.random import rand, random_sample
+from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 # }}}
 
 # Exceptions {{{
@@ -192,6 +194,28 @@ def checkForNaNsIn(data): # {{{
 def crand(*shape): # {{{
     return rand(*shape)*2-1+rand(*shape)*2j-1j
 # }}}
+def computeCompressor(old_dimension,new_dimension,matvec,dtype,computeDenseMatrix,normalize=False):
+    if new_dimension > old_dimension // 2:
+        evals, evecs = eigh(computeDenseMatrix())
+        evals = evals[-new_dimension:]
+        evecs = evecs[:,-new_dimension:]
+    else:
+        operator = \
+            LinearOperator(
+                shape=(old_dimension,)*2,
+                matvec=matvec,
+                dtype=dtype
+            )
+        evals, evecs = eigsh(operator,k=new_dimension)
+    evecs = evecs.transpose()
+    if normalize:
+        evals = sqrt(evals).reshape(new_dimension,1)
+        compressor = evecs * evals
+        inverse_compressor_conj = evecs / evals
+    else:
+        compressor = evecs
+        inverse_compressor_conj = evecs
+    return compressor, inverse_compressor_conj
 def computeLengthAndCheckForGaps(indices,error_message): # {{{
     if len(indices) == 0:
         return 0
@@ -554,6 +578,7 @@ __all__ = [
     "applyIndexMapTo",
     "applyPermutation",
     "checkForNaNsIn",
+    "computeCompressor",
     "computeNewDimension",
     "crand",
     "formAbsorber",
