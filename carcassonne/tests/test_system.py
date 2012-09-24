@@ -41,8 +41,7 @@ class TestSystem(TestCase): # {{{
         system = System.newRandom()
         for i in range(4):
             system.absorbCenter(i)
-        normalization1 = system.computeNormalization()
-        expectation1 = system.computeExpectation()
+        expectation1, normalization1 = system.computeExpectationAndNormalization()
 
         corner_data = system.corners[corner_id][Identity()]
         axis = 3*direction
@@ -57,8 +56,7 @@ class TestSystem(TestCase): # {{{
         side_enlargener_conj = enlargener
         system.sides[side_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,side_enlargener).absorbMatrixAt(axis+1,side_enlargener_conj),system.sides[side_id])
 
-        normalization2 = system.computeNormalization()
-        expectation2 = system.computeExpectation()
+        expectation2, normalization2 = system.computeExpectationAndNormalization()
         self.assertAlmostEqual(normalization2/normalization1,1)
         self.assertAlmostEqual(expectation2/expectation1,1)
 
@@ -71,12 +69,10 @@ class TestSystem(TestCase): # {{{
     @with_checker(number_of_calls=10) # test_compressCornerStateTowards_new_same_as_old {{{
     def test_compressCornerStateTowards_new_same_as_old(self,corner_id=irange(0,3),direction=irange(0,1),normalize=bool):
         system = System.newRandom(maximum_dimension=4)
-        normalization1 = system.computeNormalization()
-        expectation1 = system.computeExpectation()
+        expectation1, normalization1 = system.computeExpectationAndNormalization()
         dimension = system.corners[corner_id][Identity()].shape[3*direction]
         system.compressCornerStateTowards(corner_id,direction,dimension,normalize)
-        normalization2 = system.computeNormalization()
-        expectation2 = system.computeExpectation()
+        expectation2, normalization2 = system.computeExpectationAndNormalization()
         if isnan(normalization1) or isnan(normalization2) or isnan(expectation1) or isnan(expectation2):
             return
         self.assertAlmostEqual(normalization2/normalization1,1)
@@ -127,26 +123,22 @@ class TestSystem(TestCase): # {{{
         increments *= 2
         system = System.newRandom()
         old_shape = system.state_center_data.shape
-        expectation1 = system.computeExpectation()
-        normalization1 = system.computeNormalization()
+        expectation1, normalization1 = system.computeExpectationAndNormalization()
         system.increaseBandwidth(increments)
         new_shape = system.state_center_data.shape
         self.assertEqual(tuple(new_shape[:4]),tuple(old+inc for old,inc in zip(old_shape[:4],increments)))
         system.assertDimensionsAreConsistent()
         system.assertNormalizationIsHermitian()
-        expectation2 = system.computeExpectation()
-        normalization2 = system.computeNormalization()
+        expectation2, normalization1 = system.computeExpectationAndNormalization()
         self.assertAlmostEqual(expectation1,expectation2)
         self.assertAlmostEqual(normalization1,normalization2)
     # }}}
     @with_checker(number_of_calls=10) # test_increaseBandwidth_one_step # {{{
     def dont_test_increaseBandwidth_one_step(self,direction=irange(0,3),increment=irange(0,4)):
         system = System.newRandom()
-        expectation1 = system.computeExpectation()
-        normalization1 = system.computeNormalization()
+        expectation1, normalization1 = system.computeExpectationAndNormalization()
         system.increaseBandwidth(direction,by=increment)
-        expectation2 = system.computeExpectation()
-        normalization2 = system.computeNormalization()
+        expectation2, normalization1 = system.computeExpectationAndNormalization()
         self.assertAlmostEqual(expectation1,expectation2)
         self.assertAlmostEqual(normalization1,normalization2)
     # }}}
@@ -164,36 +156,30 @@ class TestSystem(TestCase): # {{{
     @with_checker # test_normalizeCenterAndDenormalizeSide {{{
     def test_normalizeCenterAndDenormalizeSide(self,direction=irange(0,3)):
         system = System.newRandom()
-        normalization1 = system.computeNormalization()
-        expectation1 = system.computeExpectation()
+        expectation1, normalization1 = system.computeExpectationAndNormalization()
         system.normalizeCenterAndDenormalizeSide(direction)
         system.assertNormalizationIsHermitian()
-        normalization2 = system.computeNormalization()
-        expectation2 = system.computeExpectation()
+        expectation2, normalization2 = system.computeExpectationAndNormalization()
         self.assertAlmostEqual(normalization1,normalization2)
         self.assertAlmostEqual(expectation1,expectation2)
     # }}}
     @with_checker(number_of_calls=10) # test_normalizeCornerAndDenormalizeSide {{{
     def test_normalizeCornerAndDenormalizeSide(self,corner_id=irange(0,3),direction=irange(0,1)):
         system = System.newRandom()
-        normalization1 = system.computeNormalization()
-        expectation1 = system.computeExpectation()
+        expectation1, normalization1 = system.computeExpectationAndNormalization()
         system.normalizeCornerAndDenormalizeSide(corner_id,direction)
         system.assertNormalizationIsHermitian()
-        normalization2 = system.computeNormalization()
-        expectation2 = system.computeExpectation()
+        expectation2, normalization2 = system.computeExpectationAndNormalization()
         self.assertAlmostEqual(normalization1,normalization2)
         self.assertAlmostEqual(expectation1,expectation2)
     # }}}
     @with_checker # test_normalizeSideAndDenormalizeCenter {{{
     def test_normalizeSideAndDenormalizeCenter(self,side_id=irange(0,3)):
         system = System.newRandom()
-        normalization1 = system.computeNormalization()
-        expectation1 = system.computeExpectation()
+        expectation1, normalization1 = system.computeExpectationAndNormalization()
         system.normalizeSideAndDenormalizeCenter(side_id)
         system.assertNormalizationIsHermitian()
-        normalization2 = system.computeNormalization()
-        expectation2 = system.computeExpectation()
+        expectation2, normalization2 = system.computeExpectationAndNormalization()
         self.assertAlmostEqual(normalization1,normalization2)
         self.assertAlmostEqual(expectation1,expectation2)
     # }}}

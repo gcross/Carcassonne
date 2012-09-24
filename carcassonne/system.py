@@ -193,10 +193,13 @@ class System: # {{{
         self.sides[side_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,side_multiplier).absorbMatrixAt(axis+1,side_multiplier_conj),self.sides[side_id])
     # }}}
     def computeExpectation(self): # {{{
+        return self.computeExpectationAndNormalization()[0]
+    # }}}
+    def computeExpectationAndNormalization(self): # {{{
         multiplyExpectation, multiplyNormalization = self.formExpectationAndNormalizationMultipliers()
         unnormalized_expectation = self.computeScalarUsingMultiplier(multiplyExpectation)
         normalization = self.computeScalarUsingMultiplier(multiplyNormalization)
-        return unnormalized_expectation/normalization
+        return unnormalized_expectation/normalization, normalization
     # }}}
     def computeNormalization(self): # {{{
         return self.computeScalarUsingMultiplier(self.formNormalizationMultiplier())
