@@ -78,6 +78,20 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(normalization2/normalization1,1)
         self.assertAlmostEqual(expectation2/expectation1,1)
     # }}}
+    @with_checker # test_compressCornerTwoSiteOperatorTowards_trivial {{{
+    def test_compressCornerTwoSiteOperatorTowards_trivial(self,
+        corner_id=irange(0,3),
+        direction=irange(0,1),
+        new_dimension=irange(1,10),
+        normalize=bool,
+    ):
+        system = System.newTrivialWithSparseOperator(O=NDArrayData.newIdentity(1))
+        expectation1, normalization1 = system.computeExpectationAndNormalization()
+        system.compressCornerTwoSiteOperatorTowards(corner_id,direction,new_dimension,normalize)
+        expectation2, normalization2 = system.computeExpectationAndNormalization()
+        self.assertAlmostEqual(normalization2,normalization1)
+        self.assertAlmostEqual(expectation2,expectation1)
+    # }}}
     @with_checker # test_expectation_of_identity_after_no_steps # {{{
     def test_expectation_of_sum_of_identities_after_no_steps(self):
         self.assertAlmostEqual(System.newRandom(makeOperator=lambda N: NDArrayData.newIdentity(N)).computeExpectation(),1)

@@ -23,6 +23,10 @@ class NDArrayData(Data): # {{{
     def __init__(self,_arr): # {{{
         self._arr = _arr
     # }}}
+    @classmethod # newCollected {{{
+    def newCollected(cls,datas):
+        return cls(array([data.toArray() for data in datas]))
+    # }}}
     @classmethod # newDiagonal {{{
     def newDiagonal(cls,data):
         return cls(diag(data))
