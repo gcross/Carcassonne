@@ -42,6 +42,12 @@ class TwoSiteOperator: # {{{
         self.direction = direction
         self.position = position
     # }}}
+    def __eq__(self,other): # {{{
+        return isinstance(other,TwoSiteOperator) and other.direction == self.direction and other.position == self.position
+    # }}}
+    def __hash__(self): # {{{
+        return hash(TwoSiteOperator) ^ hash(self.direction) ^ hash(self.position)
+    # }}}
     def __repr__(self): # {{{
         return "TwoSiteOperator({},{})".format(self.direction,self.position)
     # }}}
