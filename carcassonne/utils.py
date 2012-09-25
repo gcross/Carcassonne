@@ -249,6 +249,9 @@ def computePostContractionIndexMap(rank,contracted_indices,offset=0): # {{{
             new_index += 1
     return index_map
 # }}}
+def dropAt(iterable,index): # {{{
+    return type(iterable)(x for i, x in enumerate(iterable) if i != index)
+# }}}
 def formAbsorber(left_join_dimensions,right_join_dimensions,result_dimension_sources): # {{{
     # Compute the numbers of dimensions {{{
     number_of_join_dimensions = len(left_join_dimensions)
@@ -581,6 +584,7 @@ __all__ = [
     "computeCompressor",
     "computeNewDimension",
     "crand",
+    "dropAt",
     "formAbsorber",
     "formContractor",
     "formDataContractor",
