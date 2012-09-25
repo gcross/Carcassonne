@@ -1,7 +1,7 @@
 # Imports {{{
 from collections import defaultdict
 from functools import partial
-from numpy import sqrt, tensordot
+from numpy import sqrt, tensordot, zeros
 from numpy.linalg import eigh
 from numpy.random import rand, random_sample
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
@@ -194,8 +194,14 @@ def checkForNaNsIn(data): # {{{
 def crand(*shape): # {{{
     return rand(*shape)*2-1+rand(*shape)*2j-1j
 # }}}
-def computeCompressor(old_dimension,new_dimension,matvec,dtype,computeDenseMatrix,normalize=False):
-    if new_dimension > old_dimension // 2:
+def computeCompressor(old_dimension,new_dimension,matvec,dtype,computeDenseMatrix,normalize=False): # {{{
+    if new_dimension < 0:
+        raise ValueError("New dimension ({}) must be non-negative.".format(new_dimension))
+    elif new_dimension > old_dimension:
+        raise ValueError("New dimension ({}) must be less than or equal to the old dimension ({}).".format(new_dimension,old_dimension))
+    elif old_dimension == 0:
+        return (zeros((new_dimension,old_dimension),dtype=dtype),)*2
+    elif new_dimension >= old_dimension // 2:
         evals, evecs = eigh(computeDenseMatrix())
         evals = evals[-new_dimension:]
         evecs = evecs[:,-new_dimension:]
@@ -208,6 +214,8 @@ def computeCompressor(old_dimension,new_dimension,matvec,dtype,computeDenseMatri
             )
         evals, evecs = eigsh(operator,k=new_dimension)
     evecs = evecs.transpose()
+    while abs(evals[new_dimension-1]) < 1e-15:
+        new_dimension -= 1
     if normalize:
         evals = sqrt(evals).reshape(new_dimension,1)
         compressor = evecs * evals
@@ -216,6 +224,7 @@ def computeCompressor(old_dimension,new_dimension,matvec,dtype,computeDenseMatri
         compressor = evecs
         inverse_compressor_conj = evecs
     return compressor, inverse_compressor_conj
+# }}}
 def computeLengthAndCheckForGaps(indices,error_message): # {{{
     if len(indices) == 0:
         return 0

@@ -78,16 +78,64 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(normalization2/normalization1,1)
         self.assertAlmostEqual(expectation2/expectation1,1)
     # }}}
+    @with_checker # test_compressCornerTwoSiteOperatorTowards_new_same_as_old {{{
+    def test_compressCornerTwoSiteOperatorTowards_new_same_as_old(self,
+        corner_id=irange(0,3),
+        direction=irange(0,1),
+        physical_dimension=irange(1,4),
+        number_of_terms=irange(0,10),
+    ):
+        side_id = sideFromCorner(corner_id,direction)
+        side_direction = 1-direction
+
+        operator_data = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
+        if side_id in (1,3):
+            operator_direction = "OO_LR"
+        else:
+            operator_direction = "OO_UD"
+        system = System.newTrivialWithSparseOperator(**{operator_direction:operator_data})
+
+        if direction == 0:
+            system.absorbCenter(R(side_id))
+        else:
+            system.absorbCenter(L(side_id))
+        for _ in range(number_of_terms):
+            system.absorbCenter(side_id)
+
+        number_of_corner_two_site_terms = 0
+        for tag, data in system.corners[corner_id].items():
+            if isinstance(tag,TwoSiteOperator):
+                self.assertEqual(tag.direction,direction)
+                number_of_corner_two_site_terms += 1
+        self.assertEqual(number_of_corner_two_site_terms,number_of_terms)
+        del number_of_corner_two_site_terms
+
+        number_of_side_two_site_terms = 0
+        for tag, data in system.sides[side_id].items():
+            if isinstance(tag,TwoSiteOperator) and tag.direction != side_direction:
+                number_of_side_two_site_terms += 1
+        self.assertEqual(number_of_side_two_site_terms,number_of_terms)
+        del number_of_side_two_site_terms
+
+        expectation1, normalization1 = system.computeExpectationAndNormalization()
+        system.compressCornerTwoSiteOperatorTowards(corner_id,direction,number_of_terms)
+        if number_of_terms > 0:
+            self.assertTrue(TwoSiteOperatorCompressed(direction) in system.corners[corner_id])
+            self.assertTrue(TwoSiteOperatorCompressed(1-direction) in system.sides[side_id])
+        expectation2, normalization2 = system.computeExpectationAndNormalization()
+
+        self.assertAlmostEqual(normalization2,normalization1)
+        self.assertAlmostEqual(expectation2,expectation1)
+    # }}}
     @with_checker # test_compressCornerTwoSiteOperatorTowards_trivial {{{
     def test_compressCornerTwoSiteOperatorTowards_trivial(self,
         corner_id=irange(0,3),
         direction=irange(0,1),
         new_dimension=irange(1,10),
-        normalize=bool,
     ):
         system = System.newTrivialWithSparseOperator(O=NDArrayData.newIdentity(1))
         expectation1, normalization1 = system.computeExpectationAndNormalization()
-        system.compressCornerTwoSiteOperatorTowards(corner_id,direction,new_dimension,normalize)
+        system.compressCornerTwoSiteOperatorTowards(corner_id,direction,new_dimension)
         expectation2, normalization2 = system.computeExpectationAndNormalization()
         self.assertAlmostEqual(normalization2,normalization1)
         self.assertAlmostEqual(expectation2,expectation1)

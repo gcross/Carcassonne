@@ -76,7 +76,9 @@ def formExpectationStage1(corner,side): # {{{
         (TwoSiteOperator,Identity): lambda l,r: (l.matchesSideIdentityOnRightForStage1(),formStage),
         (Identity,TwoSiteOperator): lambda l,r: (r.matchesCornerIdentityOnLeftForStage1(),formStage),
         (TwoSiteOperator,TwoSiteOperator): lambda l,r: (l.matches(r),formStage),
-        (TwoSiteOperatorCompressed,TwoSiteOperatorCompressed): lambda r,l: (l.matches(r),absorb),
+        (TwoSiteOperatorCompressed,Identity): lambda l,r: (l.matchesSideIdentityOnRightForStage1(),formStage),
+        (Identity,TwoSiteOperatorCompressed): lambda l,r: (r.matchesCornerIdentityOnLeftForStage1(),formStage),
+        (TwoSiteOperatorCompressed,TwoSiteOperatorCompressed): lambda l,r: (l.matches(r),formStage),
     })
     return contractSparseTensors(terms,corner,side)
 # }}}
@@ -88,7 +90,9 @@ def formExpectationStage2(corner,side): # {{{
         (TwoSiteOperator,Identity): lambda r,l: (r.matchesStage1IdentityOnLeft(),formStage),
         (Identity,TwoSiteOperator): lambda r,l: (l.matchesStage1IdentityOnRight(),formStage),
         (TwoSiteOperator,TwoSiteOperator): lambda r,l: (l.matches(r),formStage),
-        (TwoSiteOperatorCompressed,TwoSiteOperatorCompressed): lambda r,l: (l.matches(r),absorb),
+        (TwoSiteOperatorCompressed,Identity): lambda r,l: (r.matchesStage1IdentityOnLeft(),formStage),
+        (Identity,TwoSiteOperatorCompressed): lambda r,l: (l.matchesStage1IdentityOnRight(),formStage),
+        (TwoSiteOperatorCompressed,TwoSiteOperatorCompressed): lambda r,l: (l.matches(r),formStage),
     })
     return contractSparseTensors(terms,corner,side)
 # }}}
@@ -105,7 +109,7 @@ def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
         (TwoSiteOperator,Identity,TwoSiteOperator): lambda x,y,z: x.matchesCenterForStage3(0,z),
         (Identity,TwoSiteOperator,TwoSiteOperator): lambda x,y,z: y.matchesCenterForStage3(1,z),
         (TwoSiteOperator,TwoSiteOperator,Identity): lambda x,y,z: x.matchesForStage3(y),
-        (TwoSiteOperatorCompressed,TwoSiteOperatorCompressed,Identity): lambda x,y,z: (x.matchesForStage3(y),absorb),
+        (TwoSiteOperatorCompressed,TwoSiteOperatorCompressed,Identity): lambda x,y,z: x.matchesForStage3(y),
     }
 
     def makeMultiplier(stage2_0_data,stage2_1_data,operator_center_data):

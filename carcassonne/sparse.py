@@ -121,10 +121,44 @@ class TwoSiteOperator: # {{{
         return TwoSiteOperator(self.direction,self.position+1)
     # }}}
 # }}}
-class TwoSiteOperatorCompressed:
+class TwoSiteOperatorCompressed: # {{{
     __slots__ = ["direction"]
-    def __init__(self,direction):
+    def __init__(self,direction): # {{{
         self.direction = direction
+    # }}}
+    def __eq__(self,other): # {{{
+        return isinstance(other,TwoSiteOperatorCompressed) and other.direction == self.direction
+    # }}}
+    def __hash__(self): # {{{
+        return hash(TwoSiteOperatorCompressed) ^ hash(self.direction)
+    # }}}
+    def __repr__(self): # {{{
+        return "TwoSiteOperatorCompressed({})".format(self.direction)
+    # }}}
+    def matches(left,right): # {{{
+        if left.direction == 1 and right.direction == 0:
+            return Complete()
+    # }}}
+    def matchesCornerIdentityOnLeftForStage1(self): # {{{
+        if self.direction == 1:
+            return self
+    # }}}
+    def matchesSideIdentityOnRightForStage1(self): # {{{
+        if self.direction == 0:
+            return self
+    # }}}
+    def matchesStage1IdentityOnLeft(self): # {{{
+        if self.direction == 1:
+            return self
+    # }}}
+    def matchesStage1IdentityOnRight(self): # {{{
+        if self.direction == 0:
+            return self
+    # }}}
+    def matchesForStage3(x,y): # {{{
+        return (x.direction,y.direction) in ((0,1),(1,0))
+    # }}}
+# }}}
 # }}}
 
 # Functions {{{

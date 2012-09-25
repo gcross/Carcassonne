@@ -1,5 +1,5 @@
 # Imports {{{
-from numpy import complex128, dot, prod, sqrt, zeros
+from numpy import array, complex128, dot, prod, sqrt, zeros
 from numpy.linalg import eigh
 from random import randint
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
@@ -217,21 +217,24 @@ class System: # {{{
         old_dimension = len(sparse_data)
         if old_compressed_data_exists:
             old_dimension += old_compressed_data.shape[axis]
-        if old_dimension <= new_dimension:
+        if old_dimension == 0:
             return
         # }}}
         # Compute the first submatrix {{{
-        slice1 = slice(stop=len(sparse_data))
+        slice1 = slice(0,len(sparse_data))
         collected_data = array([data.toArray().ravel() for data in sparse_data])
         matrix1 = dot(collected_data.conj(),collected_data.transpose())
         # }}}
         # Compute the second submatrix {{{
-        slice2 = slice(start=len(sparse_data))
-        data2 = old_compressed_data.fold(axis)
-        data1 = data2.conj()
-        matrix2 = data1.contractWith(data2,(1,),(1,)).toArray()
-        del data1
-        del data2
+        slice2 = slice(len(sparse_data),old_dimension)
+        if old_compressed_data_exists:
+            data2 = old_compressed_data.fold(axis)
+            data1 = data2.conj()
+            matrix2 = data1.contractWith(data2,(1,),(1,)).toArray()
+            del data1
+            del data2
+        else:
+            matrix2 = zeros((0,0),dtype=complex128)
         # }}}
         # Compute the compressors  {{{
         def matvec(in_v):
@@ -254,35 +257,41 @@ class System: # {{{
                 normalize
             )
         corner_multiplier = NDArrayData(corner_multiplier)
-        side_multiplier = side_multiplier_conj.conj()
+        side_multiplier = NDArrayData(side_multiplier_conj.conj())
         del matrix1
         del matrix2
         del matvec
         del computeDenseMatrix
         # }}}
         # Compute the new corner {{{
-        collected_data_shape = list(new_compressed_data.shape)
+        collected_data_shape = list(self.corners[corner_id][Identity()].shape)
         del collected_data_shape[axis]
         collected_data_shape.insert(0,old_dimension)
         collected_data_transposition = list(range(1,6))
         collected_data_transposition.insert(axis,0)
-        new_compressed_data = old_compressed_data.absorbMatrixAt(axis,corner_multiplier[:,slice2])
-        new_compressed_data += \
+        compressed_collected_data = \
             NDArrayData(collected_data.reshape(collected_data_shape)).absorbMatrixAt(0,corner_multiplier[:,slice1]).transpose(collected_data_transposition)
+
+        if old_compressed_data_exists:
+            new_compressed_data = old_compressed_data.absorbMatrixAt(axis,corner_multiplier[:,slice2])
+            new_compressed_data += compressed_collected_data
+        else:
+            new_compressed_data = compressed_collected_data
+
         new_corner[TwoSiteOperatorCompressed(direction)] = new_compressed_data
         self.corners[corner_id] = new_corner
         del collected_data
         # }}}
         # Compute the new side {{{
-        side_id = sideFromCorner(corner_id)
+        side_id = sideFromCorner(corner_id,direction)
         direction = 1-direction
-        axis = 3-axis
+        axis = 3*direction+2
         collected_data = [None]*len(sparse_data)
         old_compressed_data = None
         new_side = {}
         for tag, data in self.sides[side_id].items():
             if isinstance(tag,TwoSiteOperator) and tag.direction == direction:
-                collected_data[sparse_position_map[tag.position]] = data.ravel()
+                collected_data[sparse_position_map[tag.position]] = data
             elif isinstance(tag,TwoSiteOperatorCompressed) and tag.direction == direction:
                 assert old_compressed_data_exists
                 assert old_compressed_data is None
@@ -293,18 +302,22 @@ class System: # {{{
         if old_compressed_data_exists:
             assert old_compressed_data is not None
         if collected_data:
-            collected_data = collected_data[0].newCollected(collected_data)
+            collected_data = collected_data[0].newCollected(collected_data).dropUnitAxis(axis+1)
         else:
             assert old_compressed_data_exists
-            collected_data_shape = list(old_compressed_data.shape)
+            collected_data_shape = list(self.sides[side_id][Identity()].shape)
             del collected_data_shape[axis]
             collected_data_shape.insert(0,0)
             collected_data = old_compressed_data.newZeros(collected_data_shape,dtype=complex128)
-        collected_data_transposition = list(range(7))
+        collected_data_transposition = list(range(1,8))
         collected_data_transposition.insert(axis,0)
-        new_compressed_data = old_compressed_data.absorbMatrixAt(axis,side_multiplier[:,slice2])
-        new_compressed_data += \
+        compressed_collected_data = \
             collected_data.absorbMatrixAt(0,side_multiplier[:,slice1]).transpose(collected_data_transposition)
+        if old_compressed_data_exists:
+            new_compressed_data = old_compressed_data.absorbMatrixAt(axis,side_multiplier[:,slice2])
+            new_compressed_data += compressed_collected_data
+        else:
+            new_compressed_data = compressed_collected_data
         new_side[TwoSiteOperatorCompressed(direction)] = new_compressed_data
         self.sides[side_id] = new_side
         # }}}
