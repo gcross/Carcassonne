@@ -78,7 +78,42 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(normalization2/normalization1,1)
         self.assertAlmostEqual(expectation2/expectation1,1)
     # }}}
-    @with_checker # test_compressCornerTwoSiteOperatorTowards_new_same_as_old {{{
+    @with_checker(number_of_calls=10) # test_compressCornerTwoSiteOperatorTowards_down_by_half {{{
+    def test_compressCornerTwoSiteOperatorTowards_down_by_half(self,
+        corner_id=irange(0,3),
+        direction=irange(0,1),
+        physical_dimension=irange(1,4),
+        new_dimension=irange(1,10),
+    ):
+        side_id = sideFromCorner(corner_id,direction)
+        side_direction = 1-direction
+
+        operator_data = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
+        if side_id in (1,3):
+            operator_direction = "OO_LR"
+        else:
+            operator_direction = "OO_UD"
+        system = System.newTrivialWithSparseOperator(**{operator_direction:operator_data})
+
+        if direction == 0:
+            system.absorbCenter(R(side_id))
+        else:
+            system.absorbCenter(L(side_id))
+        for _ in range(new_dimension):
+            system.absorbCenter(side_id)
+        state_center_data = system.state_center_data
+        for _ in range(new_dimension*2+1):
+            system.absorbCenter(side_id)
+        system.setStateCenter(state_center_data)
+
+        expectation1, normalization1 = system.computeExpectationAndNormalization()
+        system.compressCornerTwoSiteOperatorTowards(corner_id,direction,new_dimension)
+        expectation2, normalization2 = system.computeExpectationAndNormalization()
+
+        self.assertAlmostEqual(normalization2,normalization1)
+        self.assertAlmostEqual(expectation2,expectation1)
+    # }}}
+    @with_checker(number_of_calls=10) # test_compressCornerTwoSiteOperatorTowards_new_same_as_old {{{
     def test_compressCornerTwoSiteOperatorTowards_new_same_as_old(self,
         corner_id=irange(0,3),
         direction=irange(0,1),
