@@ -5,7 +5,7 @@ from numpy import allclose, any, array, complex128, diag, identity, isnan, multi
 from scipy.linalg import norm, svd, qr
 from scipy.sparse.linalg import LinearOperator, eigs
 
-from .utils import crand, randomComplexSample
+from .utils import crand, dropAt, randomComplexSample
 # }}}
 
 # Base classes {{{
@@ -152,6 +152,11 @@ class NDArrayData(Data): # {{{
         new_data[left_indices] = self._arr
         new_data[right_indices] = other._arr
         return NDArrayData(new_data)
+    # }}}
+    def dropUnitAxis(self,axis): # {{{
+        if self.shape[axis] != 1:
+            raise ValueError("Axis {} has non-unit dimension {}.".format(axis,self.shape[axis]))
+        return NDArrayData(self._arr.reshape(dropAt(self.shape,axis)))
     # }}}
     def extractScalar(self): # {{{
         if self.ndim != 0:
