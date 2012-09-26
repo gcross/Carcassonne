@@ -1,7 +1,7 @@
 # Imports {{{
 from collections import defaultdict
 from functools import partial
-from numpy import sqrt, tensordot, zeros
+from numpy import dot, sqrt, tensordot, zeros
 from numpy.linalg import eigh
 from numpy.random import rand, random_sample
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
@@ -224,6 +224,18 @@ def computeCompressor(old_dimension,new_dimension,matvec,dtype,computeDenseMatri
         compressor = evecs
         inverse_compressor_conj = evecs
     return compressor, inverse_compressor_conj
+# }}}
+def computeCompressorForMatrixTimesItsDagger(old_dimension,new_dimension,matrix,normalize=False): # {{{
+    matrix_dagger = matrix.transpose().conj()
+    return \
+        computeCompressor(
+            old_dimension,
+            new_dimension,
+            lambda v: dot(matrix_dagger,dot(matrix,v)),
+            matrix.dtype,
+            lambda: dot(matrix_dagger,matrix),
+            normalize
+        )
 # }}}
 def computeLengthAndCheckForGaps(indices,error_message): # {{{
     if len(indices) == 0:
@@ -591,6 +603,7 @@ __all__ = [
     "applyPermutation",
     "checkForNaNsIn",
     "computeCompressor",
+    "computeCompressorForMatrixTimesItsDagger",
     "computeNewDimension",
     "crand",
     "dropAt",

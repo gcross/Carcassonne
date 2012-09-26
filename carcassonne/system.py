@@ -8,7 +8,7 @@ from .data import NDArrayData
 from .sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData
 from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
-from .utils import computeCompressor, computeNewDimension, L, R
+from .utils import computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, L, R
 # }}}
 
 # Classes {{{
@@ -170,19 +170,13 @@ class System: # {{{
         axis = 3*direction
         corner_data = self.corners[corner_id][Identity()]
         old_dimension = corner_data.shape[axis]
-        matrix = corner_data.fold(axis).toArray().transpose()
-        matrix_dagger = matrix.transpose().conj()
         corner_multiplier, side_multiplier_conj = \
-            computeCompressor(
+            computeCompressorForMatrixTimesItsDagger(
                 old_dimension,
                 new_dimension,
-                lambda v: dot(matrix_dagger,dot(matrix,v)),
-                corner_data.dtype,
-                lambda: dot(matrix_dagger,matrix),
+                corner_data.fold(axis).toArray().transpose(),
                 normalize
             )
-        del matrix
-        del matrix_dagger
         corner_multiplier = NDArrayData(corner_multiplier)
         side_multiplier_conj = NDArrayData(side_multiplier_conj)
         corner_multiplier_conj = corner_multiplier.conj()
