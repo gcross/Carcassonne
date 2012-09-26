@@ -1,5 +1,4 @@
 # Imports {{{
-from copy import copy
 from functools import reduce
 from numpy import allclose, any, array, complex128, diag, identity, isnan, multiply, ndarray, ones, prod, sqrt, tensordot, zeros
 from scipy.linalg import norm, svd, qr
