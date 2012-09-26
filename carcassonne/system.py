@@ -94,6 +94,8 @@ class System: # {{{
         self.state_center_data = state_center_data
         if state_center_data_conj is None:
             self.state_center_data_conj = self.state_center_data.conj()
+        else:
+            self.state_center_data_conj = state_center_data_conj
     # }}}
     def __add__(self,other): # {{{
         return System(
