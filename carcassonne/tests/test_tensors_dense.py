@@ -176,12 +176,13 @@ class TestDenseStages(TestCase): # {{{
     ):
         A = NDArrayData.newRandom(a,b,c,d,c,d)
         B = NDArrayData.newRandom(b,a,e,f,e,f)
-        C = NDArrayData.newRandom(c,d,e,f,g)
-        D1 = formNormalizationStage3(A,B)(C)
+        C = NDArrayData.newRandom(g,g)
+        D = NDArrayData.newRandom(c,d,e,f,g)
+        E1 = formNormalizationStage3(A,B,C)(D)
         AB = A.contractWith(B,(0,1),(1,0)).join(0,1,4,5,2,3,6,7)
-        D2 = AB.contractWith(C,(0,1,2,3),(0,1,2,3))
-        if D1.hasNaN() or D2.hasNaN():
+        E2 = AB.contractWith(D,(0,1,2,3),(0,1,2,3))
+        if E1.hasNaN() or E2.hasNaN():
             return
-        self.assertDataAlmostEqual(D1,D2)
+        self.assertDataAlmostEqual(E1,E2)
     # }}}
 # }}}

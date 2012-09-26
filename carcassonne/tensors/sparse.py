@@ -1,10 +1,11 @@
 # Imports {{{
 from functools import partial
 import itertools
+from numpy import complex128, prod
 
 from .dense import *
 from ..sparse import Identity, Complete, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, addStandardCompleteAndIdentityTerms, contractSparseTensors, formSparseContractor
-from ..utils import multiplyBySingleSiteOperator, L, R, O
+from ..utils import Multiplier, multiplyBySingleSiteOperator, L, R, O
 # }}}
 
 # Functions {{{
@@ -112,21 +113,18 @@ def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
         (TwoSiteOperatorCompressed,TwoSiteOperatorCompressed,Identity): lambda x,y,z: x.matchesForStage3(y),
     }
 
-    def makeMultiplier(stage2_0_data,stage2_1_data,operator_center_data):
-        dense_multiplier = formNormalizationStage3(stage2_0_data,stage2_1_data)
-        if operator_center_data is None:
-            return dense_multiplier
-        else:
-            def multiplier(state_center_data):
-                return dense_multiplier(multiplyBySingleSiteOperator(state_center_data,operator_center_data))
-            return multiplier
     multipliers = []
 
-    for tags in itertools.product(stage2_0,stage2_1,operator_center):
-        types = tuple(type(tag) for tag in tags)
+    tensors = (stage2_0,stage2_1,operator_center)
+    for tags in itertools.product(*tensors):
+        types = tuple(map(type,tags))
         if not rules.get(types,lambda x,y,z: False)(*tags):
             continue
-        multipliers.append(makeMultiplier(stage2_0[tags[0]],stage2_1[tags[1]],operator_center[tags[2]]))
+        if tags[-1] == Identity():
+            formStage3 = formNormalizationStage3
+        else:
+            formStage3 = formDenseStage3
+        multipliers.append(formStage3(*(tensor[tag] for tensor, tag in zip(tensors,tags))))
         
     def multiplyExpectation(center):
         result = center.newZeros(center.shape,dtype=center.dtype)
@@ -134,8 +132,30 @@ def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
             result += multiplier(center)
         return result
 
-    multiplyNormalization = formNormalizationStage3(stage2_0[Identity()],stage2_1[Identity()])
+    bandwidth_dimensions = (
+        stage2_0[Identity()].shape[2],
+        stage2_0[Identity()].shape[3],
+        stage2_1[Identity()].shape[2],
+        stage2_1[Identity()].shape[3],
+    )
+    bandwidth_dimension = prod(bandwidth_dimensions)
+    physical_dimension = operator_center[Identity()].shape[0]
+    dimension = bandwidth_dimension*physical_dimension
+    dtype = operator_center[Identity()].dtype
+    DataClass = type(operator_center[Identity()])
+    def formExpectationMatrix():
+        matrix = DataClass.newZeros((dimension,dimension),dtype=complex128)
+        for multiplier in multipliers:
+            matrix += multiplier.formMatrix()
+        return matrix
 
-    return multiplyExpectation, multiplyNormalization
+    expectation_multiplier = Multiplier(
+        multiplyExpectation,
+        formExpectationMatrix
+    )
+
+    normalization_multiplier = formNormalizationStage3(stage2_0[Identity()],stage2_1[Identity()],operator_center[Identity()])
+
+    return expectation_multiplier, normalization_multiplier
 # }}}
 # }}}

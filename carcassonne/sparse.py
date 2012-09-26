@@ -204,17 +204,24 @@ def formSparseContractor(dense_contractors): # {{{
     return partial(contractSparseTensors,dense_contractors)
 # }}}
 def makeSparseOperator(O=None,OO_UD=None,OO_LR=None): # {{{
-    operator = {Identity():None}
+    operator = {}
+    identity = None
     if O is not None:
         operator[OneSiteOperator()] = O
+        identity = O.newIdentity(O.shape[0])
     if OO_UD is not None:
         O_U, O_D = OO_UD
         operator[TwoSiteOperator(3,0)] = O_U
         operator[TwoSiteOperator(1,0)] = O_D
+        identity = O_U.newIdentity(O_U.shape[0])
     if OO_LR is not None:
         O_L, O_R = OO_LR
         operator[TwoSiteOperator(0,0)] = O_L
         operator[TwoSiteOperator(2,0)] = O_R
+        identity = O_L.newIdentity(O_L.shape[0])
+    if identity is None:
+        raise ValueError("No terms have been specified.")
+    operator[Identity()] = identity
     return operator
 # }}}
 def mapOverSparseData(f,sparse): # {{{

@@ -21,7 +21,7 @@ class System: # {{{
             tuple({Identity():NDArrayData.newTrivial((1,)*6)} for _ in range(4)),
             tuple({Identity():NDArrayData.newTrivial((1,)*6)+(d,)*2} for d in bandwidth_dimensions),
             NDArrayData.newRandom(*tuple(bandwidth_dimensions)+tuple(O.shape[:1])),
-            {Identity():None,OneSiteOperator():O}
+            {Identity():O.newIdentity(O.shape[0]),OneSiteOperator():O}
         )
         system.assertDimensionsAreConsistent()
         system.assertNormalizationIsHermitian()
@@ -53,7 +53,7 @@ class System: # {{{
                 O += O.join(1,0).conj()
             else:
                 O = makeOperator(physical_dimension)
-        operator_center_tensor = {Identity():None,OneSiteOperator():O}
+        operator_center_tensor = {Identity():DataClass.newIdentity(physical_dimension),OneSiteOperator():O}
         system = cls(
             tuple({Identity():corner_data} for corner_data in corners_data),
             tuple({Identity():side_data} for side_data in sides_data),
@@ -350,11 +350,22 @@ class System: # {{{
     def formExpectationAndNormalizationMultipliers(self): # {{{
         return formExpectationAndNormalizationMultipliers(self.corners,self.sides,self.operator_center_tensor)
     # }}}
+    def formExpectationMatrix(self): # {{{
+        return self.formExpectationMultiplier().formMatrix()
+    # }}}
     def formExpectationMultiplier(self): # {{{
         return self.formExpectationAndNormalizationMultipliers()[0]
     # }}}
+    def formNormalizationMatrix(self): # {{{
+        return self.formNormalizationMultiplier().formMatrix()
+    # }}}
     def formNormalizationMultiplier(self): # {{{
-        return formNormalizationMultiplier(tuple(corner[Identity()] for corner in self.corners),tuple(side[Identity()] for side in self.sides))
+        return \
+            formNormalizationMultiplier(
+                tuple(corner[Identity()] for corner in self.corners),
+                tuple(side[Identity()] for side in self.sides),
+                self.operator_center_tensor[Identity()]
+            )
     # }}}
     def formNormalizationSubmatrix(self): # {{{
         return formNormalizationSubmatrix(tuple(corner[Identity()] for corner in self.corners),tuple(side[Identity()] for side in self.sides))

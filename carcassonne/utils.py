@@ -165,6 +165,14 @@ class FromBoth: # {{{
         return left_index * right_dimensions[self.right_dimension] + right_index
     # }}}
 # }}}
+class Multiplier: # {{{
+    __slots__ = ["multiply","formMatrix"]
+    def __init__(self,multiply,formMatrix):
+        self.multiply = multiply
+        self.formMatrix = formMatrix
+    def __call__(self,vector):
+        return self.multiply(vector)
+# }}}
 # }}}
 
 # Decorators {{{
@@ -597,6 +605,7 @@ __all__ = [
     "FromRight",
     "FromBoth",
     "Join",
+    "Multiplier",
 
     "prepend",
     "prependDataContractor",

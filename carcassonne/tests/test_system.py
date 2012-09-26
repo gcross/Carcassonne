@@ -199,6 +199,35 @@ class TestSystem(TestCase): # {{{
             return
         self.assertAlmostEqual(system.computeExpectation(),width*height)
     # }}}
+    @with_checker(number_of_calls=10) # test_formExpectationMatrix {{{
+    def test_formExpectationMatrix(self,moves=(irange(0,2),)*4):
+        system = System.newRandom()
+        directions = sum(([i]*moves[i] for i in range(4)),[])
+        shuffle(directions)
+        for direction in directions:
+            system.absorbCenter(direction)
+
+        multiply = system.formExpectationMultiplier()
+        matrix = system.formExpectationMatrix()
+
+        state_center_data = system.state_center_data.newRandom(*system.state_center_data.shape)
+        result1 = multiply(state_center_data).ravel()
+        result2 = state_center_data.ravel().absorbMatrixAt(0,matrix)
+
+        self.assertDataAlmostEqual(result1,result2)
+    # }}}
+    @with_checker # test_formNormalizationMatrix {{{
+    def test_formNormalizationMatrix(self):
+        system = System.newRandom()
+        multiply = system.formNormalizationMultiplier()
+        matrix = system.formNormalizationMatrix()
+
+        state_center_data = system.state_center_data.newRandom(*system.state_center_data.shape)
+        result1 = multiply(state_center_data).ravel()
+        result2 = state_center_data.ravel().absorbMatrixAt(0,matrix)
+
+        self.assertDataAlmostEqual(result1,result2)
+    # }}}
     @with_checker # test_formNormalizationMultiplier_same_both_ways {{{
     def test_formNormalizationMultiplier_same_both_ways(self):
         system = System.newRandom()

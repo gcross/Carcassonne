@@ -1,6 +1,6 @@
 # Imports {{{
 from functools import partial
-from ..utils import Join, formDataContractor, prepend, prependDataContractor, L, R, O
+from ..utils import Join, Multiplier, formDataContractor, prepend, prependDataContractor, L, R, O
 # }}}
 
 # Functions {{{
@@ -76,7 +76,7 @@ def absorbDenseCenterSOSIntoSide(contractors,direction,side,center_state,center_
             center_operator,
         )
 # }}}
-def formNormalizationMultiplier(corners,sides): # {{{
+def formNormalizationMultiplier(corners,sides,center_identity): # {{{
     return formNormalizationStage3(
         formNormalizationStage2(
             formNormalizationStage1(corners[0],sides[0]),
@@ -86,6 +86,7 @@ def formNormalizationMultiplier(corners,sides): # {{{
             formNormalizationStage1(corners[2],sides[2]),
             formNormalizationStage1(corners[3],sides[3]),
         ),
+        center_identity
     )
 # }}}
 # def formNormalizationStage1(corner,side) {{{
@@ -122,12 +123,66 @@ formNormalizationStage2 = formDataContractor(
         [(2,4)],
     ]
 )
-def formNormalizationStage3(contractor,stage2_0,stage2_1):
+def formNormalizationStage3(contractor,stage2_0,stage2_1,center_identity):
+    return \
+        Multiplier(
+            partial(
+                contractor,
+                stage2_0.join((0,1),4,5,2,3),
+                stage2_1.join((1,0),4,5,2,3),
+            ),
+            formDenseStage3_formMatrix(stage2_0,stage2_1,center_identity)
+        )
+# }}}
+# def formDenseStage3_multiply(stage2_0,stage2_1,site_operator) {{{
+@prependDataContractor(
+    [
+        Join(2,1,3,4),
+        Join(0,[3,4],3,[0,1]),
+        Join(1,[3,4],3,[2,3]),
+        Join(0,0,1,0),
+    ],
+    [
+        [(0,1)],
+        [(0,2)],
+        [(1,1)],
+        [(1,2)],
+        [(2,0)],
+    ]
+)
+def formDenseStage3_multiply(contractor,stage2_0,stage2_1,site_operator):
     return \
         partial(
             contractor,
             stage2_0.join((0,1),4,5,2,3),
             stage2_1.join((1,0),4,5,2,3),
+            site_operator,
+        )
+# }}}
+# def formDenseStage3_formMatrix(stage2_0,stage2_1,site_operator) {{{
+@prependDataContractor(
+    [
+        Join(0,[0,1],1,[1,0]),
+    ],
+    [
+        [(i,j) for i in (0,1) for j in (4,5)] + [(2,0)],
+        [(i,j) for i in (0,1) for j in (2,3)] + [(2,1)],
+    ]
+)
+def formDenseStage3_formMatrix(contractor,stage2_0,stage2_1,site_operator):
+    return \
+        partial(
+            contractor,
+            stage2_0,
+            stage2_1,
+            site_operator,
+        )
+# }}}
+def formDenseStage3(stage2_0,stage2_1,site_operator): # {{{
+    return \
+        Multiplier(
+            formDenseStage3_multiply(stage2_0,stage2_1,site_operator),
+            formDenseStage3_formMatrix(stage2_0,stage2_1,site_operator),
         )
 # }}}
 # def formNormalizationSubmatrix + friends {{{
@@ -160,6 +215,9 @@ __all__ = [
     "absorbDenseSideIntoCornerFromRight",
     "absorbDenseCenterSSIntoSide",
     "absorbDenseCenterSOSIntoSide",
+    "formDenseStage3",
+    "formDenseStage3_formMatrix",
+    "formDenseStage3_multiply",
     "formNormalizationMultiplier",
     "formNormalizationStage1",
     "formNormalizationStage2",
