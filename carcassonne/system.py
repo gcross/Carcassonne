@@ -1,4 +1,5 @@
 # Imports {{{
+from copy import copy
 from numpy import array, complex128, dot, prod, sqrt, zeros
 from numpy.linalg import eigh
 from random import randint
@@ -101,6 +102,16 @@ class System: # {{{
             self.state_center_data.directSumWith(other.state_center_data,4),
             self.operator_center_tensor
         )
+    # }}}
+    def __copy__(self): # {{{
+        return \
+            System(
+                copy(self.corners),
+                copy(self.sides),
+                self.state_center_data,
+                self.operator_center_tensor,
+                self.state_center_data_conj,
+            )
     # }}}
     def absorbCenter(self,direction): # {{{
         self.corners[direction] = absorbSparseSideIntoCornerFromLeft(self.corners[direction],self.sides[L(direction)])
