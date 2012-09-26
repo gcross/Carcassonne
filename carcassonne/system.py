@@ -41,7 +41,7 @@ class System: # {{{
         corners_data = tuple(DataClass.newRandom(*(sides_data[L(i)].shape[3],)*2+(1,)+(sides_data[i].shape[0],)*2+(1,)) for i in range(4))
         for corner_data in corners_data:
             corner_data += corner_data.join(1,0,2,4,3,5).conj()
-        if O:
+        if O is not None:
             physical_dimension = O.shape[0]
         else:
             physical_dimension = randomDimension()
