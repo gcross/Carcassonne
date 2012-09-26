@@ -390,7 +390,9 @@ class System: # {{{
                 if isinstance(tag,OneSiteOperator):
                     operator += data
             evals, evecs = eigh(operator.toArray())
-            self.state_center_data = type(state_center_data)(evecs[:,0].reshape(state_center_data.shape))
+            solutions = evecs.transpose().reshape((N,) + state_center_data.shape)
+            self.state_center_data = type(state_center_data)(solutions[0])
+            return map(type(state_center_data),solutions[1:1+number_of_additional_solutions])
         else:
             minimizers = \
                 state_center_data.computeMinimizersOver(
