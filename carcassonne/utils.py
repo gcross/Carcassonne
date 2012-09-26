@@ -199,7 +199,7 @@ def computeCompressor(old_dimension,new_dimension,matvec,dtype,computeDenseMatri
         raise ValueError("New dimension ({}) must be non-negative.".format(new_dimension))
     elif new_dimension > old_dimension:
         raise ValueError("New dimension ({}) must be less than or equal to the old dimension ({}).".format(new_dimension,old_dimension))
-    elif old_dimension == 0:
+    elif new_dimension == 0:
         return (zeros((new_dimension,old_dimension),dtype=dtype),)*2
     elif new_dimension >= old_dimension // 2:
         evals, evecs = eigh(computeDenseMatrix())
@@ -214,8 +214,10 @@ def computeCompressor(old_dimension,new_dimension,matvec,dtype,computeDenseMatri
             )
         evals, evecs = eigsh(operator,k=new_dimension)
     evecs = evecs.transpose()
-    while abs(evals[new_dimension-1]) < 1e-15:
+    while new_dimension > 0 and abs(evals[new_dimension-1]) < 1e-15:
         new_dimension -= 1
+    if new_dimension == 0:
+        raise ValueError("Input is filled with near-zero elements.")
     if normalize:
         evals = sqrt(evals).reshape(new_dimension,1)
         compressor = evecs * evals
