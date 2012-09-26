@@ -1,4 +1,5 @@
 # Imports {{{
+from functools import partial
 from ..utils import Join, formDataContractor, prepend, prependDataContractor, L, R, O
 # }}}
 
@@ -122,11 +123,12 @@ formNormalizationStage2 = formDataContractor(
     ]
 )
 def formNormalizationStage3(contractor,stage2_0,stage2_1):
-    data0 = stage2_0.join((0,1),4,5,2,3)
-    data1 = stage2_1.join((1,0),4,5,2,3)
-    def multiply(center):
-        return contractor(data0,data1,center)
-    return multiply
+    return \
+        partial(
+            contractor,
+            stage2_0.join((0,1),4,5,2,3),
+            stage2_1.join((1,0),4,5,2,3),
+        )
 # }}}
 # def formNormalizationSubmatrix + friends {{{
 @prependDataContractor(
