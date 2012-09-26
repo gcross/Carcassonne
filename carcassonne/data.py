@@ -127,6 +127,19 @@ class NDArrayData(Data): # {{{
     def contractWith(self,other,self_axes,other_axes): # {{{
         return NDArrayData(tensordot(self._arr,other._arr,(self_axes,other_axes)))
     # }}}
+    def computeMinimizersOver(self,multiplyExpectation,multiplyNormalization,k=1): # {{{
+        initial = self.toArray().ravel()
+        N = len(initial)
+        if k >= N:
+            raise ValueError("Number of desired eigenvectors must be less than the number of degrees of freedom. ({} > prod{} = {}".format(k,self.shape,N))
+        evals, evecs = eigs(
+            A=LinearOperator((N,N),dtype=self.dtype,matvec=lambda v: multiplyExpectation(NDArrayData(v.reshape(self.shape))).toArray()),
+            M=LinearOperator((N,N),dtype=self.dtype,matvec=lambda v: multiplyNormalization(NDArrayData(v.reshape(self.shape))).toArray()),
+            k=k,
+            which='SR',
+        )
+        return tuple(map(NDArrayData,evecs.transpose().reshape((k,) + self.shape)))
+    # }}}
     def directSumWith(self,other,*non_summed_axes): # {{{
         if not self.ndim == other.ndim:
             raise ValueError("In a direct sum the number of axes must match ({} != {})".format(self.ndim,other.ndim))
@@ -207,17 +220,6 @@ class NDArrayData(Data): # {{{
             shape.append(prod(_arr.shape[index:index+len(group)]))
             index += len(group)
         return NDArrayData(_arr.reshape(shape))
-    # }}}
-    def minimizeOver(self,multiplyExpectation,multiplyNormalization): # {{{
-        initial = self.toArray().ravel()
-        N = len(initial)
-        evals, evecs = eigs(
-            A=LinearOperator((N,N),dtype=self.dtype,matvec=lambda v: multiplyExpectation(NDArrayData(v.reshape(self.shape))).toArray()),
-            M=LinearOperator((N,N),dtype=self.dtype,matvec=lambda v: multiplyNormalization(NDArrayData(v.reshape(self.shape))).toArray()),
-            k=1,
-            which='SR',
-        )
-        return NDArrayData(evecs.reshape(self.shape))
     # }}}
     def normalizeAxis(self,axis,sqrt_svals=False): # {{{
         if self.shape[axis] == 1:

@@ -374,7 +374,7 @@ class System: # {{{
         self.increaseBandwidth(direction,by,to)
         self.normalize()
     # }}}
-    def minimizeExpectation(self): # {{{
+    def minimizeExpectation(self,number_of_additional_solutions=0): # {{{
         state_center_data = self.state_center_data
         if prod(state_center_data.shape[:4]) == 1:
             N = prod(state_center_data.shape)
@@ -385,7 +385,13 @@ class System: # {{{
             evals, evecs = eigh(operator.toArray())
             self.state_center_data = type(state_center_data)(evecs[:,0].reshape(state_center_data.shape))
         else:
-            self.state_center_data = state_center_data.minimizeOver(*self.formExpectationAndNormalizationMultipliers())
+            minimizers = \
+                state_center_data.computeMinimizersOver(
+                    *self.formExpectationAndNormalizationMultipliers(),
+                    k=1+number_of_additional_solutions
+                )
+            self.state_center_data = minimizers[0]
+            return minimizers[1:]
     # }}}
     def normalize(self): # {{{
         for corner_id in range(4):
