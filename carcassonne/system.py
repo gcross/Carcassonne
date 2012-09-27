@@ -394,7 +394,9 @@ class System: # {{{
     def minimizeExpectation(self,number_of_additional_solutions=0): # {{{
         state_center_data = self.state_center_data
         if prod(state_center_data.shape[:4]) == 1:
-            N = prod(state_center_data.shape)
+            N = state_center_data.shape[4]
+            if 1+number_of_additional_solutions > N:
+                raise ValueError("{} solutions in total are required but there are only {} degrees of freedom available.".format(1+number_of_additional_solutions,N))
             operator = state_center_data.newZeros(shape=(N,N),dtype=state_center_data.dtype)
             for tag, data in self.operator_center_tensor.items():
                 if isinstance(tag,OneSiteOperator):
