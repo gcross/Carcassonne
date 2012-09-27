@@ -210,7 +210,10 @@ def computeCompressor(old_dimension,new_dimension,multiplier,dtype,normalize=Fal
     elif new_dimension == 0:
         return (zeros((new_dimension,old_dimension),dtype=dtype),)*2
     elif new_dimension >= old_dimension // 2:
-        evals, evecs = eigh(multiplier.formMatrix())
+        matrix = multiplier.formMatrix()
+        if tuple(matrix.shape) != (old_dimension,)*2:
+            raise ValueError("Multiplier matrix has shape {} but the old dimension is {}.".format(matrix.shape,old_dimension))
+        evals, evecs = eigh(matrix)
         evals = evals[-new_dimension:]
         evecs = evecs[:,-new_dimension:]
     else:
