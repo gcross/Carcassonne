@@ -1,7 +1,7 @@
 # Imports {{{
 from collections import defaultdict
 from functools import partial
-from numpy import dot, sqrt, tensordot, zeros
+from numpy import dot, prod, sqrt, tensordot, zeros
 from numpy.linalg import eigh
 from numpy.random import rand, random_sample
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
@@ -584,6 +584,9 @@ def formDataContractor(joins,final_groups,tensor_ranks=None): # {{{
 def invertPermutation(permutation): # {{{
     return [permutation.index(i) for i in range(len(permutation))]
 # }}}
+def maximumBandwidthIncrement(direction,shape): # {{{
+    return min(shape[direction],prod(dropAt(shape,direction)))
+# }}}
 def multiplyBySingleSiteOperator(state,operator): # {{{
     return state.absorbMatrixAt(4,operator)
 # }}}
@@ -635,6 +638,7 @@ __all__ = [
     "formContractor",
     "formDataContractor",
     "invertPermutation",
+    "maximumBandwidthIncrement",
     "randomComplexSample",
     "replaceAt",
 
