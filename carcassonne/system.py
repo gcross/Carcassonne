@@ -9,7 +9,7 @@ from .data import NDArrayData
 from .sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData
 from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
-from .utils import Multiplier, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, L, R
+from .utils import Multiplier, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt, maximumBandwidthIncrement, L, O, R
 # }}}
 
 # Classes {{{
@@ -45,7 +45,7 @@ class System: # {{{
         if O is not None:
             physical_dimension = O.shape[0]
         else:
-            physical_dimension = randomDimension()
+            physical_dimension = max(2,randomDimension())
         state_center_data = DataClass.newRandom(*spoke_sizes + (physical_dimension,))
         if O is None:
             if makeOperator is None:
@@ -369,23 +369,35 @@ class System: # {{{
     def formNormalizationSubmatrix(self): # {{{
         return formNormalizationSubmatrix(tuple(corner[Identity()] for corner in self.corners),tuple(side[Identity()] for side in self.sides))
     # }}}
-    def increaseBandwidth(self,increments): # {{{
+    def increaseBandwidth(self,direction,by=None,to=None): # {{{
+        if direction not in (0,1):
+            raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))
         state_center_data = self.state_center_data
-        new_sides = []
-        new_bandwidths = []
-        for direction, increment in enumerate(increments):
-            if increment < 1:
-                raise ValueError("All increments must be at least 1;  observed increment of {} for direction {}.".format(increment,direction))
-            new_bandwidths.append(state_center_data.shape[direction]+increment)
-            indices_to_merge = list(range(5))
-            del indices_to_merge[direction]
-            U, S, V = state_center_data.join(indices_to_merge,direction).svd(full_matrices=False)
-            shrinker = V[:increment,:]
-            shrinker_conj = shrinker.conj()
-            new_sides.append(mapOverSparseData(lambda data: data.absorbMatrixAt(6,shrinker).absorbMatrixAt(7,shrinker_conj),self.sides[direction]))
-        self.corners = directSumListsOfSparse(self.corners,self.corners)
-        self.sides = directSumListsOfSparse(self.sides,new_sides)
-        self.setStateCenter(self.state_center_data.increaseDimensionsAndFillWithZeros(*enumerate(new_bandwidths)))
+        old_dimension = state_center_data.shape[direction]
+        new_dimension = computeNewDimension(old_dimension,by=by,to=to)
+        increment = new_dimension-old_dimension
+        maximum_increment = maximumBandwidthIncrement(direction,state_center_data.shape)
+        if increment > maximum_increment:
+            raise ValueError("Increment of {} in the bandwidth dimensions {} and {} is too great given the current shape of {} (maximum increment is {}).".format(increment,direction,direction+2,state_center_data.shape,maximum_increment))
+        extra_state_center_data, = self.minimizeExpectation(number_of_additional_solutions=1)
+        axes = (direction,direction+2)
+        for axis in axes:
+            compressor, _ = \
+                computeCompressorForMatrixTimesItsDagger(
+                    old_dimension,
+                    increment,
+                    extra_state_center_data.fold(axis).transpose().toArray()
+                )
+            self.setStateCenter(
+                state_center_data.directSumWith(
+                    extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
+                    *dropAt(range(5),axis)
+                )
+            )
+            self.absorbCenter(O(axis))
+        self.setStateCenter(
+            state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
+        )
     # }}}
     def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
         self.increaseBandwidth(direction,by,to)

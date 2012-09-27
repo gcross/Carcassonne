@@ -5,6 +5,7 @@ from numpy.linalg import norm
 from . import *
 from ..system import *
 from ..sparse import *
+from ..utils import *
 # }}}
 
 class TestSystem(TestCase): # {{{
@@ -244,29 +245,20 @@ class TestSystem(TestCase): # {{{
         m2 = system.formNormalizationSubmatrix().contractWith(random_data.join(range(4),4),(1,),(0,)).split(*random_data.shape)
         self.assertDataAlmostEqual(m1,m2)
     # }}}
-    @with_checker(number_of_calls=10) # test_increaseBandwidth# {{{
-    def dont_test_increaseBandwidth(self,increments=(irange(1,3),)*2):
-        increments *= 2
-        system = System.newRandom()
-        old_shape = system.state_center_data.shape
-        expectation1, normalization1 = system.computeExpectationAndNormalization()
-        system.increaseBandwidth(increments)
-        new_shape = system.state_center_data.shape
-        self.assertEqual(tuple(new_shape[:4]),tuple(old+inc for old,inc in zip(old_shape[:4],increments)))
-        system.assertDimensionsAreConsistent()
-        system.assertNormalizationIsHermitian()
-        expectation2, normalization1 = system.computeExpectationAndNormalization()
-        self.assertAlmostEqual(expectation1,expectation2)
-        self.assertAlmostEqual(normalization1,normalization2)
-    # }}}
-    @with_checker(number_of_calls=10) # test_increaseBandwidth_one_step # {{{
-    def dont_test_increaseBandwidth_one_step(self,direction=irange(0,3),increment=irange(0,4)):
-        system = System.newRandom()
-        expectation1, normalization1 = system.computeExpectationAndNormalization()
-        system.increaseBandwidth(direction,by=increment)
-        expectation2, normalization1 = system.computeExpectationAndNormalization()
-        self.assertAlmostEqual(expectation1,expectation2)
-        self.assertAlmostEqual(normalization1,normalization2)
+    @with_checker(number_of_calls=100,throw_arguments_exception=False) # test_increaseBandwidth# {{{
+    def test_increaseBandwidth(self,direction=irange(0,1),physical_dimension=irange(3,4)):
+        system1 = System.newRandom()
+        system1.minimizeExpectation()
+
+        old_shape = system1.state_center_data.shape
+        increment = randint(0,maximumBandwidthIncrement(direction,old_shape))
+        system2 = copy(system1)
+
+        system1.increaseBandwidth(direction,by=increment)
+        system2.absorbCenter(O(direction))
+        system2.absorbCenter(direction)
+        self.assertAlmostEqual(system1.computeNormalization(),system2.computeNormalization())
+        self.assertAlmostEqual(system1.computeExpectation(),system2.computeExpectation())
     # }}}
     @with_checker # test_minimizer_works_after_some_steps {{{
     def dont_test_minimizer_works_after_some_steps(self,moves=(irange(0,1),)*4):
