@@ -403,7 +403,7 @@ class System: # {{{
                     operator += data
             evals, evecs = eigh(operator.toArray())
             solutions = evecs.transpose().reshape((N,) + state_center_data.shape)
-            self.state_center_data = type(state_center_data)(solutions[0])
+            self.setStateCenter(type(state_center_data)(solutions[0]))
             return map(type(state_center_data),solutions[1:1+number_of_additional_solutions])
         else:
             minimizers = \
@@ -411,7 +411,7 @@ class System: # {{{
                     *self.formExpectationAndNormalizationMultipliers(),
                     k=1+number_of_additional_solutions
                 )
-            self.state_center_data = minimizers[0]
+            self.setStateCenter(minimizers[0])
             return minimizers[1:]
     # }}}
     def normalize(self): # {{{
