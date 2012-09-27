@@ -9,7 +9,7 @@ from .data import NDArrayData
 from .sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData
 from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
-from .utils import computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, L, R
+from .utils import Multiplier, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, L, R
 # }}}
 
 # Classes {{{
@@ -244,12 +244,12 @@ class System: # {{{
             matrix2 = zeros((0,0),dtype=complex128)
         # }}}
         # Compute the compressors  {{{
-        def matvec(in_v):
+        def multiply(in_v):
             out_v = 0*in_v
             out_v[slice1] = dot(matrix1,in_v[slice1])
             out_v[slice2] = dot(matrix2,in_v[slice2])
             return out_v
-        def computeDenseMatrix():
+        def formMatrix():
             matrix = zeros((old_dimension,old_dimension),dtype=complex128)
             matrix[slice1,slice1] = matrix1
             matrix[slice2,slice2] = matrix2
@@ -258,17 +258,16 @@ class System: # {{{
             computeCompressor(
                 old_dimension,
                 new_dimension,
-                matvec,
+                Multiplier(multiply,formMatrix),
                 complex128,
-                computeDenseMatrix,
                 normalize
             )
         corner_multiplier = NDArrayData(corner_multiplier)
         side_multiplier = NDArrayData(side_multiplier_conj.conj())
         del matrix1
         del matrix2
-        del matvec
-        del computeDenseMatrix
+        del multiply
+        del formMatrix
         # }}}
         # Compute the new corner {{{
         collected_data_shape = list(self.corners[corner_id][Identity()].shape)

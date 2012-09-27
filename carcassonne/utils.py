@@ -202,7 +202,7 @@ def checkForNaNsIn(data): # {{{
 def crand(*shape): # {{{
     return rand(*shape)*2-1+rand(*shape)*2j-1j
 # }}}
-def computeCompressor(old_dimension,new_dimension,matvec,dtype,computeDenseMatrix,normalize=False): # {{{
+def computeCompressor(old_dimension,new_dimension,multiplier,dtype,normalize=False): # {{{
     if new_dimension < 0:
         raise ValueError("New dimension ({}) must be non-negative.".format(new_dimension))
     elif new_dimension > old_dimension:
@@ -210,14 +210,14 @@ def computeCompressor(old_dimension,new_dimension,matvec,dtype,computeDenseMatri
     elif new_dimension == 0:
         return (zeros((new_dimension,old_dimension),dtype=dtype),)*2
     elif new_dimension >= old_dimension // 2:
-        evals, evecs = eigh(computeDenseMatrix())
+        evals, evecs = eigh(multiplier.formMatrix())
         evals = evals[-new_dimension:]
         evecs = evecs[:,-new_dimension:]
     else:
         operator = \
             LinearOperator(
                 shape=(old_dimension,)*2,
-                matvec=matvec,
+                matvec=multiplier,
                 dtype=dtype
             )
         evals, evecs = eigsh(operator,k=new_dimension)
@@ -241,9 +241,11 @@ def computeCompressorForMatrixTimesItsDagger(old_dimension,new_dimension,matrix,
         computeCompressor(
             old_dimension,
             new_dimension,
-            lambda v: dot(matrix_dagger,dot(matrix,v)),
+            Multiplier(
+                lambda v: dot(matrix_dagger,dot(matrix,v)),
+                lambda: dot(matrix_dagger,matrix),
+            ),
             matrix.dtype,
-            lambda: dot(matrix_dagger,matrix),
             normalize
         )
 # }}}
