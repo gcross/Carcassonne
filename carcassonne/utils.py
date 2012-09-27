@@ -286,7 +286,11 @@ def computePostContractionIndexMap(rank,contracted_indices,offset=0): # {{{
     return index_map
 # }}}
 def dropAt(iterable,index): # {{{
-    return type(iterable)(x for i, x in enumerate(iterable) if i != index)
+    new_values = (x for i, x in enumerate(iterable) if i != index)
+    try:
+        return type(iterable)(new_values)
+    except TypeError:
+        return tuple(new_values)
 # }}}
 def formAbsorber(left_join_dimensions,right_join_dimensions,result_dimension_sources): # {{{
     # Compute the numbers of dimensions {{{
@@ -587,7 +591,11 @@ def randomComplexSample(shape): # {{{
     return random_sample(shape)*2-1+random_sample(shape)*2j-1j
 # }}}
 def replaceAt(iterable,index,new_value): # {{{
-    return type(iterable)(old_value if i != index else new_value for (i,old_value) in enumerate(iterable))
+    new_values = (old_value if i != index else new_value for (i,old_value) in enumerate(iterable))
+    try:
+        return type(iterable)(new_values)
+    except TypeError:
+        return tuple(new_values)
 # }}}
 # }}}
 
