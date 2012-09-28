@@ -1,6 +1,6 @@
 # Imports {{{
 from functools import reduce
-from numpy import allclose, any, array, complex128, diag, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
+from numpy import allclose, any, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
 from scipy.linalg import eig, norm, svd, qr
 from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigs, gmres
 
@@ -130,16 +130,27 @@ class NDArrayData(Data): # {{{
     def contractWith(self,other,self_axes,other_axes): # {{{
         return NDArrayData(tensordot(self._arr,other._arr,(self_axes,other_axes)))
     # }}}
-    def computeMinimizersOver(self,multiplyExpectation,multiplyNormalization,k=1): # {{{
+    def computeMinimizersOver(self,expectation_multiplier,normalization_multiplier,k=1): # {{{
         initial = self.toArray().ravel()
         N = len(initial)
         if k >= N:
             raise ValueError("Number of desired eigenvectors must be less than the number of degrees of freedom. ({} > prod{} = {}".format(k,self.shape,N))
-        multiplyExpectation_flat = lambda v: multiplyExpectation(NDArrayData(v.reshape(self.shape))).toArray().ravel()
-        multiplyNormalization_flat = lambda v: multiplyNormalization(NDArrayData(v.reshape(self.shape))).toArray().ravel()
-        normalization = LinearOperator(matvec=multiplyNormalization_flat,shape=(N,N),dtype=self.dtype)
+
+        if normalization_multiplier.isCheaperToFormMatrix(1000*k):
+            normalization_operator = normalization_multiplier.formMatrix().toArray()
+            del normalization_multiplier
+        else:
+            normalization_matvec = lambda v: normalization_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
+            normalization_operator = LinearOperator(matvec=normalization_matvec,shape=(N,N),dtype=self.dtype)
+
+        if expectation_multiplier.isCheaperToFormMatrix(100*k):
+            expectation_matrix = expectation_multiplier.formMatrix().toArray()
+            multiplyExpectation = lambda v: dot(expectation_matrix,v)
+            del expectation_multiplier
+        else:
+            multiplyExpectation = lambda v: expectation_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
         def matvec(in_v):
-            out_v, info = gmres(normalization,multiplyExpectation_flat(in_v))
+            out_v, info = gmres(normalization_operator,multiplyExpectation(in_v))
             assert info == 0
             return out_v
         matrix = LinearOperator(matvec=matvec,shape=(N,N),dtype=self.dtype)
@@ -152,8 +163,8 @@ class NDArrayData(Data): # {{{
                 break
             except ArpackNoConvergence:
                 if number_of_tries >= 5:
-                    save("A.npy",multiplyExpectation_flat.formMatrix().toArray())
-                    save("M.npy",multiplyNormalization_flat.formMatrix().toArray())
+                    save("A.npy",expectation_multiplier.formMatrix().toArray())
+                    save("M.npy",normalization_multiplier.formMatrix().toArray())
                     raise Exception("Unable to converge after {} tries.".format(number_of_tries))
         return tuple(map(NDArrayData,evecs.transpose().reshape((k,) + self.shape)))
     # }}}

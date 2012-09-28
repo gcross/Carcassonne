@@ -166,14 +166,20 @@ class FromBoth: # {{{
     # }}}
 # }}}
 class Multiplier: # {{{
-    def __init__(self,shape,multiply,cost_of_multiply,formMatrix,cost_of_formMatrix):
+    def __init__(self,shape,multiply,cost_of_multiply,formMatrix,cost_of_formMatrix): # {{{
         self.shape = shape
         self.multiply = multiply
         self.cost_of_multiply = cost_of_multiply
         self.formMatrix = formMatrix
         self.cost_of_formMatrix = cost_of_formMatrix
-    def __call__(self,vector):
+    # }}}
+    def __call__(self,vector): # {{{
         return self.multiply(vector)
+    # }}}
+    def isCheaperToFormMatrix(self,estimated_number_of_applications): # {{{
+        return estimated_number_of_applications*self.cost_of_multiply > \
+                self.cost_of_formMatrix + estimated_number_of_applications*self.shape[0]*self.shape[1]
+    # }}}
 # }}}
 # }}}
 
