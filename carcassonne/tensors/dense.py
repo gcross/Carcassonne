@@ -1,5 +1,7 @@
 # Imports {{{
 from functools import partial
+
+from ..data.cost_tracker import CostTracker, computeCostOfContracting
 from ..utils import Join, Multiplier, formDataContractor, prepend, prependDataContractor, L, R, O
 # }}}
 
@@ -124,17 +126,21 @@ formNormalizationStage2 = formDataContractor(
     ]
 )
 def formNormalizationStage3(contractor,stage2_0,stage2_1,center_identity):
+    stage2_0_joined = stage2_0.join((0,1),4,5,2,3)
+    stage2_1_joined = stage2_1.join((1,0),4,5,2,3)
+    dummy_state_center_data = CostTracker(stage2_0_joined.shape[-2:] + stage2_1_joined.shape[-2:] + (center_identity.shape[0],))
     return \
         Multiplier(
             partial(
                 contractor,
-                stage2_0.join((0,1),4,5,2,3),
-                stage2_1.join((1,0),4,5,2,3),
+                stage2_0_joined,
+                stage2_1_joined
             ),
-            formDenseStage3_formMatrix(stage2_0,stage2_1,center_identity)
+            computeCostOfContracting(contractor,stage2_0_joined,stage2_1_joined,dummy_state_center_data),
+            *formDenseStage3_formMatrix_and_cost(stage2_0,stage2_1,center_identity)
         )
 # }}}
-# def formDenseStage3_multiply(stage2_0,stage2_1,site_operator) {{{
+# def formDenseStage3_multiply_and_cost(stage2_0,stage2_1,site_operator) {{{
 @prependDataContractor(
     [
         Join(2,1,3,4),
@@ -150,16 +156,21 @@ def formNormalizationStage3(contractor,stage2_0,stage2_1,center_identity):
         [(2,0)],
     ]
 )
-def formDenseStage3_multiply(contractor,stage2_0,stage2_1,site_operator):
-    return \
+def formDenseStage3_multiply_and_cost(contractor,stage2_0,stage2_1,site_operator):
+    stage2_0_joined = stage2_0.join((0,1),4,5,2,3)
+    stage2_1_joined = stage2_1.join((1,0),4,5,2,3)
+    dummy_state_center_data = CostTracker(stage2_0_joined.shape[-2:] + stage2_1_joined.shape[-2:] + (site_operator.shape[0],))
+    return (
         partial(
             contractor,
-            stage2_0.join((0,1),4,5,2,3),
-            stage2_1.join((1,0),4,5,2,3),
+            stage2_0_joined,
+            stage2_1_joined,
             site_operator,
-        )
+        ),
+        computeCostOfContracting(contractor,stage2_0_joined,stage2_1_joined,site_operator,dummy_state_center_data)
+    )
 # }}}
-# def formDenseStage3_formMatrix(stage2_0,stage2_1,site_operator) {{{
+# def formDenseStage3_formMatrix_and_cost(stage2_0,stage2_1,site_operator) {{{
 @prependDataContractor(
     [
         Join(0,[0,1],1,[1,0]),
@@ -169,20 +180,22 @@ def formDenseStage3_multiply(contractor,stage2_0,stage2_1,site_operator):
         [(i,j) for i in (0,1) for j in (2,3)] + [(2,1)],
     ]
 )
-def formDenseStage3_formMatrix(contractor,stage2_0,stage2_1,site_operator):
-    return \
+def formDenseStage3_formMatrix_and_cost(contractor,stage2_0,stage2_1,site_operator):
+    return (
         partial(
             contractor,
             stage2_0,
             stage2_1,
             site_operator,
-        )
+        ),
+        computeCostOfContracting(contractor,stage2_0,stage2_1,site_operator)
+    )
 # }}}
 def formDenseStage3(stage2_0,stage2_1,site_operator): # {{{
     return \
-        Multiplier(
-            formDenseStage3_multiply(stage2_0,stage2_1,site_operator),
-            formDenseStage3_formMatrix(stage2_0,stage2_1,site_operator),
+        Multiplier(*
+            formDenseStage3_multiply_and_cost(stage2_0,stage2_1,site_operator)+ 
+            formDenseStage3_formMatrix_and_cost(stage2_0,stage2_1,site_operator)
         )
 # }}}
 # def formNormalizationSubmatrix + friends {{{
@@ -216,8 +229,8 @@ __all__ = [
     "absorbDenseCenterSSIntoSide",
     "absorbDenseCenterSOSIntoSide",
     "formDenseStage3",
-    "formDenseStage3_formMatrix",
-    "formDenseStage3_multiply",
+    "formDenseStage3_formMatrix_and_cost",
+    "formDenseStage3_multiply_and_cost",
     "formNormalizationMultiplier",
     "formNormalizationStage1",
     "formNormalizationStage2",

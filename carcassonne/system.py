@@ -258,7 +258,12 @@ class System: # {{{
             computeCompressor(
                 old_dimension,
                 new_dimension,
-                Multiplier(multiply,formMatrix),
+                Multiplier(
+                    multiply,
+                    matrix1.shape[0]*matrix1.shape[1]+matrix2.shape[0]*matrix2.shape[1],
+                    formMatrix,
+                    0,
+                ),
                 complex128,
                 normalize
             )

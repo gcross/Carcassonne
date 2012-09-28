@@ -34,7 +34,15 @@ class CostTracker(Data): # {{{
 # }}}
 # }}}
 
+# Functions {{{
+def computeCostOfContracting(contractor,*tensors): # {{{
+    return contractor(*(CostTracker(tensor.shape) for tensor in tensors)).cost
+# }}}
+# }}}
+
 # Exports {{{
 __all__ = [
     "CostTracker",
+
+    "computeCostOfContracting",
 ] # }}}

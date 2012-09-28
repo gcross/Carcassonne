@@ -166,10 +166,11 @@ class FromBoth: # {{{
     # }}}
 # }}}
 class Multiplier: # {{{
-    __slots__ = ["multiply","formMatrix"]
-    def __init__(self,multiply,formMatrix):
+    def __init__(self,multiply,cost_of_multiply,formMatrix,cost_of_formMatrix):
         self.multiply = multiply
+        self.cost_of_multiply = cost_of_multiply
         self.formMatrix = formMatrix
+        self.cost_of_formMatrix = cost_of_formMatrix
     def __call__(self,vector):
         return self.multiply(vector)
 # }}}
@@ -246,7 +247,9 @@ def computeCompressorForMatrixTimesItsDagger(old_dimension,new_dimension,matrix,
             new_dimension,
             Multiplier(
                 lambda v: dot(matrix_dagger,dot(matrix,v)),
+                2*matrix.shape[0]*matrix.shape[1],
                 lambda: dot(matrix_dagger,matrix),
+                matrix.shape[0]*matrix.shape[1]*matrix.shape[1],
             ),
             matrix.dtype,
             normalize
