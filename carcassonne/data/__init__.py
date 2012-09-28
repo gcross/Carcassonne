@@ -4,7 +4,7 @@ from numpy import allclose, any, array, complex128, diag, identity, isnan, multi
 from scipy.linalg import eig, norm, svd, qr
 from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigs, gmres
 
-from .utils import crand, dropAt, randomComplexSample
+from ..utils import crand, dropAt, randomComplexSample
 # }}}
 
 # Base classes {{{
