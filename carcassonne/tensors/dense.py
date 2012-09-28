@@ -1,5 +1,6 @@
 # Imports {{{
 from functools import partial
+from numpy import prod
 
 from ..data.cost_tracker import CostTracker, computeCostOfContracting
 from ..utils import Join, Multiplier, formDataContractor, prepend, prependDataContractor, L, R, O
@@ -131,6 +132,7 @@ def formNormalizationStage3(contractor,stage2_0,stage2_1,center_identity):
     dummy_state_center_data = CostTracker(stage2_0_joined.shape[-2:] + stage2_1_joined.shape[-2:] + (center_identity.shape[0],))
     return \
         Multiplier(
+            (dummy_state_center_data.size(),)*2,
             partial(
                 contractor,
                 stage2_0_joined,
@@ -194,6 +196,7 @@ def formDenseStage3_formMatrix_and_cost(contractor,stage2_0,stage2_1,site_operat
 def formDenseStage3(stage2_0,stage2_1,site_operator): # {{{
     return \
         Multiplier(*
+            ((prod(stage2_0.shape[-2:]+stage2_1.shape[-2:]+(site_operator.shape[0],)),)*2,)+
             formDenseStage3_multiply_and_cost(stage2_0,stage2_1,site_operator)+ 
             formDenseStage3_formMatrix_and_cost(stage2_0,stage2_1,site_operator)
         )

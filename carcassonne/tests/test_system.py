@@ -217,6 +217,15 @@ class TestSystem(TestCase): # {{{
 
         self.assertDataAlmostEqual(result1,result2)
     # }}}
+    @with_checker(number_of_calls=10) # test_formExpectationMultiplier {{{
+    def test_formExpectationAndNormalizationMultipliers_have_correct_shape(self,moves=(irange(0,2),)*4):
+        system = System.newRandom()
+
+        expectation_mutiplier, normalization_multiplier = system.formExpectationAndNormalizationMultipliers()
+
+        self.assertEqual(expectation_mutiplier.shape,(system.state_center_data.size(),)*2)
+        self.assertEqual(normalization_multiplier.shape,(system.state_center_data.size(),)*2)
+    # }}}
     @with_checker # test_formNormalizationMatrix {{{
     def test_formNormalizationMatrix(self):
         system = System.newRandom()

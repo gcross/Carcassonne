@@ -10,8 +10,12 @@ from ..utils import crand, dropAt, randomComplexSample
 # Base classes {{{
 class Data: # {{{
   # Instance methods {{{
-    def toNDArrayData(self):
+    def size(self): # {{{
+        return prod(self.shape,dtype=int)
+    # }}}
+    def toNDArrayData(self): # {{{
         return NDArrayData(self.toArray())
+    # }}}
   # }}}
 # }}}
 # }}}

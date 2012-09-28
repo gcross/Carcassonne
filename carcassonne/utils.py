@@ -166,7 +166,8 @@ class FromBoth: # {{{
     # }}}
 # }}}
 class Multiplier: # {{{
-    def __init__(self,multiply,cost_of_multiply,formMatrix,cost_of_formMatrix):
+    def __init__(self,shape,multiply,cost_of_multiply,formMatrix,cost_of_formMatrix):
+        self.shape = shape
         self.multiply = multiply
         self.cost_of_multiply = cost_of_multiply
         self.formMatrix = formMatrix
@@ -240,16 +241,18 @@ def computeCompressor(old_dimension,new_dimension,multiplier,dtype,normalize=Fal
     return compressor, inverse_compressor_conj
 # }}}
 def computeCompressorForMatrixTimesItsDagger(old_dimension,new_dimension,matrix,normalize=False): # {{{
+    other_dimension = matrix.shape[0]
     matrix_dagger = matrix.transpose().conj()
     return \
         computeCompressor(
             old_dimension,
             new_dimension,
             Multiplier(
+                (old_dimension,)*2,
                 lambda v: dot(matrix_dagger,dot(matrix,v)),
-                2*matrix.shape[0]*matrix.shape[1],
+                2 * old_dimension * other_dimension,
                 lambda: dot(matrix_dagger,matrix),
-                matrix.shape[0]*matrix.shape[1]*matrix.shape[1],
+                old_dimension**2 * other_dimension
             ),
             matrix.dtype,
             normalize

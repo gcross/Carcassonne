@@ -149,14 +149,15 @@ def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
             matrix += multiplier.formMatrix()
         return matrix
 
+    normalization_multiplier = formNormalizationStage3(stage2_0[Identity()],stage2_1[Identity()],operator_center[Identity()])
+
     expectation_multiplier = Multiplier(
+        normalization_multiplier.shape,
         multiplyExpectation,
         sum((multiplier.cost_of_multiply for multiplier in multipliers),0),
         formExpectationMatrix,
         sum((multiplier.cost_of_formMatrix for multiplier in multipliers),0),
     )
-
-    normalization_multiplier = formNormalizationStage3(stage2_0[Identity()],stage2_1[Identity()],operator_center[Identity()])
 
     return expectation_multiplier, normalization_multiplier
 # }}}
