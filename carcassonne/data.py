@@ -1,8 +1,8 @@
 # Imports {{{
 from functools import reduce
-from numpy import allclose, any, array, complex128, diag, identity, isnan, multiply, ndarray, ones, prod, sqrt, tensordot, zeros
+from numpy import allclose, any, array, complex128, diag, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
 from scipy.linalg import eig, norm, svd, qr
-from scipy.sparse.linalg import LinearOperator, eigs, gmres
+from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigs, gmres
 
 from .utils import crand, dropAt, randomComplexSample
 # }}}
@@ -131,12 +131,26 @@ class NDArrayData(Data): # {{{
         N = len(initial)
         if k >= N:
             raise ValueError("Number of desired eigenvectors must be less than the number of degrees of freedom. ({} > prod{} = {}".format(k,self.shape,N))
-        #multiplyExpectation_flat = lambda v: multiplyExpectation(NDArrayData(v.reshape(self.shape))).toArray().ravel()
-        #multiplyNormalization_flat = lambda v: multiplyNormalization(NDArrayData(v.reshape(self.shape))).toArray().ravel()
-        #normalization = LinearOperator(matvec=multiplyNormalization_flat,shape=(N,N),dtype=self.dtype)
-        #matrix = LinearOperator(matvec=lambda v: gmres(normalization,multiplyExpectation_flat(v))[0],shape=(N,N),dtype=self.dtype)
-        #evals, evecs = eigs(k=k,A=matrix,which='SR')
-        evecs = eig(multiplyExpectation.formMatrix().toArray(),multiplyNormalization.formMatrix().toArray())[1][:,:k]
+        multiplyExpectation_flat = lambda v: multiplyExpectation(NDArrayData(v.reshape(self.shape))).toArray().ravel()
+        multiplyNormalization_flat = lambda v: multiplyNormalization(NDArrayData(v.reshape(self.shape))).toArray().ravel()
+        normalization = LinearOperator(matvec=multiplyNormalization_flat,shape=(N,N),dtype=self.dtype)
+        def matvec(in_v):
+            out_v, info = gmres(normalization,multiplyExpectation_flat(in_v))
+            assert info == 0
+            return out_v
+        matrix = LinearOperator(matvec=matvec,shape=(N,N),dtype=self.dtype)
+
+        number_of_tries = 0
+        while(True):
+            try:
+                number_of_tries += 1
+                evecs = eigs(k=k,A=matrix,which='SR')[1]
+                break
+            except ArpackNoConvergence:
+                if number_of_tries >= 5:
+                    save("A.npy",multiplyExpectation_flat.formMatrix().toArray())
+                    save("M.npy",multiplyNormalization_flat.formMatrix().toArray())
+                    raise Exception("Unable to converge after {} tries.".format(number_of_tries))
         return tuple(map(NDArrayData,evecs.transpose().reshape((k,) + self.shape)))
     # }}}
     def directSumWith(self,other,*non_summed_axes): # {{{

@@ -245,7 +245,7 @@ class TestSystem(TestCase): # {{{
         m2 = system.formNormalizationSubmatrix().contractWith(random_data.join(range(4),4),(1,),(0,)).split(*random_data.shape)
         self.assertDataAlmostEqual(m1,m2)
     # }}}
-    @with_checker(number_of_calls=100,throw_arguments_exception=False) # test_increaseBandwidth# {{{
+    @with_checker(number_of_calls=10) # test_increaseBandwidth# {{{
     def test_increaseBandwidth(self,direction=irange(0,1),physical_dimension=irange(3,4)):
         system1 = System.newRandom()
         system1.minimizeExpectation()
