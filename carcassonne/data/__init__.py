@@ -136,41 +136,50 @@ class NDArrayData(Data): # {{{
         if k >= N:
             raise ValueError("Number of desired eigenvectors must be less than the number of degrees of freedom. ({} > prod{} = {}".format(k,self.shape,N))
 
-        if normalization_multiplier.isCheaperToFormMatrix(1000*k):
-            applyInverseNormalization = partial(lu_solve,lu_factor(normalization_multiplier.formMatrix().toArray()))
+        if 2*(k+1) >= N and normalization_multiplier.isCheaperToFormMatrix(2*N):
+            expectation_matrix = expectation_multiplier.formMatrix()
+            del expectation_multiplier
+            normalization_matrix = normalization_mutliplier.formMatrix()
+            del normalization_multiplier
+            return tuple(map(NDArrayData,eigh(expectation_matrix,normalization_matrix).transpose()[:k]))
         else:
-            normalization_matvec = lambda v: normalization_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
-            normalization_operator = LinearOperator(matvec=normalization_matvec,shape=(N,N),dtype=self.dtype)
-            def applyInverseNormalization(in_v):
-                out_v, info = gmres(normalization_operator,in_v)
-                assert info == 0
-                return out_v
+            if normalization_multiplier.isCheaperToFormMatrix(1000*k):
+                applyInverseNormalization = partial(lu_solve,lu_factor(normalization_multiplier.formMatrix().toArray()))
+                del normalization_multiplier
+            else:
+                normalization_matvec = lambda v: normalization_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
+                normalization_operator = LinearOperator(matvec=normalization_matvec,shape=(N,N),dtype=self.dtype)
+                def applyInverseNormalization(in_v):
+                    out_v, info = gmres(normalization_operator,in_v)
+                    assert info == 0
+                    return out_v
 
-        if expectation_multiplier.isCheaperToFormMatrix(100*k):
-            expectation_matrix = expectation_multiplier.formMatrix().toArray()
-            multiplyExpectation = lambda v: dot(expectation_matrix,v)
-        else:
-            multiplyExpectation = lambda v: expectation_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
+            if expectation_multiplier.isCheaperToFormMatrix(100*k):
+                expectation_matrix = expectation_multiplier.formMatrix().toArray()
+                multiplyExpectation = lambda v: dot(expectation_matrix,v)
+                del expectation_multiplier
+            else:
+                multiplyExpectation = lambda v: expectation_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
 
-        matrix = \
-            LinearOperator(
-                matvec=lambda v: applyInverseNormalization(multiplyExpectation(v)),
-                shape=(N,N),
-                dtype=self.dtype
-            )
+            matrix = \
+                LinearOperator(
+                    matvec=lambda v: applyInverseNormalization(multiplyExpectation(v)),
+                    shape=(N,N),
+                    dtype=self.dtype
+                )
 
-        number_of_tries = 0
-        while(True):
-            try:
-                number_of_tries += 1
-                evecs = eigs(k=k,A=matrix,which='SR')[1]
-                break
-            except ArpackNoConvergence:
-                if number_of_tries >= 5:
-                    save("A.npy",expectation_multiplier.formMatrix().toArray())
-                    save("M.npy",normalization_multiplier.formMatrix().toArray())
-                    raise Exception("Unable to converge after {} tries.".format(number_of_tries))
-        return tuple(map(NDArrayData,evecs.transpose().reshape((k,) + self.shape)))
+            number_of_tries = 0
+            while(True):
+                try:
+                    number_of_tries += 1
+                    evecs = eigs(k=k,A=matrix,which='SR')[1]
+                    break
+                except ArpackNoConvergence:
+                    if number_of_tries >= 5:
+                        #save("A.npy",expectation_multiplier.formMatrix().toArray())
+                        #save("M.npy",normalization_multiplier.formMatrix().toArray())
+                        raise Exception("Unable to converge after {} tries.".format(number_of_tries))
+            return tuple(map(NDArrayData,evecs.transpose().reshape((k,) + self.shape)))
     # }}}
     def directSumWith(self,other,*non_summed_axes): # {{{
         if not self.ndim == other.ndim:
