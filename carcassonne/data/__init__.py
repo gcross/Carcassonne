@@ -1,7 +1,7 @@
 # Imports {{{
-from functools import reduce
+from functools import partial, reduce
 from numpy import allclose, any, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
-from scipy.linalg import eig, norm, svd, qr
+from scipy.linalg import eig, lu_factor, lu_solve, norm, svd, qr
 from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigs, gmres
 
 from ..utils import crand, dropAt, randomComplexSample
@@ -137,23 +137,27 @@ class NDArrayData(Data): # {{{
             raise ValueError("Number of desired eigenvectors must be less than the number of degrees of freedom. ({} > prod{} = {}".format(k,self.shape,N))
 
         if normalization_multiplier.isCheaperToFormMatrix(1000*k):
-            normalization_operator = normalization_multiplier.formMatrix().toArray()
-            del normalization_multiplier
+            applyInverseNormalization = partial(lu_solve,lu_factor(normalization_multiplier.formMatrix().toArray()))
         else:
             normalization_matvec = lambda v: normalization_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
             normalization_operator = LinearOperator(matvec=normalization_matvec,shape=(N,N),dtype=self.dtype)
+            def applyInverseNormalization(in_v):
+                out_v, info = gmres(normalization_operator,in_v)
+                assert info == 0
+                return out_v
 
         if expectation_multiplier.isCheaperToFormMatrix(100*k):
             expectation_matrix = expectation_multiplier.formMatrix().toArray()
             multiplyExpectation = lambda v: dot(expectation_matrix,v)
-            del expectation_multiplier
         else:
             multiplyExpectation = lambda v: expectation_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
-        def matvec(in_v):
-            out_v, info = gmres(normalization_operator,multiplyExpectation(in_v))
-            assert info == 0
-            return out_v
-        matrix = LinearOperator(matvec=matvec,shape=(N,N),dtype=self.dtype)
+
+        matrix = \
+            LinearOperator(
+                matvec=lambda v: applyInverseNormalization(multiplyExpectation(v)),
+                shape=(N,N),
+                dtype=self.dtype
+            )
 
         number_of_tries = 0
         while(True):
