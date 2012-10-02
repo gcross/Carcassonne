@@ -176,6 +176,25 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(normalization2,normalization1)
         self.assertAlmostEqual(expectation2,expectation1)
     # }}}
+    @with_checker # test_computeOneSiteExpectation {{{
+    def test_computeOneSiteExpectation(self,physical_dimension=irange(1,4),moves=(irange(0,1),)*4):
+        O = NDArrayData.newRandomHermitian(physical_dimension,physical_dimension)
+        system = System.newRandom(O=O)
+
+        directions = sum([[i]*n for i,n in enumerate(moves)],[])
+        shuffle(directions)
+        for direction in directions:
+            system.contractTowards(direction)
+            system.setStateCenter(NDArrayData.newRandom(*system.state_center_data.shape))
+
+        state_center_data = system.formNormalizationMultiplier()(system.state_center_data)
+        state_center_data_conj = system.state_center_data_conj
+
+        self.assertAlmostEqual(
+            system.computeOneSiteExpectation(),
+            state_center_data_conj.ravel().contractWith(state_center_data.absorbMatrixAt(4,O).ravel(),(0,),(0,)).extractScalar()/state_center_data_conj.ravel().contractWith(state_center_data.ravel(),(0,),(0,)).extractScalar()
+        )
+    # }}}
     @with_checker # test_expectation_of_identity_after_no_steps # {{{
     def test_expectation_of_sum_of_identities_after_no_steps(self):
         self.assertAlmostEqual(System.newRandom(makeOperator=lambda N: NDArrayData.newIdentity(N)).computeExpectation(),1)

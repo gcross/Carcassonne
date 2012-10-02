@@ -337,14 +337,26 @@ class System: # {{{
     def computeExpectation(self): # {{{
         return self.computeExpectationAndNormalization()[0]
     # }}}
+    def computeExpectationWithoutCenter(self): # {{{
+        return self.computeExpectationAndNormalizationWithoutCenter()[0]
+    # }}}
     def computeExpectationAndNormalization(self): # {{{
         multiplyExpectation, multiplyNormalization = self.formExpectationAndNormalizationMultipliers()
         unnormalized_expectation = self.computeScalarUsingMultiplier(multiplyExpectation)
         normalization = self.computeScalarUsingMultiplier(multiplyNormalization)
         return unnormalized_expectation/normalization, normalization
     # }}}
+    def computeExpectationAndNormalizationWithoutCenter(self): # {{{
+        multiplyExpectation, multiplyNormalization = self.formExpectationAndNormalizationMultipliersWithoutCenter()
+        unnormalized_expectation = self.computeScalarUsingMultiplier(multiplyExpectation)
+        normalization = self.computeScalarUsingMultiplier(multiplyNormalization)
+        return unnormalized_expectation/normalization, normalization
+    # }}}
     def computeNormalization(self): # {{{
         return self.computeScalarUsingMultiplier(self.formNormalizationMultiplier())
+    # }}}
+    def computeOneSiteExpectation(self): # {{{
+        return self.computeExpectation()-self.computeExpectationWithoutCenter()
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.state_center_data_conj.contractWith(multiply(self.state_center_data),range(5),range(5)).extractScalar()
@@ -354,6 +366,9 @@ class System: # {{{
     # }}}
     def formExpectationAndNormalizationMultipliers(self): # {{{
         return formExpectationAndNormalizationMultipliers(self.corners,self.sides,self.operator_center_tensor)
+    # }}}
+    def formExpectationAndNormalizationMultipliersWithoutCenter(self): # {{{
+        return formExpectationAndNormalizationMultipliers(self.corners,self.sides,{Identity():self.operator_center_tensor[Identity()]})
     # }}}
     def formExpectationMatrix(self): # {{{
         return self.formExpectationMultiplier().formMatrix()
