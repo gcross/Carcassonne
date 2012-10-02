@@ -26,7 +26,7 @@ class System: # {{{
         system.assertDimensionsAreConsistent()
         system.assertNormalizationIsHermitian()
         for direction in [0,2,1,3]:
-            system.absorbCenter(direction)
+            system.contractTowards(direction)
         return system
     # }}}
     @classmethod # newRandom {{{
@@ -115,7 +115,7 @@ class System: # {{{
                 self.state_center_data_conj,
             )
     # }}}
-    def absorbCenter(self,direction): # {{{
+    def contractTowards(self,direction): # {{{
         self.corners[direction] = absorbSparseSideIntoCornerFromLeft(self.corners[direction],self.sides[L(direction)])
         self.sides[direction] = absorbSparseCenterSOSIntoSide(direction,self.sides[direction],self.state_center_data,self.operator_center_tensor,self.state_center_data_conj)
         self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(self.corners[R(direction)],self.sides[R(direction)])
@@ -400,7 +400,7 @@ class System: # {{{
                     *dropAt(range(5),axis)
                 )
             )
-            self.absorbCenter(O(axis))
+            self.contractTowards(O(axis))
         self.setStateCenter(
             state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
         )

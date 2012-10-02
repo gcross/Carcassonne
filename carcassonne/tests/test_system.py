@@ -20,7 +20,7 @@ class TestSystem(TestCase): # {{{
     def test___add___self(self,moves=(irange(0,1),)*4):
         system1 = System.newRandom()
         for direction in sum(([i]*moves[i] for i in range(4)),[]):
-            system1.absorbCenter(direction)
+            system1.contractTowards(direction)
         system2 = system1 + system1
         try:
             self.assertAlmostEqual(
@@ -41,7 +41,7 @@ class TestSystem(TestCase): # {{{
     def test_compressCornerStateTowards_down_by_half(self,corner_id=irange(0,3),direction=irange(0,1),normalize=bool):
         system = System.newRandom()
         for i in range(4):
-            system.absorbCenter(i)
+            system.contractTowards(i)
         expectation1, normalization1 = system.computeExpectationAndNormalization()
 
         corner_data = system.corners[corner_id][Identity()]
@@ -97,14 +97,14 @@ class TestSystem(TestCase): # {{{
         system = System.newTrivialWithSparseOperator(**{operator_direction:operator_data})
 
         if direction == 0:
-            system.absorbCenter(R(side_id))
+            system.contractTowards(R(side_id))
         else:
-            system.absorbCenter(L(side_id))
+            system.contractTowards(L(side_id))
         for _ in range(new_dimension):
-            system.absorbCenter(side_id)
+            system.contractTowards(side_id)
         state_center_data = system.state_center_data
         for _ in range(new_dimension*2+1):
-            system.absorbCenter(side_id)
+            system.contractTowards(side_id)
         system.setStateCenter(state_center_data)
 
         expectation1, normalization1 = system.computeExpectationAndNormalization()
@@ -132,11 +132,11 @@ class TestSystem(TestCase): # {{{
         system = System.newTrivialWithSparseOperator(**{operator_direction:operator_data})
 
         if direction == 0:
-            system.absorbCenter(R(side_id))
+            system.contractTowards(R(side_id))
         else:
-            system.absorbCenter(L(side_id))
+            system.contractTowards(L(side_id))
         for _ in range(number_of_terms):
-            system.absorbCenter(side_id)
+            system.contractTowards(side_id)
 
         number_of_corner_two_site_terms = 0
         for tag, data in system.corners[corner_id].items():
@@ -189,7 +189,7 @@ class TestSystem(TestCase): # {{{
         for direction in directions:
             system.assertDimensionsAreConsistent()
             system.assertNormalizationIsHermitian()
-            system.absorbCenter(direction)
+            system.contractTowards(direction)
             system.assertDimensionsAreConsistent()
             system.assertNormalizationIsHermitian()
             if direction == 0 or direction == 2:
@@ -206,7 +206,7 @@ class TestSystem(TestCase): # {{{
         directions = sum(([i]*moves[i] for i in range(4)),[])
         shuffle(directions)
         for direction in directions:
-            system.absorbCenter(direction)
+            system.contractTowards(direction)
 
         multiply = system.formExpectationMultiplier()
         matrix = system.formExpectationMatrix()
@@ -264,8 +264,8 @@ class TestSystem(TestCase): # {{{
         system2 = copy(system1)
 
         system1.increaseBandwidth(direction,by=increment)
-        system2.absorbCenter(O(direction))
-        system2.absorbCenter(direction)
+        system2.contractTowards(O(direction))
+        system2.contractTowards(direction)
         self.assertAlmostEqual(system1.computeNormalization(),system2.computeNormalization())
         self.assertAlmostEqual(system1.computeExpectation(),system2.computeExpectation())
     # }}}
@@ -277,7 +277,7 @@ class TestSystem(TestCase): # {{{
         self.assertDataAlmostEqual(system.state_center_data,NDArrayData.newOuterProduct([1],[1],[1],[1],[0]*(N-1)+[1]))
         directions = sum(([i]*moves[i] for i in range(4)),[])
         for direction in directions:
-            system.absorbCenter(direction)
+            system.contractTowards(direction)
             system.increaseBandwidth(direction=direction+1,by=1)
     # }}}
     @with_checker # test_normalizeCenterAndDenormalizeSide {{{
@@ -326,7 +326,7 @@ class TestSystemSillyFieldWalk(TestCase): # {{{
     @with_checker(number_of_calls=10) # test_silly_field_single_step {{{
     def test_silly_field_single_step(self,direction=irange(0,3)):
         system = self.makeSillySystem()
-        system.absorbCenter(direction)
+        system.contractTowards(direction)
         self.assertEqual(system.computeExpectation(),2)
         self.assertEqual(system.computeNormalization(),1)
     # }}}
@@ -335,8 +335,8 @@ class TestSystemSillyFieldWalk(TestCase): # {{{
         system = self.makeSillySystem()
         width = 1
         height = 1
-        system.absorbCenter(direction1)
-        system.absorbCenter(direction2)
+        system.contractTowards(direction1)
+        system.contractTowards(direction2)
         if direction1 == 0 or direction1 == 2:
             width += 1
         else:
@@ -354,7 +354,7 @@ class TestSystemSillyFieldWalk(TestCase): # {{{
         width = 1
         height = 1
         for direction in directions:
-            system.absorbCenter(direction)
+            system.contractTowards(direction)
             if direction == 0 or direction == 2:
                 width += 1
             else:
@@ -387,7 +387,7 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
     def test_magnetic_field_single_step(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1)):
         system, states, spins = self.makeMagneticField()
         system.setStateCenter(states[s1])
-        system.absorbCenter(direction)
+        system.contractTowards(direction)
         system.setStateCenter(states[s2])
         self.assertEqual(system.computeExpectation(),spins[s1]+spins[s2])
         self.assertEqual(system.computeNormalization(),1)
@@ -396,9 +396,9 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
     def test_magnetic_field_double_step_same_direction(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1),s3=irange(0,1)):
         system, states, spins = self.makeMagneticField()
         system.setStateCenter(states[s1])
-        system.absorbCenter(direction)
+        system.contractTowards(direction)
         system.setStateCenter(states[s2])
-        system.absorbCenter(direction)
+        system.contractTowards(direction)
         system.setStateCenter(states[s3])
         self.assertEqual(system.computeExpectation(),spins[s1]+spins[s2]+spins[s3])
         self.assertEqual(system.computeNormalization(),1)
@@ -419,7 +419,7 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
         DR = 0
         for direction, spin in directions_and_spins:
             system.setStateCenter(states[spin])
-            system.absorbCenter(direction)
+            system.contractTowards(direction)
             if direction == 0:
                 R += spins[spin]
                 UR += U
