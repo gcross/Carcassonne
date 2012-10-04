@@ -268,7 +268,7 @@ class NDArrayData(Data): # {{{
             index += len(group)
         return NDArrayData(_arr.reshape(shape))
     # }}}
-    def normalizeAxis(self,axis,sqrt_svals=False): # {{{
+    def normalizeAxis(self,axis,sqrt_svals=False,dont_recip_under=1e-14): # {{{
         if self.shape[axis] == 1:
             n = (norm(self._arr))
             if sqrt_svals:
@@ -285,11 +285,21 @@ class NDArrayData(Data): # {{{
         U_join = list(range(self.ndim-1))
         U_join.insert(axis,self.ndim-1)
         S = S.split(S.shape[0],1)
+
+        SI = copy(S.toArray())
+        if dont_recip_under:
+            snz = abs(SI) > dont_recip_under
+            SI[snz] = 1.0/SI[snz]
+        else:
+            SI = 1.0/SI
+        SI = NDArrayData(SI)
+
         if sqrt_svals:
             S = S.sqrt()
-            return (V/S).conj(), V*S
+            SI = SI.sqrt()
+            return (V*SI).conj(), V*S
         else:
-            return U.split(*U_split).join(*U_join), (V/S).conj(), V*S
+            return U.split(*U_split).join(*U_join), (V*SI).conj(), V*S
     # }}}
     def qr(self,mode='full'): # {{{
         q, r = qr(self._arr,mode=mode)
