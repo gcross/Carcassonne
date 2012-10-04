@@ -355,7 +355,7 @@ class System: # {{{
     def computeNormalization(self): # {{{
         return self.computeScalarUsingMultiplier(self.formNormalizationMultiplier())
     # }}}
-    def computeOneSiteExpectation(self): # {{{
+    def computeCenterSiteExpectation(self): # {{{
         return self.computeExpectation()-self.computeExpectationWithoutCenter()
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{

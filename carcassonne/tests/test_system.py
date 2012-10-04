@@ -176,8 +176,8 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(normalization2,normalization1)
         self.assertAlmostEqual(expectation2,expectation1)
     # }}}
-    @with_checker # test_computeOneSiteExpectation {{{
-    def test_computeOneSiteExpectation(self,physical_dimension=irange(1,4),moves=(irange(0,1),)*4):
+    @with_checker # test_computeCenterSiteExpectation {{{
+    def test_computeCenterSiteExpectation(self,physical_dimension=irange(1,4),moves=(irange(0,1),)*4):
         O = NDArrayData.newRandomHermitian(physical_dimension,physical_dimension)
         system = System.newRandom(O=O)
 
@@ -191,7 +191,7 @@ class TestSystem(TestCase): # {{{
         state_center_data_conj = system.state_center_data_conj
 
         self.assertAlmostEqual(
-            system.computeOneSiteExpectation(),
+            system.computeCenterSiteExpectation(),
             state_center_data_conj.ravel().contractWith(state_center_data.absorbMatrixAt(4,O).ravel(),(0,),(0,)).extractScalar()/state_center_data_conj.ravel().contractWith(state_center_data.ravel(),(0,),(0,)).extractScalar()
         )
     # }}}
