@@ -1,7 +1,7 @@
 # Imports {{{
 from copy import copy
 from numpy import array, complex128, dot, prod, sqrt, zeros
-from numpy.linalg import eigh
+from numpy.linalg import cond, eigh
 from random import randint
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 
@@ -9,7 +9,7 @@ from .data import NDArrayData
 from .sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData
 from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
-from .utils import Multiplier, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt, maximumBandwidthIncrement, L, O, R
+from .utils import InvariantViolatedError, Multiplier, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt, maximumBandwidthIncrement, L, O, R
 # }}}
 
 # Classes {{{
@@ -96,6 +96,7 @@ class System: # {{{
             self.state_center_data_conj = self.state_center_data.conj()
         else:
             self.state_center_data_conj = state_center_data_conj
+        self.just_increased_bandwidth = False
     # }}}
     def __add__(self,other): # {{{
         return System(
@@ -419,6 +420,7 @@ class System: # {{{
         self.setStateCenter(
             state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
         )
+        self.just_increased_bandwidth = True
     # }}}
     def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
         self.increaseBandwidth(direction,by,to)
@@ -500,6 +502,7 @@ class System: # {{{
             self.state_center_data_conj = state_center_data.conj()
         else:
             self.state_center_data_conj = state_center_data_conj
+        self.just_increased_bandwidth = False
     # }}}
   # }}}
 # }}}

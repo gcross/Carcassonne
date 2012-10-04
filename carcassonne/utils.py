@@ -19,6 +19,7 @@ class DimensionMismatchError(ValueError): # {{{
         ValueError.__init__(self,"tensor {left_tensor_number}'s index {left_index} has dimension {left_dimension}, whereas tensor {right_tensor_number}'s index {right_index} has dimension {right_dimension}".format(**self.__dict__))
     # }}}
 # }}}
+class InvariantViolatedError(Exception): pass
 class UnexpectedTensorRankError(ValueError): # {{{
     def __init__(self,tensor_number,expected_rank,actual_rank): # {{{
         self.tensor_number = tensor_number
@@ -627,6 +628,7 @@ def RA(i): return A(i,R(i))
 # Exports {{{
 __all__ = [
     "DimensionMismatchError",
+    "InvariantViolatedError",
     "UnexpectedTensorRankError",
 
     "FromLeft",
