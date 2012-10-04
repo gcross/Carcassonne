@@ -1,4 +1,5 @@
 # Imports {{{
+from copy import copy
 from functools import partial, reduce
 from numpy import allclose, any, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
 from scipy.linalg import eig, lu_factor, lu_solve, norm, svd, qr
@@ -84,6 +85,9 @@ class NDArrayData(Data): # {{{
     # }}}
   # }}}
   # Instance methods {{{
+    def __copy__(self): # {{{
+        return NDArrayData(copy(self._arr))
+    # }}}
     def __iadd__(self,other): # {{{
         self._arr += other._arr
         return self
