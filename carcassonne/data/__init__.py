@@ -169,12 +169,14 @@ class NDArrayData(Data): # {{{
                 )
 
             number_of_tries = 0
+            guess = self.ravel().toArray()
             while(True):
                 try:
                     number_of_tries += 1
-                    evecs = eigs(k=k,A=matrix,which='SR')[1]
+                    evecs = eigs(k=k,A=matrix,which='SR',v0=guess)[1]
                     break
                 except ArpackNoConvergence:
+                    guess = None
                     if number_of_tries >= 5:
                         #save("A.npy",expectation_multiplier.formMatrix().toArray())
                         #save("M.npy",normalization_multiplier.formMatrix().toArray())
