@@ -99,6 +99,9 @@ class NDArrayData(Data): # {{{
     def __getitem__(self,index): # {{{
         return NDArrayData(self._arr[index])
     # }}}
+    def __neg__(self): # {{{
+        return NDArrayData(-self._arr)
+    # }}}
     def __mul__(self,other): # {{{
         return NDArrayData(self._arr * other._arr)
     # }}}
