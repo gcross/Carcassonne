@@ -351,6 +351,9 @@ class System: # {{{
     def computeNormalization(self): # {{{
         return self.computeScalarUsingMultiplier(self.formNormalizationMultiplier())
     # }}}
+    def computeNormalizationMatrixConditionNumber(self): # {{{
+        return cond(self.formNormalizationMatrix().toArray())
+    # }}}
     def computeCenterSiteExpectation(self): # {{{
         return self.computeExpectation()-self.computeExpectationWithoutCenter()
     # }}}
