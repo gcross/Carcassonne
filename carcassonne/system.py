@@ -116,11 +116,6 @@ class System: # {{{
                 self.state_center_data_conj,
             )
     # }}}
-    def contractTowards(self,direction): # {{{
-        self.corners[direction] = absorbSparseSideIntoCornerFromLeft(self.corners[direction],self.sides[L(direction)])
-        self.sides[direction] = absorbSparseCenterSOSIntoSide(direction,self.sides[direction],self.state_center_data,self.operator_center_tensor,self.state_center_data_conj)
-        self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(self.corners[R(direction)],self.sides[R(direction)])
-    # }}}
     def assertDimensionsAreConsistent(self): # {{{
         assert self.state_center_data.shape == self.state_center_data_conj.shape
         if self.state_center_data.shape[0] != self.state_center_data.shape[2]:
@@ -364,6 +359,13 @@ class System: # {{{
     # }}}
     def computeUnnormalizedExpectation(self): # {{{
         return self.computeScalarUsingMultiplier(self.formExpectationMultipliers())
+    # }}}
+    def contractTowards(self,direction): # {{{
+        self.corners[direction] = absorbSparseSideIntoCornerFromLeft(self.corners[direction],self.sides[L(direction)])
+        self.sides[direction] = absorbSparseCenterSOSIntoSide(direction,self.sides[direction],self.state_center_data,self.operator_center_tensor,self.state_center_data_conj)
+        self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(self.corners[R(direction)],self.sides[R(direction)])
+        if self.just_increased_bandwidth:
+            raise InvariantViolatedError("Contracting the current center would blow up the condition number of the normalization matrix;  optimize it or replace it first.")
     # }}}
     def formExpectationAndNormalizationMultipliers(self): # {{{
         return formExpectationAndNormalizationMultipliers(self.corners,self.sides,self.operator_center_tensor)
