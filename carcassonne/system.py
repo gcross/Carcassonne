@@ -370,6 +370,13 @@ class System: # {{{
         if self.just_increased_bandwidth:
             raise InvariantViolatedError("Contracting the current center would blow up the condition number of the normalization matrix;  optimize it or replace it first.")
     # }}}
+    def contractTowardsAndNormalizeCenter(self,direction): # {{{
+        normalized_state_center_data, _, denormalizer = self.state_center_data.normalizeAxis(O(direction))
+        denormalized_state_center_data = self.state_center_data.absorbMatrixAt(direction,denormalizer)
+        self.setStateCenter(normalized_state_center_data)
+        self.contractTowards(direction)
+        self.setStateCenter(denormalized_state_center_data)
+    # }}}
     def formExpectationAndNormalizationMultipliers(self): # {{{
         return formExpectationAndNormalizationMultipliers(self.corners,self.sides,self.operator_center_tensor)
     # }}}
