@@ -363,18 +363,24 @@ class System: # {{{
     def computeUnnormalizedExpectation(self): # {{{
         return self.computeScalarUsingMultiplier(self.formExpectationMultipliers())
     # }}}
-    def contractTowards(self,direction): # {{{
+    def contractTowards(self,direction,state_center_data=None,state_center_data_conj=None): # {{{
+        if state_center_data is None:
+            state_center_data = self.state_center_data
+            state_center_data_conj = self.state_center_data_conj
+        if state_center_data_conj is None:
+            state_center_data_conj = state_center_data.conj()
         self.corners[direction] = absorbSparseSideIntoCornerFromLeft(self.corners[direction],self.sides[L(direction)])
-        self.sides[direction] = absorbSparseCenterSOSIntoSide(direction,self.sides[direction],self.state_center_data,self.operator_center_tensor,self.state_center_data_conj)
+        self.sides[direction] = absorbSparseCenterSOSIntoSide(direction,self.sides[direction],state_center_data,self.operator_center_tensor,state_center_data_conj)
         self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(self.corners[R(direction)],self.sides[R(direction)])
         if self.just_increased_bandwidth:
             raise InvariantViolatedError("Contracting the current center would blow up the condition number of the normalization matrix;  optimize it or replace it first.")
     # }}}
-    def contractNormalizedTowards(self,direction): # {{{
-        normalized_state_center_data, _, denormalizer = self.state_center_data.normalizeAxis(O(direction))
+    def contractNormalizedTowards(self,direction,state_center_data=None): # {{{
+        if state_center_data is None:
+            state_center_data = self.state_center_data
+        normalized_state_center_data, _, denormalizer = state_center_data.normalizeAxis(O(direction))
         denormalized_state_center_data = self.state_center_data.absorbMatrixAt(direction,denormalizer)
-        self.setStateCenter(normalized_state_center_data)
-        self.contractTowards(direction)
+        self.contractTowards(direction,normalized_state_center_data)
         self.setStateCenter(denormalized_state_center_data)
     # }}}
     def formExpectationAndNormalizationMultipliers(self): # {{{
