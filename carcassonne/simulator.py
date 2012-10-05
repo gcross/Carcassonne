@@ -29,7 +29,7 @@ class Simulator1D: # {{{
         self.optimizeSite()
         direction = self.direction
         while not isConverged(self.computeOneSiteExpectation()):
-            self.system.contractTowardsAndNormalizeCenter(direction)
+            self.system.contractNormalizedTowards(direction)
             direction = O(direction)
             self.optimizeSite()
     # }}}

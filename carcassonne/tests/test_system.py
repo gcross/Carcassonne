@@ -205,7 +205,7 @@ class TestSystem(TestCase): # {{{
         system2 = copy(system1)
 
         system1.contractTowards(direction)
-        system2.contractTowardsAndNormalizeCenter(direction)
+        system2.contractNormalizedTowards(direction)
 
         expectation1, normalization1 = system1.computeExpectationAndNormalization()
         expectation2, normalization2 = system2.computeExpectationAndNormalization()
