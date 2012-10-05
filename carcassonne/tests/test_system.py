@@ -306,6 +306,20 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(system1.computeNormalization(),system2.computeNormalization())
         self.assertAlmostEqual(system1.computeExpectation(),system2.computeExpectation())
     # }}}
+    @with_checker(number_of_calls=10) # test_increaseBandwidth_trivial # {{{
+    def test_increaseBandwidth_trivial(self,direction=irange(0,1),physical_dimension=irange(2,8)):
+        system1 = System.newTrivialWithSparseOperator(NDArrayData.newRandomHermitian(physical_dimension,physical_dimension))
+        system1.minimizeExpectation()
+        system2 = copy(system1)
+
+        system1.increaseBandwidth(direction,by=1)
+        system2.contractTowards(O(direction))
+        system2.contractTowards(direction)
+        self.assertAlmostEqual(system1.computeNormalization(),system2.computeNormalization())
+        self.assertAlmostEqual(system1.computeExpectation(),system2.computeExpectation())
+
+        self.assertAlmostEqual(system1.computeNormalizationMatrixConditionNumber(),1)
+    # }}}
     @with_checker # test_minimizer_works_after_some_steps {{{
     def dont_test_minimizer_works_after_some_steps(self,moves=(irange(0,1),)*4):
         system = System.newRandom(makeOperator=lambda N: NDArrayData.newDiagonal([1]*(N-1)+[-1]))

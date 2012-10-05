@@ -421,6 +421,9 @@ class System: # {{{
             raise ValueError("Increment of {} in the bandwidth dimensions {} and {} is too great given the current shape of {} (maximum increment is {}).".format(increment,direction,direction+2,state_center_data.shape,maximum_increment))
         extra_state_center_data, = self.minimizeExpectation(number_of_additional_solutions=1)
         axes = (direction,direction+2)
+        self.setStateCenter(
+            state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
+        )
         for axis in axes:
             compressor, _ = \
                 computeCompressorForMatrixTimesItsDagger(
@@ -428,16 +431,13 @@ class System: # {{{
                     increment,
                     extra_state_center_data.fold(axis).transpose().toArray()
                 )
-            self.setStateCenter(
+            self.contractNormalizedTowards(
+                O(axis),
                 state_center_data.directSumWith(
                     extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
                     *dropAt(range(5),axis)
                 )
             )
-            self.contractTowards(O(axis))
-        self.setStateCenter(
-            state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
-        )
         self.just_increased_bandwidth = True
     # }}}
     def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
