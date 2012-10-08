@@ -19,7 +19,7 @@ class TestSimulator1D(TestCase): # {{{
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeCenterSiteExpectation(),-1)
     # }}}
-    @ with_checker(number_of_calls=10) # test_on_magnetic_field {{{
+    @ with_checker(number_of_calls=10) # test_on_ferromagnetic_coupling {{{
     def test_on_ferromagnetic_coupling(self,direction=choiceof((0,1))):
         system = System.newTrivialWithSparseOperator(OO_LR=[NDArrayData.Z,-NDArrayData.Z])
         system.sweep_convergence_policy = RelativeCenterSiteExpectationDifferenceThresholdConvergencePolicy(1e-7)
