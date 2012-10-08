@@ -6,6 +6,7 @@ from random import randint
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 
 from .data import NDArrayData
+from .policies import PolicyField
 from .sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData
 from .tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from .tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
@@ -514,6 +515,14 @@ class System: # {{{
         self.state_center_data = self.state_center_data.absorbMatrixAt(side_id,denormalizer_for_center)
         self.state_center_data_conj = self.state_center_data.conj()
     # }}}
+    def runUntilConverged(self): # {{{
+        self.sweepUntilConverged()
+        self.run_convergence_policy.update()
+        while not self.run_convergence_policy.converged():
+            self.increase_bandwidth_policy.apply()
+            self.sweepUntilConverged()
+            self.run_convergence_policy.update()
+    # }}}
     def setStateCenter(self,state_center_data,state_center_data_conj=None): # {{{
         self.state_center_data = state_center_data
         if state_center_data_conj is None:
@@ -522,6 +531,22 @@ class System: # {{{
             self.state_center_data_conj = state_center_data_conj
         self.just_increased_bandwidth = False
     # }}}
+    def sweepUntilConverged(self): # {{{
+        self.sweep_convergence_policy.reset()
+        self.contraction_policy.reset()
+        self.minimizeExpectation()
+        self.sweep_convergence_policy.update()
+        while not self.sweep_convergence_policy.converged():
+            self.contraction_policy.apply()
+            self.minimizeExpectation()
+            self.sweep_convergence_policy.update()
+    # }}}
+  # }}}
+  # Policy fields {{{
+    sweep_convergence_policy = PolicyField("sweep_convergence_policy")
+    run_convergence_policy = PolicyField("run_convergence_policy")
+    increase_bandwidth_policy = PolicyField("increase_bandwidth_policy")
+    contraction_policy = PolicyField("contraction_policy")
   # }}}
 # }}}
 # }}}

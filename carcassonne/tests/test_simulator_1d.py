@@ -4,28 +4,29 @@ from paycheck import *
 
 from . import *
 from ..data import NDArrayData
-from ..simulator import *
+from ..policies import *
+from ..system import System
 # }}}
 
 class TestSimulator1D(TestCase): # {{{
     @ with_checker(number_of_calls=10) # test_on_magnetic_field {{{
     def test_on_magnetic_field(self,direction=choiceof((0,1))):
-        simulator = Simulator1D(direction=direction,O=NDArrayData.Z)
-        simulator.runUntilConverged(
-            makeConvergenceThresholdTest(1e-7),
-            lambda old_bandwidth: old_bandwidth+1,
-            partial(makeConvergenceThresholdTest,1e-7)
-        )
-        self.assertAlmostEqual(simulator.computeOneSiteExpectation(),-1)
+        system = System.newTrivialWithSparseOperator(O=NDArrayData.Z)
+        system.sweep_convergence_policy = RelativeCenterSiteExpectationDifferenceThresholdConvergencePolicy(1e-7)
+        system.run_convergence_policy = RelativeCenterSiteExpectationDifferenceThresholdConvergencePolicy(1e-7)
+        system.increase_bandwidth_policy = OneDirectionIncrementBandwidthPolicy(0)
+        system.contraction_policy = RepeatPatternContractionPolicy([0,2])
+        system.runUntilConverged()
+        self.assertAlmostEqual(system.computeCenterSiteExpectation(),-1)
     # }}}
     @ with_checker(number_of_calls=10) # test_on_magnetic_field {{{
     def test_on_ferromagnetic_coupling(self,direction=choiceof((0,1))):
-        simulator = Simulator1D(direction=direction,OO=[NDArrayData.Z,-NDArrayData.Z])
-        simulator.runUntilConverged(
-            makeConvergenceThresholdTest(1e-7),
-            lambda old_bandwidth: old_bandwidth+1,
-            partial(makeConvergenceThresholdTest,1e-7)
-        )
-        self.assertAlmostEqual(simulator.computeOneSiteExpectation(),-2)
+        system = System.newTrivialWithSparseOperator(OO_LR=[NDArrayData.Z,-NDArrayData.Z])
+        system.sweep_convergence_policy = RelativeCenterSiteExpectationDifferenceThresholdConvergencePolicy(1e-7)
+        system.run_convergence_policy = RelativeCenterSiteExpectationDifferenceThresholdConvergencePolicy(1e-7)
+        system.increase_bandwidth_policy = OneDirectionIncrementBandwidthPolicy(0)
+        system.contraction_policy = RepeatPatternContractionPolicy([0,2])
+        system.runUntilConverged()
+        self.assertAlmostEqual(system.computeCenterSiteExpectation(),-2)
     # }}}
 # }}}
