@@ -103,10 +103,19 @@ class NDArrayData(Data): # {{{
         return NDArrayData(-self._arr)
     # }}}
     def __mul__(self,other): # {{{
-        return NDArrayData(self._arr * other._arr)
+        if isinstance(other,NDArrayData):
+            return NDArrayData(self._arr * other._arr)
+        else:
+            return NDArrayData(self._arr * other)
     # }}}
     def __repr__(self): # {{{
         return "NDArrayData(" + repr(self._arr) + ")"
+    # }}}
+    def __rmul__(self,other): # {{{
+        if isinstance(other,NDArrayData):
+            return NDArrayData(other._arr * self._arr)
+        else:
+            return NDArrayData(other      * self._arr)
     # }}}
     def __setitem__(self,index,value): # {{{
         self._arr[index] = value._arr
