@@ -331,6 +331,9 @@ class System: # {{{
         self.sides[side_id] = new_side
         # }}}
     # }}}
+    def computeCenterSiteExpectation(self): # {{{
+        return self.computeExpectation()-self.computeExpectationWithoutCenter()
+    # }}}
     def computeExpectation(self): # {{{
         return self.computeExpectationAndNormalization()[0]
     # }}}
@@ -354,9 +357,6 @@ class System: # {{{
     # }}}
     def computeNormalizationMatrixConditionNumber(self): # {{{
         return cond(self.formNormalizationMatrix().toArray())
-    # }}}
-    def computeCenterSiteExpectation(self): # {{{
-        return self.computeExpectation()-self.computeExpectationWithoutCenter()
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.state_center_data_conj.contractWith(multiply(self.state_center_data),range(5),range(5)).extractScalar()
