@@ -189,7 +189,7 @@ class NDArrayData(Data): # {{{
             while(True):
                 try:
                     number_of_tries += 1
-                    evecs = eigs(k=k,A=matrix,which='SR',v0=guess)[1]
+                    evecs = eigs(k=k,A=matrix,which='SR',v0=guess,ncv=3*k+1)[1]
                     break
                 except ArpackNoConvergence:
                     guess = None
