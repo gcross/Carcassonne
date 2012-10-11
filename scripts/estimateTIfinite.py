@@ -13,4 +13,4 @@ else:
     m_lo = -(N-1)//2
     m_hi =  (N-1)//2
 
-print(-1/2*sum(sqrt(1+lam**2+2*lam*cos(2*pi*m/N)) for m in range(m_lo,m_hi+1)))
+print(-sum(sqrt(1+lam**2+2*lam*cos(2*pi*m/N)) for m in range(m_lo,m_hi+1)))
