@@ -1,3 +1,4 @@
+from __future__ import division, print_function
 import sys
 N = int(sys.argv[1])
 J = float(sys.argv[2])
@@ -20,4 +21,4 @@ def matvec(in_v):
 from scipy.sparse.linalg import LinearOperator, eigsh
 operator = LinearOperator(shape=(1 << N,)*2,matvec=matvec,dtype=float)
 evals, evecs = eigsh(k=1,A=operator)
-print float(evals[0])
+print("{:.15f}".format(evals[0].real))
