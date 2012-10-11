@@ -410,7 +410,7 @@ class System: # {{{
     def formNormalizationSubmatrix(self): # {{{
         return formNormalizationSubmatrix(tuple(corner[Identity()] for corner in self.corners),tuple(side[Identity()] for side in self.sides))
     # }}}
-    def increaseBandwidth(self,direction,by=None,to=None): # {{{
+    def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction not in (0,1):
             raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))
         state_center_data = self.state_center_data
@@ -419,7 +419,11 @@ class System: # {{{
         increment = new_dimension-old_dimension
         maximum_increment = maximumBandwidthIncrement(direction,state_center_data.shape)
         if increment > maximum_increment:
-            raise ValueError("Increment of {} in the bandwidth dimensions {} and {} is too great given the current shape of {} (maximum increment is {}).".format(increment,direction,direction+2,state_center_data.shape,maximum_increment))
+            if do_as_much_as_possible:
+                increment = maximum_increment
+                new_dimension = old_dimension + increment
+            else:
+                raise ValueError("Increment of {} in the bandwidth dimensions {} and {} is too great given the current shape of {} (maximum increment is {}).".format(increment,direction,direction+2,state_center_data.shape,maximum_increment))
         extra_state_center_data, = self.minimizeExpectation(number_of_additional_solutions=1)
         axes = (direction,direction+2)
         self.setStateCenter(
