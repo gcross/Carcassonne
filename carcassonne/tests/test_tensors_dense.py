@@ -3,8 +3,7 @@ from numpy import dot, multiply
 from paycheck import *
 
 from ..data import NDArrayData
-from ..tensors.dense import *
-from ..tensors.dense import formNormalizationStage1, formNormalizationStage2, formNormalizationStage3
+from ..tensors._2d.dense import *
 from . import *
 # }}}
 

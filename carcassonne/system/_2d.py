@@ -8,8 +8,8 @@ from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 from .base import BaseSystem
 from ..data import NDArrayData
 from ..sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData
-from ..tensors.dense import formNormalizationMultiplier, formNormalizationSubmatrix
-from ..tensors.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
+from ..tensors._2d.dense import formNormalizationMultiplier, formNormalizationSubmatrix
+from ..tensors._2d.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
 from ..utils import InvariantViolatedError, Multiplier, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt, maximumBandwidthIncrement, L, O, R
 # }}}
 

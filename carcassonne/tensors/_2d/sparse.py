@@ -4,8 +4,8 @@ import itertools
 from numpy import complex128, prod
 
 from .dense import *
-from ..sparse import Identity, Complete, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, addStandardCompleteAndIdentityTerms, contractSparseTensors, formSparseContractor
-from ..utils import Multiplier, multiplyBySingleSiteOperator, L, R, O
+from ...sparse import Identity, Complete, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, addStandardCompleteAndIdentityTerms, contractSparseTensors, formSparseContractor
+from ...utils import Multiplier, multiplyBySingleSiteOperator, L, R, O
 # }}}
 
 # Functions {{{
