@@ -3,7 +3,7 @@ import sys
 N = int(sys.argv[1])
 J = float(sys.argv[2])
 
-from numpy import array, tensordot
+from numpy import array, dot, tensordot
 X = array([[0,1],[1,0]])
 Z = array([[1,0],[0,-1]])
 
@@ -21,4 +21,15 @@ def matvec(in_v):
 from scipy.sparse.linalg import LinearOperator, eigsh
 operator = LinearOperator(shape=(1 << N,)*2,matvec=matvec,dtype=float)
 evals, evecs = eigsh(k=1,A=operator)
-print("{:.15f}".format(evals[0].real))
+v = evecs.transpose().reshape((2,) * N)
+vrc = v.ravel().conj()
+
+expZ = 0
+expXX = 0
+for i in range(N):
+    expZ += dot(vrc,absorbMatrixAt(-Z,i,v).ravel())
+    expXX += dot(vrc,absorbMatrixAt(X,i,absorbMatrixAt(-J*X,(i+1)%N,v)).ravel())
+
+print("<Z> =",expZ)
+print("<XX> =",expXX)
+print("E = {:.15f}".format(evals[0].real))
