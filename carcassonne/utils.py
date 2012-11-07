@@ -1,9 +1,9 @@
 # Imports {{{
 from collections import defaultdict
 from functools import partial
-from numpy.linalg import eigh
 from numpy import dot, prod, sqrt, set_printoptions, tensordot, zeros
 from numpy.random import rand, random_sample
+from scipy.linalg import LinAlgError, eigh, svd
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 # }}}
 
@@ -194,6 +194,9 @@ class prepend: # {{{
     def __call__(self,f):
         return partial(f,*self.args,**self.keywords)
 # }}}
+def prependContractor(*args,**keywords): # {{{
+    return prepend(formContractor(*args,**keywords))
+# }}}
 def prependDataContractor(*args,**keywords): # {{{
     return prepend(formDataContractor(*args,**keywords))
 # }}}
@@ -289,6 +292,38 @@ def computeNewDimension(old_dimension,by=None,to=None): # {{{
         new_dimension = to
     assert new_dimension >= old_dimension
     return new_dimension
+# }}}
+def computeNormalizerAndInverse(matrix,index): # {{{
+    new_indices = list(range(matrix.ndim))
+    del new_indices[index]
+    new_indices.append(index)
+
+    size_of_normalization_dimension = matrix.shape[index]
+
+    old_shape = list(matrix.shape)
+    del old_shape[index]
+    new_shape = (prod(old_shape),size_of_normalization_dimension)
+    old_shape.append(size_of_normalization_dimension)
+
+    new_matrix = matrix.transpose(new_indices).reshape(new_shape)
+
+    old_indices = list(range(matrix.ndim-1))
+    old_indices.insert(index,matrix.ndim-1)
+
+    try:
+        u, s, v = svd(new_matrix,full_matrices=0)
+        return dot(v.transpose().conj()*(1/s),v), dot(v.transpose().conj()*s,v)
+    except LinAlgError:
+        M = dot(new_matrix.conj().transpose(),new_matrix)
+
+        vals, U = eigh(M)
+        vals[vals<0] = 0
+
+        dvals = sqrt(vals)
+        nonzero_dvals = dvals!=0
+        dvals[nonzero_dvals] = 1.0/dvals[nonzero_dvals]
+
+        return dot(U*dvals,U.conj().transpose()), dot(U*vals,U.conj().transpose())
 # }}}
 def computePostContractionIndexMap(rank,contracted_indices,offset=0): # {{{
     contracted_indices = set(contracted_indices)
@@ -605,6 +640,79 @@ def maximumBandwidthIncrement(direction,shape): # {{{
 def multiplyBySingleSiteOperator(state,operator): # {{{
     return state.absorbMatrixAt(4,operator)
 # }}}
+def multiplyTensorByMatrixAtIndex(tensor,matrix,index): # {{{
+    tensor_new_indices = list(range(tensor.ndim-1))
+    tensor_new_indices.insert(index,tensor.ndim-1)
+    return tensordot(tensor,matrix,(index,0)).transpose(tensor_new_indices)
+# }}}
+def normalize(matrix,index): # {{{
+    new_indices = list(range(matrix.ndim))
+    del new_indices[index]
+    new_indices.append(index)
+
+    old_shape = list(matrix.shape)
+    del old_shape[index]
+    new_shape = (prod(old_shape),matrix.shape[index])
+    old_shape.append(matrix.shape[index])
+
+    new_matrix = matrix.transpose(new_indices).reshape(new_shape)
+    if new_matrix.shape[1] > new_matrix.shape[0]:
+        raise ValueError("There are not enough degrees of freedom available to normalize the tensor.")
+
+    old_indices = list(range(matrix.ndim-1))
+    old_indices.insert(index,matrix.ndim-1)
+
+    try:
+        u, s, v = svd(new_matrix,full_matrices=0)
+        return dot(u,v).reshape(old_shape).transpose(old_indices)
+    except LinAlgError:
+        M = dot(new_matrix.conj().transpose(),new_matrix)
+
+        vals, U = eigh(M)
+        vals[vals<0] = 0
+
+        dvals = sqrt(vals)
+        nonzero_dvals = dvals!=0
+        dvals[nonzero_dvals] = 1.0/dvals[nonzero_dvals]
+        X = dot(U*dvals,U.conj().transpose())
+
+        return dot(new_matrix,X).reshape(old_shape).transpose(old_indices)
+# }}}
+def normalizeAndReturnInverseNormalizer(matrix,index): # {{{
+    new_indices = list(range(matrix.ndim))
+    del new_indices[index]
+    new_indices.append(index)
+
+    old_shape = list(matrix.shape)
+    del old_shape[index]
+    new_shape = (prod(old_shape),matrix.shape[index])
+    old_shape.append(matrix.shape[index])
+
+    new_matrix = matrix.transpose(new_indices).reshape(new_shape)
+
+    old_indices = list(range(matrix.ndim-1))
+    old_indices.insert(index,matrix.ndim-1)
+
+    try:
+        u, s, v = svd(new_matrix,full_matrices=0)
+        return dot(u,v).reshape(old_shape).transpose(old_indices), dot(v.transpose().conj()*s,v)
+    except LinAlgError:
+        M = dot(new_matrix.conj().transpose(),new_matrix)
+
+        vals, U = eigh(M)
+        vals[vals<0] = 0
+
+        dvals = sqrt(vals)
+        nonzero_dvals = dvals!=0
+        dvals[nonzero_dvals] = 1.0/dvals[nonzero_dvals]
+
+        return dot(new_matrix,dot(U*dvals,U.conj().transpose())).reshape(old_shape).transpose(old_indices), dot(U*vals,U.conj().transpose())
+# }}}
+def normalizeAndDenormalize(tensor_to_normalize,index_to_normalize,tensor_to_denormalize,index_to_denormalize): # {{{
+    normalized_tensor, inverse_normalizer = normalizeAndReturnInverseNormalizer(tensor_to_normalize,index_to_normalize)
+    unnormalized_tensor = multiplyTensorByMatrixAtIndex(tensor_to_denormalize,inverse_normalizer.transpose(),index_to_denormalize)
+    return normalized_tensor, unnormalized_tensor
+# }}}
 def randomComplexSample(shape): # {{{
     return random_sample(shape)*2-1+random_sample(shape)*2j-1j
 # }}}
@@ -640,6 +748,7 @@ __all__ = [
     "Multiplier",
 
     "prepend",
+    "prependContractor",
     "prependDataContractor",
 
     "applyIndexMapTo",
@@ -648,6 +757,7 @@ __all__ = [
     "computeCompressor",
     "computeCompressorForMatrixTimesItsDagger",
     "computeNewDimension",
+    "computeNormalizerAndInverse",
     "crand",
     "dropAt",
     "formAbsorber",
@@ -655,6 +765,10 @@ __all__ = [
     "formDataContractor",
     "invertPermutation",
     "maximumBandwidthIncrement",
+    "multiplyTensorByMatrixAtIndex",
+    "normalize",
+    "normalizeAndReturnInverseNormalizer",
+    "normalizeAndDenormalize",
     "randomComplexSample",
     "replaceAt",
 

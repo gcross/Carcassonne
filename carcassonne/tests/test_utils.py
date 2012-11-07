@@ -1,6 +1,6 @@
 # Imports {{{
 from functools import reduce
-from numpy import dot, multiply
+from numpy import dot, multiply, prod
 from paycheck import *
 
 from ..data import NDArrayData
@@ -772,4 +772,82 @@ class TestFormDataContractor(TestCase): # {{{
             )(A,B)
         )
     # }}}
+# }}}
+
+class TestNormalize(TestCase): # {{{
+    @with_checker # test_correctness {{{
+    def test_correctness(self,number_of_dimensions=irange(2,4),size=irange(2,5)):
+        index_to_normalize = randint(0,number_of_dimensions-1)
+        normalized_tensor = normalize(crand(*(size,)*number_of_dimensions),index_to_normalize)
+        indices_to_sum_over = list(range(number_of_dimensions))
+        del indices_to_sum_over[index_to_normalize]
+        should_be_identity = tensordot(normalized_tensor.conj(),normalized_tensor,(indices_to_sum_over,)*2)
+        self.assertTrue(allclose(identity(size),should_be_identity))
+    # }}}
+    @with_checker # test_correctness_on_random_shape {{{
+    def test_correctness_on_random_shape(self,number_of_dimensions=irange(2,6)):
+        index_to_normalize = randint(0,number_of_dimensions-1)
+
+        shape = [randint(1,5) for _ in range(number_of_dimensions)]
+        try:
+            normalized_tensor = normalize(crand(*shape),index_to_normalize)
+        except ValueError:
+            self.assertTrue(prod(shape[:index_to_normalize])*prod(shape[index_to_normalize+1:]) < shape[index_to_normalize])
+            return
+
+        indices_to_sum_over = list(range(number_of_dimensions))
+        del indices_to_sum_over[index_to_normalize]
+        should_be_identity = tensordot(normalized_tensor.conj(),normalized_tensor,(indices_to_sum_over,)*2)
+        self.assertTrue(allclose(identity(normalized_tensor.shape[index_to_normalize]),should_be_identity))
+    # }}}
+    @with_checker # test_method_agreement {{{
+    def test_method_agreement(self,number_of_dimensions=irange(2,4),size=irange(2,5)):
+        index_to_normalize = randint(0,number_of_dimensions-1)
+        tensor = crand(*(size,)*number_of_dimensions)
+        normalized_tensor_1 = normalize(tensor,index_to_normalize)
+        normalized_tensor_2 = multiplyTensorByMatrixAtIndex(tensor,computeNormalizerAndInverse(tensor,index_to_normalize)[0],index_to_normalize)
+        self.assertTrue(allclose(normalized_tensor_1,normalized_tensor_2))
+    # }}}
+# }}}
+
+class TestComputeNormalizerAndInverse(TestCase): # {{{
+    @with_checker # test_inverse {{{
+    def test_inverse(self,number_of_dimensions=irange(2,4),size=irange(2,5)):
+        index_to_normalize = randint(0,number_of_dimensions-1)
+        tensor = crand(*(size,)*number_of_dimensions)
+        normalizer, inverse_normalizer = computeNormalizerAndInverse(tensor,index_to_normalize)
+        self.assertTrue(allclose(identity(size),dot(normalizer,inverse_normalizer)))
+    # }}}
+    @with_checker # test_inverse_cancels_normalizer {{{
+    def test_inverse_cancels_normalizer(self,number_of_dimensions=irange(2,4),size=irange(2,5)):
+        index_to_normalize = randint(0,number_of_dimensions-1)
+        tensor = crand(*(size,)*number_of_dimensions)
+        normalizer, inverse_normalizer = computeNormalizerAndInverse(tensor,index_to_normalize)
+        self.assertTrue(allclose(tensor,multiplyTensorByMatrixAtIndex(multiplyTensorByMatrixAtIndex(tensor,normalizer,index_to_normalize),inverse_normalizer,index_to_normalize)))
+    # }}}
+# }}}
+
+class TestNormalizeAndReturnInverseNormalizer(TestCase): # {{{
+    @with_checker
+    def test_method_agreement(self,number_of_dimensions=irange(2,4),size=irange(2,5)):
+        index_to_normalize = randint(0,number_of_dimensions-1)
+        tensor = crand(*(size,)*number_of_dimensions)
+        normalized_tensor_1 = normalize(tensor,index_to_normalize)
+        normalizer, inverse_normalizer_1 = computeNormalizerAndInverse(tensor,index_to_normalize)
+        normalized_tensor_2, inverse_normalizer_2 = normalizeAndReturnInverseNormalizer(tensor,index_to_normalize)
+        self.assertTrue(allclose(normalized_tensor_1,normalized_tensor_2))
+        self.assertTrue(allclose(inverse_normalizer_1,inverse_normalizer_1))
+# }}}
+
+class TestNormalizeAndDenormalize(TestCase): # {{{
+    @with_checker
+    def testEquivalence(self,number_of_dimensions=irange(2,4),size=irange(2,5)):
+        index_to_normalize = randint(0,number_of_dimensions-1)
+        index_to_denormalize = randint(0,number_of_dimensions-1)
+        tensor_A, tensor_B = crand(2,*(size,)*number_of_dimensions)
+        normalized_tensor_A_1, inverse_normalizer = normalizeAndReturnInverseNormalizer(tensor_A,index_to_normalize)
+        unnormalized_tensor_B_1 = multiplyTensorByMatrixAtIndex(tensor_B,inverse_normalizer.transpose(),index_to_denormalize)
+        normalized_tensor_A_2, unnormalized_tensor_B_2 = normalizeAndDenormalize(tensor_A,index_to_normalize,tensor_B,index_to_denormalize)
+        self.assertTrue(allclose(normalized_tensor_A_1,normalized_tensor_A_2))
+        self.assertTrue(allclose(unnormalized_tensor_B_1,unnormalized_tensor_B_2))
 # }}}
