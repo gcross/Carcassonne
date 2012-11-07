@@ -203,6 +203,12 @@ def directSumSparse(sparse1,sparse2): # {{{
 def formSparseContractor(dense_contractors): # {{{
     return partial(contractSparseTensors,dense_contractors)
 # }}}
+def getInformationFromOperatorCenter(operator_center): # {{{
+    for matrix in operator_center.values():
+        return matrix.shape[0], matrix.dtype, type(matrix)
+    else:
+        raise ValueError("operator tensor has no term from which to extract the physical dimension")
+# }}}
 def makeSparseOperator(O=None,OO_UD=None,OO_LR=None): # {{{
     operator = {}
     identity = None
@@ -245,6 +251,7 @@ __all__ = [
     "directSumListsOfSparse",
     "directSumSparse",
     "formSparseContractor",
+    "getInformationFromOperatorCenter",
     "makeSparseOperator",
     "mapOverSparseData",
     "stripAllButIdentityFrom",

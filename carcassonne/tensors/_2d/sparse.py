@@ -4,7 +4,7 @@ import itertools
 from numpy import complex128, prod
 
 from .dense import *
-from ...sparse import Identity, Complete, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, addStandardCompleteAndIdentityTerms, contractSparseTensors, formSparseContractor
+from ...sparse import Identity, Complete, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, addStandardCompleteAndIdentityTerms, contractSparseTensors, formSparseContractor, getInformationFromOperatorCenter
 from ...utils import Multiplier, multiplyBySingleSiteOperator, L, R, O
 # }}}
 
@@ -139,17 +139,15 @@ def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
         stage2_1[Identity()].shape[3],
     )
     bandwidth_dimension = prod(bandwidth_dimensions)
-    physical_dimension = operator_center[Identity()].shape[0]
+    physical_dimension, dtype, DataClass = getInformationFromOperatorCenter(operator_center)
     dimension = bandwidth_dimension*physical_dimension
-    dtype = operator_center[Identity()].dtype
-    DataClass = type(operator_center[Identity()])
     def formExpectationMatrix():
         matrix = DataClass.newZeros((dimension,dimension),dtype=complex128)
         for multiplier in multipliers:
             matrix += multiplier.formMatrix()
         return matrix
 
-    normalization_multiplier = formNormalizationStage3(stage2_0[Identity()],stage2_1[Identity()],operator_center[Identity()])
+    normalization_multiplier = formNormalizationStage3(stage2_0[Identity()],stage2_1[Identity()],DataClass.newIdentity(physical_dimension))
 
     expectation_multiplier = Multiplier(
         normalization_multiplier.shape,
