@@ -280,6 +280,9 @@ class NDArrayData(Data): # {{{
             index += len(group)
         return NDArrayData(_arr.reshape(shape))
     # }}}
+    def matvecWith(self,v): # {{{
+        return v.absorbMatrixAt(0,self)
+    # }}}
     def norm(self): # {{{
         return norm(self._arr)
     # }}}

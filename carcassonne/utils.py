@@ -179,6 +179,18 @@ class Multiplier: # {{{
     def __call__(self,vector): # {{{
         return self.multiply(vector)
     # }}}
+    @classmethod # fromMatrix {{{
+    def fromMatrix(self,matrix):
+        m, n = matrix.shape
+        return \
+            Multiplier(
+                matrix.shape,
+                lambda v: matrix.matvecWith(v),
+                m*n,
+                lambda: matrix,
+                0
+            )
+    # }}}
     def isCheaperToFormMatrix(self,estimated_number_of_applications): # {{{
         return estimated_number_of_applications*self.cost_of_multiply > \
                 self.cost_of_formMatrix + estimated_number_of_applications*self.shape[0]*self.shape[1]
