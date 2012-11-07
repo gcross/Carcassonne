@@ -8,6 +8,11 @@ from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigs, gmres
 from ..utils import crand, dropAt, randomComplexSample
 # }}}
 
+# Exception classes {{{
+class ARPACKError(Exception):
+    pass
+# }}}
+
 # Base classes {{{
 class Data: # {{{
   # Instance methods {{{
@@ -196,7 +201,7 @@ class NDArrayData(Data): # {{{
                     if number_of_tries >= 5:
                         #save("A.npy",expectation_multiplier.formMatrix().toArray())
                         #save("M.npy",normalization_multiplier.formMatrix().toArray())
-                        raise Exception("Unable to converge after {} tries.".format(number_of_tries))
+                        raise ARPACKError("Unable to converge after {} tries.".format(number_of_tries))
             return tuple(map(NDArrayData,evecs.transpose().reshape((k,) + self.shape)))
     # }}}
     def directSumWith(self,other,*non_summed_axes): # {{{
@@ -418,6 +423,9 @@ class ScalarData(Data): # {{{
 
 # Exports {{{
 __all__ = [
+    # Exceptions {{{
+    "ARPACKError",
+    # }}}
     # Classes {{{
     "NDArrayData",
     "ScalarData",
