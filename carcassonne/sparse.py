@@ -227,6 +227,9 @@ def makeSparseOperator(O=None,OO_UD=None,OO_LR=None): # {{{
 def mapOverSparseData(f,sparse): # {{{
     return {tag: f(data) for tag, data in sparse.items()}
 # }}}
+def stripAllButIdentityFrom(sparse): # {{{
+    return {Identity():sparse[Identity()]}
+# }}}
 # }}}
 
 # Exports {{{
@@ -244,5 +247,6 @@ __all__ = [
     "formSparseContractor",
     "makeSparseOperator",
     "mapOverSparseData",
+    "stripAllButIdentityFrom",
 ]
 # }}}
