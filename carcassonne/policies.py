@@ -57,7 +57,7 @@ class RepeatPatternContractionPolicy(Policy): # {{{
                     direction = next(self.iteration)
                 except StopIteration:
                     raise ValueError("An empty sequence of contraction directions was provided! ({})".format(self.parent.directions))
-            self.system.contractNormalizedTowards(direction)
+            self.system.contractTowards(direction)
 # }}}
 # }}}
 

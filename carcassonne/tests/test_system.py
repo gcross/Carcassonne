@@ -20,7 +20,7 @@ class TestSystem(TestCase): # {{{
     def test___add___self(self,moves=(irange(0,1),)*4):
         system1 = System.newRandom()
         for direction in sum(([i]*moves[i] for i in range(4)),[]):
-            system1.contractTowards(direction)
+            system1.contractUnnormalizedTowards(direction)
         system2 = system1 + system1
         try:
             self.assertAlmostEqual(
@@ -204,8 +204,8 @@ class TestSystem(TestCase): # {{{
             system1.contractTowards(direction)
         system2 = copy(system1)
 
-        system1.contractTowards(direction)
-        system2.contractNormalizedTowards(direction)
+        system1.contractUnnormalizedTowards(direction)
+        system2.contractTowards(direction,normalize_center=False)
 
         expectation1, normalization1 = system1.computeExpectationAndNormalization()
         expectation2, normalization2 = system2.computeExpectationAndNormalization()
@@ -301,8 +301,8 @@ class TestSystem(TestCase): # {{{
         system2 = copy(system1)
 
         system1.increaseBandwidth(direction,by=increment)
-        system2.contractTowards(O(direction))
-        system2.contractTowards(direction)
+        system2.contractUnnormalizedTowards(O(direction))
+        system2.contractUnnormalizedTowards(direction)
         self.assertAlmostEqual(system1.computeNormalization(),system2.computeNormalization())
         self.assertAlmostEqual(system1.computeExpectation(),system2.computeExpectation())
     # }}}
@@ -313,8 +313,8 @@ class TestSystem(TestCase): # {{{
         system2 = copy(system1)
 
         system1.increaseBandwidth(direction,by=1)
-        system2.contractTowards(O(direction))
-        system2.contractTowards(direction)
+        system2.contractTowards(O(direction),normalize_center=False)
+        system2.contractTowards(direction,normalize_center=False)
         self.assertAlmostEqual(system1.computeNormalization(),system2.computeNormalization())
         self.assertAlmostEqual(system1.computeExpectation(),system2.computeExpectation())
 

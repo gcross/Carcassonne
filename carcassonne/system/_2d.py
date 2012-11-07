@@ -27,7 +27,7 @@ class System(BaseSystem): # {{{
         system.assertDimensionsAreConsistent()
         system.assertNormalizationIsHermitian()
         for direction in [0,2,1,3]:
-            system.contractTowards(direction)
+            system.contractUnnormalizedTowards(direction)
         return system
     # }}}
     @classmethod # newRandom {{{
@@ -364,7 +364,17 @@ class System(BaseSystem): # {{{
     def computeUnnormalizedExpectation(self): # {{{
         return self.computeScalarUsingMultiplier(self.formExpectationMultipliers())
     # }}}
-    def contractTowards(self,direction,state_center_data=None,state_center_data_conj=None): # {{{
+    def contractTowards(self,direction,state_center_data=None,normalize_center=True): # {{{
+        if state_center_data is None:
+            state_center_data = self.state_center_data
+        normalized_state_center_data, _, denormalizer = state_center_data.normalizeAxis(O(direction))
+        denormalized_state_center_data = self.state_center_data.absorbMatrixAt(direction,denormalizer)
+        if normalize_center:
+            denormalized_state_center_data = denormalized_state_center_data.normalized()
+        self.contractUnnormalizedTowards(direction,normalized_state_center_data)
+        self.setStateCenter(denormalized_state_center_data)
+    # }}}
+    def contractUnnormalizedTowards(self,direction,state_center_data=None,state_center_data_conj=None): # {{{
         if state_center_data is None:
             state_center_data = self.state_center_data
             state_center_data_conj = self.state_center_data_conj
@@ -375,14 +385,6 @@ class System(BaseSystem): # {{{
         self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(self.corners[R(direction)],self.sides[R(direction)])
         if self.just_increased_bandwidth:
             raise InvariantViolatedError("Contracting the current center would blow up the condition number of the normalization matrix;  optimize it or replace it first.")
-    # }}}
-    def contractNormalizedTowards(self,direction,state_center_data=None): # {{{
-        if state_center_data is None:
-            state_center_data = self.state_center_data
-        normalized_state_center_data, _, denormalizer = state_center_data.normalizeAxis(O(direction))
-        denormalized_state_center_data = self.state_center_data.absorbMatrixAt(direction,denormalizer)
-        self.contractTowards(direction,normalized_state_center_data)
-        self.setStateCenter(denormalized_state_center_data)
     # }}}
     def formExpectationAndNormalizationMultipliers(self): # {{{
         return formExpectationAndNormalizationMultipliers(self.corners,self.sides,self.operator_center_tensor)
@@ -436,12 +438,13 @@ class System(BaseSystem): # {{{
                     increment,
                     extra_state_center_data.fold(axis).transpose().toArray()
                 )
-            self.contractNormalizedTowards(
+            self.contractTowards(
                 O(axis),
                 state_center_data.directSumWith(
                     extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
                     *dropAt(range(5),axis)
-                )
+                ),
+                normalize_center=False
             )
         self.just_increased_bandwidth = True
     # }}}
