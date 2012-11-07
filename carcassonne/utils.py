@@ -1,11 +1,13 @@
 # Imports {{{
 from collections import defaultdict
 from functools import partial
-from numpy import dot, prod, sqrt, tensordot, zeros
 from numpy.linalg import eigh
+from numpy import dot, prod, sqrt, set_printoptions, tensordot, zeros
 from numpy.random import rand, random_sample
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 # }}}
+
+set_printoptions(linewidth=132)
 
 # Exceptions {{{
 class DimensionMismatchError(ValueError): # {{{
