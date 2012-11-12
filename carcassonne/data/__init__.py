@@ -241,6 +241,9 @@ class NDArrayData(Data): # {{{
         del others[axis]
         return self.join(axis,others)
     # }}}
+    def hasNaN(self): # {{{
+        return any(isnan(self._arr))
+    # }}}
     def increaseDimensionsAndFillWithRandom(self,*axes_and_new_dimensions): # {{{
         old_shape = self.shape
         new_shape = list(old_shape)
@@ -266,9 +269,6 @@ class NDArrayData(Data): # {{{
         old_indices = tuple(slice(0,d) for d in old_shape)
         new_arr[old_indices] = self._arr
         return NDArrayData(new_arr)
-    # }}}
-    def hasNaN(self): # {{{
-        return any(isnan(self._arr))
     # }}}
     def join(self,*groups): # {{{
         groups = [[group] if isinstance(group,int) else group for group in groups]
