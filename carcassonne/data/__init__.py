@@ -199,20 +199,17 @@ class NDArrayData(Data): # {{{
                     dtype=self.dtype
                 )
 
-            number_of_tries = 0
             guess = self.ravel().toArray()
-            while(True):
+            for _ in range(maximum_number_of_tries):
                 try:
-                    number_of_tries += 1
                     evals, evecs = eigs(k=k,A=matrix,which='SR',v0=guess,ncv=3*k+1)
-                    break
+                    return tuple(map(NDArrayData,evecs.transpose()[argsort(evals.real)].reshape((k,) + self.shape)))
                 except ArpackNoConvergence:
                     guess = None
-                    if number_of_tries >= maximum_number_of_tries:
-                        #save("A.npy",expectation_multiplier.formMatrix().toArray())
-                        #save("M.npy",normalization_multiplier.formMatrix().toArray())
-                        raise ARPACKError("Unable to converge after {} tries.".format(number_of_tries))
-            return tuple(map(NDArrayData,evecs.transpose()[argsort(evals.real)].reshape((k,) + self.shape)))
+
+            #save("A.npy",expectation_multiplier.formMatrix().toArray())
+            #save("M.npy",normalization_multiplier.formMatrix().toArray())
+            raise ARPACKError("Unable to converge after {} tries.".format(number_of_tries))
     # }}}
     def directSumWith(self,other,*non_summed_axes): # {{{
         if not self.ndim == other.ndim:
