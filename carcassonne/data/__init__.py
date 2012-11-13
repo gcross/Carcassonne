@@ -151,7 +151,7 @@ class NDArrayData(Data): # {{{
     def contractWith(self,other,self_axes,other_axes): # {{{
         return NDArrayData(tensordot(self._arr,other._arr,(self_axes,other_axes)))
     # }}}
-    def computeMinimizersOver(self,expectation_multiplier,normalization_multiplier,k=1): # {{{
+    def computeMinimizersOver(self,expectation_multiplier,normalization_multiplier,k=1,maximum_number_of_tries=5): # {{{
         initial = self.toArray().ravel()
         N = len(initial)
         if k >= N:
@@ -198,7 +198,7 @@ class NDArrayData(Data): # {{{
                     break
                 except ArpackNoConvergence:
                     guess = None
-                    if number_of_tries >= 5:
+                    if number_of_tries >= maximum_number_of_tries:
                         #save("A.npy",expectation_multiplier.formMatrix().toArray())
                         #save("M.npy",normalization_multiplier.formMatrix().toArray())
                         raise ARPACKError("Unable to converge after {} tries.".format(number_of_tries))
