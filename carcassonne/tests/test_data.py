@@ -1,4 +1,7 @@
 # Imports {{{
+from scipy.linalg import eigh, eigvalsh
+from scipy.sparse.linalg import eigs, eigsh
+
 from . import *
 from ..data import *
 # }}}
@@ -23,6 +26,32 @@ class TestNDArrayData(TestCase): # {{{
             tensor.absorbMatrixAt(axis,matrix),
             matrix.contractWith(tensor,(1,),(axis,)).join(*new_axes),
         )
+    # }}}
+    @with_checker(number_of_calls=10) # test_computeMinimizersOver_standard {{{
+    def test_computeMinimizersOver_standard(self,N=irange(3,10)):
+        matrix = NDArrayData.newRandomHermitian(N,N)
+        k = randint(1,N-2)
+        try:
+            vecs1 = NDArrayData.newRandom(N).computeMinimizersOver(Multiplier.fromMatrix(matrix),k=k)
+        except ARPACKError:
+            return
+        vecs2 = NDArrayData(eigh(matrix.toArray())[1].transpose())[:k]
+        for i in range(k):
+            self.assertAlmostEqual(abs(vecs1[i].conj().contractWithAlongAll(vecs2[i]).extractScalar())/vecs1[i].norm()/vecs2[i].norm(),1)
+    # }}}
+    @with_checker(number_of_calls=10) # test_computeMinimizersOver_generalized {{{
+    def test_computeMinimizersOver_generalized(self,N=irange(3,10)):
+        matrix1 = NDArrayData.newRandomHermitian(N,N)
+        matrix2 = NDArrayData.newRandomHermitian(N,N)
+        matrix2 += -2*NDArrayData.newIdentity(N)*eigvalsh(matrix2.toArray())[0]
+        k = randint(1,N-2)
+        try:
+            vecs1 = NDArrayData.newRandom(N).computeMinimizersOver(Multiplier.fromMatrix(matrix1),Multiplier.fromMatrix(matrix2),k=k)
+        except ARPACKError:
+            return
+        vecs2 = NDArrayData(eigh(matrix1.toArray(),matrix2.toArray())[1].transpose())[:k]
+        for i in range(k):
+            self.assertAlmostEqual(abs(vecs1[i].conj().contractWithAlongAll(vecs2[i]).extractScalar())/vecs1[i].norm()/vecs2[i].norm(),1)
     # }}}
     @with_checker # test_directSumWith_all_axes_summed {{{
     def test_directSumWith_all_axes_summed(self,shapes=((irange(1,5),)*5,)*2):
