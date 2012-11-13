@@ -1,7 +1,7 @@
 # Imports {{{
 from copy import copy
 from functools import partial, reduce
-from numpy import allclose, any, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
+from numpy import allclose, any, argsort, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
 from scipy.linalg import eig, eigh, lu_factor, lu_solve, norm, svd, qr
 from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigs, gmres
 
@@ -194,7 +194,7 @@ class NDArrayData(Data): # {{{
             while(True):
                 try:
                     number_of_tries += 1
-                    evecs = eigs(k=k,A=matrix,which='SR',v0=guess,ncv=3*k+1)[1]
+                    evals, evecs = eigs(k=k,A=matrix,which='SR',v0=guess,ncv=3*k+1)
                     break
                 except ArpackNoConvergence:
                     guess = None
@@ -202,7 +202,7 @@ class NDArrayData(Data): # {{{
                         #save("A.npy",expectation_multiplier.formMatrix().toArray())
                         #save("M.npy",normalization_multiplier.formMatrix().toArray())
                         raise ARPACKError("Unable to converge after {} tries.".format(number_of_tries))
-            return tuple(map(NDArrayData,evecs.transpose().reshape((k,) + self.shape)))
+            return tuple(map(NDArrayData,evecs.transpose()[argsort(evals.real)].reshape((k,) + self.shape)))
     # }}}
     def directSumWith(self,other,*non_summed_axes): # {{{
         if not self.ndim == other.ndim:
