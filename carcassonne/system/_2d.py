@@ -334,23 +334,20 @@ class System(BaseSystem): # {{{
     def computeCenterSiteExpectation(self): # {{{
         return self.computeExpectation()-self.computeExpectationWithoutCenter()
     # }}}
-    def computeExpectation(self): # {{{
-        return self.computeExpectationAndNormalization()[0]
+    def computeExpectation(self,operator_center_tensor=None): # {{{
+        return self.computeExpectationAndNormalization(operator_center_tensor)[0]
     # }}}
     def computeExpectationWithoutCenter(self): # {{{
         return self.computeExpectationAndNormalizationWithoutCenter()[0]
     # }}}
-    def computeExpectationAndNormalization(self): # {{{
-        multiplyExpectation, multiplyNormalization = self.formExpectationAndNormalizationMultipliers()
+    def computeExpectationAndNormalization(self,operator_center_tensor=None): # {{{
+        multiplyExpectation, multiplyNormalization = self.formExpectationAndNormalizationMultipliers(operator_center_tensor)
         unnormalized_expectation = self.computeScalarUsingMultiplier(multiplyExpectation)
         normalization = self.computeScalarUsingMultiplier(multiplyNormalization)
         return unnormalized_expectation/normalization, normalization
     # }}}
     def computeExpectationAndNormalizationWithoutCenter(self): # {{{
-        multiplyExpectation, multiplyNormalization = self.formExpectationAndNormalizationMultipliersWithoutCenter()
-        unnormalized_expectation = self.computeScalarUsingMultiplier(multiplyExpectation)
-        normalization = self.computeScalarUsingMultiplier(multiplyNormalization)
-        return unnormalized_expectation/normalization, normalization
+        return self.computeExpectationAndNormalization({Identity():self.operator_center_tensor[Identity()]})
     # }}}
     def computeNormalization(self): # {{{
         return self.computeScalarUsingMultiplier(self.formNormalizationMultiplier())
@@ -386,11 +383,10 @@ class System(BaseSystem): # {{{
         if self.just_increased_bandwidth:
             raise InvariantViolatedError("Contracting the current center would blow up the condition number of the normalization matrix;  optimize it or replace it first.")
     # }}}
-    def formExpectationAndNormalizationMultipliers(self): # {{{
-        return formExpectationAndNormalizationMultipliers(self.corners,self.sides,self.operator_center_tensor)
-    # }}}
-    def formExpectationAndNormalizationMultipliersWithoutCenter(self): # {{{
-        return formExpectationAndNormalizationMultipliers(self.corners,self.sides,{Identity():self.operator_center_tensor[Identity()]})
+    def formExpectationAndNormalizationMultipliers(self,operator_center_tensor=None): # {{{
+        if operator_center_tensor is None:
+            operator_center_tensor = self.operator_center_tensor
+        return formExpectationAndNormalizationMultipliers(self.corners,self.sides,operator_center_tensor)
     # }}}
     def formExpectationMatrix(self): # {{{
         return self.formExpectationMultiplier().formMatrix()
