@@ -2,7 +2,7 @@
 from copy import copy
 from functools import partial, reduce
 from numpy import allclose, any, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
-from scipy.linalg import eig, lu_factor, lu_solve, norm, svd, qr
+from scipy.linalg import eig, eigh, lu_factor, lu_solve, norm, svd, qr
 from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigs, gmres
 
 from ..utils import crand, dropAt, randomComplexSample
@@ -158,11 +158,11 @@ class NDArrayData(Data): # {{{
             raise ValueError("Number of desired eigenvectors must be less than the number of degrees of freedom. ({} > prod{} = {}".format(k,self.shape,N))
 
         if 2*(k+1) >= N and normalization_multiplier.isCheaperToFormMatrix(2*N):
-            expectation_matrix = expectation_multiplier.formMatrix()
+            expectation_matrix = expectation_multiplier.formMatrix().toArray()
             del expectation_multiplier
-            normalization_matrix = normalization_mutliplier.formMatrix()
+            normalization_matrix = normalization_multiplier.formMatrix().toArray()
             del normalization_multiplier
-            return tuple(map(NDArrayData,eigh(expectation_matrix,normalization_matrix).transpose()[:k]))
+            return tuple(map(NDArrayData,eigh(expectation_matrix,normalization_matrix)[1].transpose()[:k].reshape((k,) + self.shape)))
         else:
             if normalization_multiplier.isCheaperToFormMatrix(1000*k):
                 applyInverseNormalization = partial(lu_solve,lu_factor(normalization_multiplier.formMatrix().toArray()))
