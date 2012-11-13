@@ -151,20 +151,30 @@ class NDArrayData(Data): # {{{
     def contractWith(self,other,self_axes,other_axes): # {{{
         return NDArrayData(tensordot(self._arr,other._arr,(self_axes,other_axes)))
     # }}}
-    def computeMinimizersOver(self,expectation_multiplier,normalization_multiplier,k=1,maximum_number_of_tries=5): # {{{
+    def contractWithAlongAll(self,other): # {{{
+        assert self.ndim == other.ndim
+        return self.contractWith(other,range(self.ndim),range(self.ndim))
+    # }}}
+    def computeMinimizersOver(self,expectation_multiplier,normalization_multiplier=None,k=1,maximum_number_of_tries=5): # {{{
         initial = self.toArray().ravel()
         N = len(initial)
-        if k >= N:
-            raise ValueError("Number of desired eigenvectors must be less than the number of degrees of freedom. ({} > prod{} = {}".format(k,self.shape,N))
+        if k >= N-1:
+            raise ValueError("Number of desired eigenvectors must be less than the number of degrees of freedom minus 1. ({} >= prod{}-1 = {})".format(k,self.shape,N-1))
 
-        if 2*(k+1) >= N and normalization_multiplier.isCheaperToFormMatrix(2*N):
+        if 2*(k+1) >= N and normalization_multiplier is not None and normalization_multiplier.isCheaperToFormMatrix(2*N):
             expectation_matrix = expectation_multiplier.formMatrix().toArray()
             del expectation_multiplier
-            normalization_matrix = normalization_multiplier.formMatrix().toArray()
+            if normalization_multiplier is None:
+                normalization_matrix = None
+            else:
+                normalization_matrix = normalization_multiplier.formMatrix().toArray()
             del normalization_multiplier
+            print("Taking eigh branch.")
             return tuple(map(NDArrayData,eigh(expectation_matrix,normalization_matrix)[1].transpose()[:k].reshape((k,) + self.shape)))
         else:
-            if normalization_multiplier.isCheaperToFormMatrix(1000*k):
+            if normalization_multiplier is None:
+                applyInverseNormalization = lambda x: x
+            elif normalization_multiplier.isCheaperToFormMatrix(1000*k):
                 applyInverseNormalization = partial(lu_solve,lu_factor(normalization_multiplier.formMatrix().toArray()))
                 del normalization_multiplier
             else:
