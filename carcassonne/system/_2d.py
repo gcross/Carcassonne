@@ -113,7 +113,7 @@ class System(BaseSystem): # {{{
                 copy(self.corners),
                 copy(self.sides),
                 self.state_center_data,
-                self.operator_center_tensor,
+                copy(self.operator_center_tensor),
                 self.state_center_data_conj,
             )
     # }}}
