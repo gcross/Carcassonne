@@ -176,23 +176,40 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(normalization2,normalization1)
         self.assertAlmostEqual(expectation2,expectation1)
     # }}}
-    @with_checker # test_computeCenterSiteExpectation {{{
-    def test_computeCenterSiteExpectation(self,physical_dimension=irange(1,4),moves=(irange(0,1),)*4):
+    @with_checker(number_of_calls=10) # test_computeCenterSiteExpectation {{{
+    def test_computeCenterSiteExpectation(self,
+        direction=irange(0,1),
+        physical_dimension=irange(2,4),
+        moves=[choiceof((0,2))],
+        final_move=choiceof((0,2))
+    ):
         O = NDArrayData.newRandomHermitian(physical_dimension,physical_dimension)
-        system = System.newRandom(O=O)
+        OO1 = 0*NDArrayData.newRandomHermitian(physical_dimension,physical_dimension)
+        OO2 = 0*NDArrayData.newRandomHermitian(physical_dimension,physical_dimension)
+        if direction == 0:
+            system = System.newTrivialWithSparseOperator(O=O,OO_LR=(OO1,OO2))
+        else:
+            system = System.newTrivialWithSparseOperator(O=O,OO_UD=(OO1,OO2))
 
-        directions = sum([[i]*n for i,n in enumerate(moves)],[])
-        shuffle(directions)
-        for direction in directions:
-            system.contractTowards(direction)
-            system.setStateCenter(NDArrayData.newRandom(*system.state_center_data.shape))
+        print()
+        for move in moves:
+            print(move)
+            system.contractTowards(direction+move)
+            print(system.computeNormalizationMatrixConditionNumber())
+            print(prod(system.state_center_data.shape))
+            system.increaseBandwidth(direction=direction,by=1)
+            #system.setStateCenter(NDArrayData.newRandom(*system.state_center_data.shape))
+        system.contractTowards(direction+0)
+        system.contractTowards(direction+2)
 
-        state_center_data = system.formNormalizationMultiplier()(system.state_center_data)
-        state_center_data_conj = system.state_center_data_conj
+        center_site_expectation = system.computeCenterSiteExpectation()
+        expectation1 = system.computeExpectation()
+        system.contractTowards(direction+final_move)
+        expectation2 = system.computeExpectation()
 
         self.assertAlmostEqual(
-            system.computeCenterSiteExpectation(),
-            state_center_data_conj.ravel().contractWith(state_center_data.absorbMatrixAt(4,O).ravel(),(0,),(0,)).extractScalar()/state_center_data_conj.ravel().contractWith(state_center_data.ravel(),(0,),(0,)).extractScalar()
+            center_site_expectation,
+            expectation2-expectation1,
         )
     # }}}
     @with_checker(number_of_calls=10) # test_contractTowardsAndNormalize {{{

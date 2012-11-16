@@ -169,8 +169,10 @@ class NDArrayData(Data): # {{{
             else:
                 normalization_matrix = normalization_multiplier.formMatrix().toArray()
             del normalization_multiplier
+            print("Taking eigh branch.")
             return tuple(map(NDArrayData,eigh(expectation_matrix,normalization_matrix)[1].transpose()[:k].reshape((k,) + self.shape)))
         else:
+            print("Taking standard branch.")
             if normalization_multiplier is None:
                 applyInverseNormalization = lambda x: x
             elif normalization_multiplier.isCheaperToFormMatrix(1000*k):
@@ -180,7 +182,9 @@ class NDArrayData(Data): # {{{
                 normalization_matvec = lambda v: normalization_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
                 normalization_operator = LinearOperator(matvec=normalization_matvec,shape=(N,N),dtype=self.dtype)
                 def applyInverseNormalization(in_v):
+                    #print("begin inverse")
                     out_v, info = gmres(normalization_operator,in_v)
+                    #print("end inverse")
                     assert info == 0
                     return out_v
 
@@ -190,6 +194,15 @@ class NDArrayData(Data): # {{{
                 del expectation_multiplier
             else:
                 multiplyExpectation = lambda v: expectation_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
+
+            oldMultiplyExpectation = multiplyExpectation
+            def multiplyExpectation(v):
+                nonlocal n
+                n += 1
+                #print("Begin multiply")
+                vv = oldMultiplyExpectation(v)
+                #print("End multiply")
+                return vv
 
             matrix = \
                 LinearOperator(
@@ -201,7 +214,9 @@ class NDArrayData(Data): # {{{
             guess = self.ravel().toArray()
             for _ in range(maximum_number_of_tries):
                 try:
+                    n = 0
                     evals, evecs = eigs(k=k,A=matrix,which='SR',v0=guess,ncv=3*k+1)
+                    print("n=",n)
                     return tuple(map(NDArrayData,evecs.transpose()[argsort(evals.real)].reshape((k,) + self.shape)))
                 except ArpackNoConvergence:
                     guess = None

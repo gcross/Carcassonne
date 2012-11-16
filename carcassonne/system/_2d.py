@@ -347,13 +347,48 @@ class System(BaseSystem): # {{{
         return unnormalized_expectation/normalization, normalization
     # }}}
     def computeExpectationAndNormalizationWithoutCenter(self): # {{{
-        return self.computeExpectationAndNormalization({Identity():self.operator_center_tensor[Identity()]})
+        operator_center_tensor = {Identity():self.operator_center_tensor[Identity()]}
+        for tag, value in self.operator_center_tensor.items():
+            if isinstance(tag,TwoSiteOperator) and tag.direction in (2,3):
+                operator_center_tensor[tag] = value
+        return self.computeExpectationAndNormalization(operator_center_tensor)
     # }}}
     def computeNormalization(self): # {{{
         return self.computeScalarUsingMultiplier(self.formNormalizationMultiplier())
     # }}}
     def computeNormalizationMatrixConditionNumber(self): # {{{
         return cond(self.formNormalizationMatrix().toArray())
+    # }}}
+    def computeOneSiteExpectation(self): # {{{
+        expectation = 0
+        stripped_self = self.stripExpectationEnvironment()
+
+        if OneSiteOperator() in self.operator_center_tensor:
+            system = copy(stripped_self)
+            system.operator_center_tensor[OneSiteOperator()] = self.operator_center_tensor[OneSiteOperator()]
+            print("OSO=",system.computeExpectation())
+            expectation += system.computeExpectation()
+            del system
+
+        if TwoSiteOperator(0,0) in self.operator_center_tensor:
+            system = copy(stripped_self)
+            system.operator_center_tensor[TwoSiteOperator(0,0)] = self.operator_center_tensor[TwoSiteOperator(0,0)]
+            system.operator_center_tensor[TwoSiteOperator(2,0)] = self.operator_center_tensor[TwoSiteOperator(2,0)]
+            system.contractTowards(0)
+            expectation += system.computeExpectation()
+            print("TSO=",system.computeExpectation())
+            del system
+
+        if TwoSiteOperator(1,0) in self.operator_center_tensor:
+            system = copy(stripped_self)
+            system.operator_center_tensor[TwoSiteOperator(1,0)] = self.operator_center_tensor[TwoSiteOperator(1,0)]
+            system.operator_center_tensor[TwoSiteOperator(3,0)] = self.operator_center_tensor[TwoSiteOperator(3,0)]
+            system.contractTowards(3)
+            expectation += system.computeExpectation()
+            print("TSO=",system.computeExpectation())
+            del system
+
+        return expectation
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.state_center_data_conj.contractWith(multiply(self.state_center_data),range(5),range(5)).extractScalar()
@@ -422,7 +457,9 @@ class System(BaseSystem): # {{{
                 new_dimension = old_dimension + increment
             else:
                 raise ValueError("Increment of {} in the bandwidth dimensions {} and {} is too great given the current shape of {} (maximum increment is {}).".format(increment,direction,direction+2,state_center_data.shape,maximum_increment))
+        print("Begin solve")
         extra_state_center_data, = self.minimizeExpectation(number_of_additional_solutions=1)
+        print("End solve")
         axes = (direction,direction+2)
         self.setStateCenter(
             state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
@@ -442,7 +479,7 @@ class System(BaseSystem): # {{{
                 ),
                 normalize_center=False
             )
-        self.just_increased_bandwidth = True
+        #self.just_increased_bandwidth = True
     # }}}
     def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
         self.increaseBandwidth(direction,by,to)
