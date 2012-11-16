@@ -37,12 +37,35 @@ class System(BaseSystem): # {{{
         randomDimensions = lambda n: tuple(randomDimension() for _ in range(n))
         spoke_sizes = randomDimensions(2)*2
         sides_dimensions = [randomDimension() for _ in range(4)]
-        sides_data = tuple(DataClass.newRandom(*((sides_dimensions[i],)*2+(1,))*2+(spoke_sizes[i],)*2) for i in range(4))
-        for side_data in sides_data:
-            side_data += side_data.join(1,0,2,4,3,5,7,6).conj()
-        corners_data = tuple(DataClass.newRandom(*(sides_data[L(i)].shape[3],)*2+(1,)+(sides_data[i].shape[0],)*2+(1,)) for i in range(4))
-        for corner_data in corners_data:
-            corner_data += corner_data.join(1,0,2,4,3,5).conj()
+
+        def makeSide(i,left_right_dimension,center_dimension):
+            data = NDArrayData.newRandom(left_right_dimension,left_right_dimension,center_dimension,randint(1,left_right_dimension*center_dimension))
+            n = 1e20
+            while n > 1e10:
+                side = data.contractWith(data.conj(),(3,),(3,)).transpose(0,3,1,4,2,5)
+                side += (1e-14*NDArrayData.newIdentity(left_right_dimension*left_right_dimension*center_dimension)).split(left_right_dimension,left_right_dimension,center_dimension,left_right_dimension,left_right_dimension,center_dimension).transpose(0,3,1,4,2,5)
+                n = side.norm()
+            if not side.isCloseTo(side.transpose(1,0,3,2,5,4).conj()):
+                print("data=",data)
+                print("side=",side)
+                raise AssertionError("side {} is not hermitian".format(i))
+            return side.split(left_right_dimension,left_right_dimension,1,left_right_dimension,left_right_dimension,1,center_dimension,center_dimension)
+        sides_data = tuple(makeSide(i,sides_dimensions[i],spoke_sizes[i]) for i in range(4))
+
+        def makeCorner(i,left_dimension,right_dimension):
+            data = NDArrayData.newRandom(left_dimension,right_dimension,randint(1,left_dimension*right_dimension))
+            n = 1e20
+            while n > 1e10:
+                corner = data.contractWith(data.conj(),(2,),(2,)).transpose(0,2,1,3)
+                corner += (1e-5*NDArrayData.newIdentity(left_dimension*right_dimension)).split(left_dimension,right_dimension,left_dimension,right_dimension).transpose(0,2,1,3)
+                n = corner.norm()
+            if not corner.isCloseTo(corner.transpose(1,0,3,2).conj()):
+                print("data=",data)
+                print("corner=",side)
+                raise AssertionError("corner {} is not hermitian".format(i))
+            return corner.split(left_dimension,left_dimension,1,right_dimension,right_dimension,1)
+        corners_data = tuple(makeCorner(i,sides_data[L(i)].shape[3],sides_data[i].shape[0]) for i in range(4))
+
         if O is not None:
             physical_dimension = O.shape[0]
         else:
@@ -171,9 +194,9 @@ class System(BaseSystem): # {{{
     # }}}
     def assertNormalizationIsHermitian(self): # {{{
         for i in range(4):
-            if not self.sides[i][Identity()].allcloseTo(self.sides[i][Identity()].join(1,0,2,4,3,5,7,6).conj()):
+            if not self.sides[i][Identity()].isCloseTo(self.sides[i][Identity()].join(1,0,2,4,3,5,7,6).conj()):
                 raise AssertionError("side {} is not hermitian".format(i))
-            if not self.corners[i][Identity()].allcloseTo(self.corners[i][Identity()].join(1,0,2,4,3,5).conj()):
+            if not self.corners[i][Identity()].isCloseTo(self.corners[i][Identity()].join(1,0,2,4,3,5).conj()):
                 raise AssertionError("corner {} is not hermitian".format(i))
     # }}}
     def compressCornerStateTowards(self,corner_id,direction,new_dimension,normalize=False): # {{{
@@ -354,6 +377,37 @@ class System(BaseSystem): # {{{
     # }}}
     def computeNormalizationMatrixConditionNumber(self): # {{{
         return cond(self.formNormalizationMatrix().toArray())
+    # }}}
+    def computeOneSiteExpectation(self): # {{{
+        expectation = 0
+        stripped_self = self.stripExpectationEnvironment()
+
+        if OneSiteOperator() in self.operator_center_tensor:
+            system = copy(stripped_self)
+            system.operator_center_tensor[OneSiteOperator()] = self.operator_center_tensor[OneSiteOperator()]
+            print("OSO=",system.computeExpectation())
+            expectation += system.computeExpectation()
+            del system
+
+        if TwoSiteOperator(0,0) in self.operator_center_tensor:
+            system = copy(stripped_self)
+            system.operator_center_tensor[TwoSiteOperator(0,0)] = self.operator_center_tensor[TwoSiteOperator(0,0)]
+            system.operator_center_tensor[TwoSiteOperator(2,0)] = self.operator_center_tensor[TwoSiteOperator(2,0)]
+            system.contractTowards(0)
+            expectation += system.computeExpectation()
+            print("TSO=",system.computeExpectation())
+            del system
+
+        if TwoSiteOperator(1,0) in self.operator_center_tensor:
+            system = copy(stripped_self)
+            system.operator_center_tensor[TwoSiteOperator(1,0)] = self.operator_center_tensor[TwoSiteOperator(1,0)]
+            system.operator_center_tensor[TwoSiteOperator(3,0)] = self.operator_center_tensor[TwoSiteOperator(3,0)]
+            system.contractTowards(3)
+            expectation += system.computeExpectation()
+            print("TSO=",system.computeExpectation())
+            del system
+
+        return expectation
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.state_center_data_conj.contractWith(multiply(self.state_center_data),range(5),range(5)).extractScalar()

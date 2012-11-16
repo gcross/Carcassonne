@@ -90,6 +90,9 @@ class NDArrayData(Data): # {{{
     # }}}
   # }}}
   # Instance methods {{{
+    def __add__(self,other): # {{{
+        return NDArrayData(self._arr + other._arr)
+    # }}}
     def __copy__(self): # {{{
         return NDArrayData(copy(self._arr))
     # }}}
@@ -127,6 +130,9 @@ class NDArrayData(Data): # {{{
     # }}}
     def __str__(self): # {{{
         return "NDArrayData({})".format(self._arr)
+    # }}}
+    def __sub__(self,other): # {{{
+        return NDArrayData(self._arr-other._arr)
     # }}}
     def __truediv__(self,other): # {{{
         return NDArrayData(self._arr / other._arr)
@@ -280,6 +286,15 @@ class NDArrayData(Data): # {{{
         old_indices = tuple(slice(0,d) for d in old_shape)
         new_arr[old_indices] = self._arr
         return NDArrayData(new_arr)
+    # }}}
+    def isCloseTo(self,other,rtol=1e-7,atol=1e-7): # {{{
+        ndiff = (self-other).norm()
+        if not (ndiff <= atol or ndiff/(self.norm()+other.norm())/2 <= rtol):
+            print(self._arr,other._arr)
+            print(self.hasNaN(),other.hasNaN())
+            print(max(self._arr.ravel()),max(other._arr.ravel()))
+            print(self.norm(),other.norm(),ndiff,ndiff/(self.norm()+other.norm()))
+        return ndiff <= atol or ndiff/(self.norm()+other.norm())/2 <= rtol
     # }}}
     def join(self,*groups): # {{{
         groups = [[group] if isinstance(group,int) else group for group in groups]

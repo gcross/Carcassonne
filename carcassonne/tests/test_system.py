@@ -1,6 +1,6 @@
 # Imports {{{
 from numpy import array, complex128, prod, isnan
-from numpy.linalg import norm
+from numpy.linalg import norm, eigvalsh
 
 from . import *
 from ..system import *
@@ -294,17 +294,23 @@ class TestSystem(TestCase): # {{{
     @with_checker(number_of_calls=10) # test_increaseBandwidth {{{
     def test_increaseBandwidth(self,direction=irange(0,1),physical_dimension=irange(3,4)):
         system1 = System.newRandom()
-        system1.minimizeExpectation()
+        try:
+            system1.minimizeExpectation()
+        except ARPACKError:
+            return
 
         old_shape = system1.state_center_data.shape
         increment = randint(0,maximumBandwidthIncrement(direction,old_shape))
         system2 = copy(system1)
 
-        system1.increaseBandwidth(direction,by=increment)
+        try:
+            system1.increaseBandwidth(direction,by=increment)
+        except ARPACKError:
+            return
         system2.contractUnnormalizedTowards(O(direction))
         system2.contractUnnormalizedTowards(direction)
-        self.assertAlmostEqual(system1.computeNormalization(),system2.computeNormalization())
-        self.assertAlmostEqual(system1.computeExpectation(),system2.computeExpectation())
+        self.assertAlmostEqual(system1.computeNormalization()/system2.computeNormalization(),1,delta=1e-6)
+        self.assertAlmostEqual(system1.computeExpectation()/system2.computeExpectation(),1,delta=1e-6)
     # }}}
     @with_checker(number_of_calls=10) # test_increaseBandwidth_trivial # {{{
     def test_increaseBandwidth_trivial(self,direction=irange(0,1),physical_dimension=irange(2,8)):
@@ -330,6 +336,10 @@ class TestSystem(TestCase): # {{{
         for direction in directions:
             system.contractTowards(direction)
             system.increaseBandwidth(direction=direction+1,by=1)
+    # }}}
+    @with_checker # test_newRandom {{{
+    def test_newRandom(self):
+        System.newRandom()
     # }}}
     @with_checker # test_normalizeCenterAndDenormalizeSide {{{
     def test_normalizeCenterAndDenormalizeSide(self,direction=irange(0,3)):
