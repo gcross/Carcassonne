@@ -27,32 +27,6 @@ class TestNDArrayData(TestCase): # {{{
             matrix.contractWith(tensor,(1,),(axis,)).join(*new_axes),
         )
     # }}}
-    @with_checker(number_of_calls=10) # test_computeMinimizersOver_standard {{{
-    def test_computeMinimizersOver_standard(self,N=irange(3,10)):
-        matrix = NDArrayData.newRandomHermitian(N,N)
-        k = randint(1,N-2)
-        try:
-            vecs1 = NDArrayData.newRandom(N).computeMinimizersOver(Multiplier.fromMatrix(matrix),k=k)
-        except ARPACKError:
-            return
-        vecs2 = NDArrayData(eigh(matrix.toArray())[1].transpose())[:k]
-        for i in range(k):
-            self.assertAlmostEqual(abs(vecs1[i].conj().contractWithAlongAll(vecs2[i]).extractScalar())/vecs1[i].norm()/vecs2[i].norm(),1)
-    # }}}
-    @with_checker(number_of_calls=10) # test_computeMinimizersOver_generalized {{{
-    def test_computeMinimizersOver_generalized(self,N=irange(3,10)):
-        matrix1 = NDArrayData.newRandomHermitian(N,N)
-        matrix2 = NDArrayData.newRandomHermitian(N,N)
-        matrix2 += -2*NDArrayData.newIdentity(N)*eigvalsh(matrix2.toArray())[0]
-        k = randint(1,N-2)
-        try:
-            vecs1 = NDArrayData.newRandom(N).computeMinimizersOver(Multiplier.fromMatrix(matrix1),Multiplier.fromMatrix(matrix2),k=k)
-        except ARPACKError:
-            return
-        vecs2 = NDArrayData(eigh(matrix1.toArray(),matrix2.toArray())[1].transpose())[:k]
-        for i in range(k):
-            self.assertAlmostEqual(abs(vecs1[i].conj().contractWithAlongAll(vecs2[i]).extractScalar())/vecs1[i].norm()/vecs2[i].norm(),1)
-    # }}}
     @with_checker # test_directSumWith_all_axes_summed {{{
     def test_directSumWith_all_axes_summed(self,shapes=((irange(1,5),)*5,)*2):
         datas = [NDArrayData.newRandom(*shape) for shape in shapes]
@@ -152,5 +126,27 @@ class TestNDArrayData(TestCase): # {{{
             denormalizer.contractWith(normalizer,(1,),(1,)),
             NDArrayData.newIdentity(normalizer.shape[0])
         )
+    # }}}
+    @with_checker # test_relaxOver_generalized {{{
+    def test_relaxOver_generalized(self,N=irange(3,10)):
+        k = randint(1,N)
+        matrix1 = NDArrayData.newRandomHermitian(N,N)
+        matrix2 = NDArrayData.newRandomHermitian(N,N)
+        matrix2 += -2*NDArrayData.newIdentity(N)*eigvalsh(matrix2.toArray())[0]
+        old_vec = NDArrayData.newRandom(N).normalized()
+        old_val = old_vec.conj().contractWith(matrix1.contractWith(old_vec,(1,),(0,)),(0,),(0,)).extractScalar().real/old_vec.conj().contractWith(matrix2.contractWith(old_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
+        new_vec = old_vec.relaxOver(Multiplier.fromMatrix(matrix1),Multiplier.fromMatrix(matrix2),k=k)[0]
+        new_val = new_vec.conj().contractWith(matrix1.contractWith(new_vec,(1,),(0,)),(0,),(0,)).extractScalar().real/new_vec.conj().contractWith(matrix2.contractWith(new_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
+        self.assertLess(new_val,old_val)
+    # }}}
+    @with_checker # test_relaxOver_standard {{{
+    def test_relaxOver_standard(self,N=irange(3,10)):
+        k = randint(1,N)
+        matrix = NDArrayData.newRandomHermitian(N,N)
+        old_vec = NDArrayData.newRandom(N).normalized()
+        old_val = old_vec.conj().contractWith(matrix.contractWith(old_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
+        new_vec = old_vec.relaxOver(Multiplier.fromMatrix(matrix),k=k)[0]
+        new_val = new_vec.conj().contractWith(matrix.contractWith(new_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
+        self.assertLess(new_val,old_val)
     # }}}
 # }}}

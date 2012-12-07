@@ -1,6 +1,7 @@
 # Imports {{{
 from copy import copy
 from functools import partial, reduce
+from math import ceil
 from numpy import allclose, any, argsort, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
 from scipy.linalg import eig, eigh, lu_factor, lu_solve, norm, svd, qr
 from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigs, gmres
@@ -155,61 +156,6 @@ class NDArrayData(Data): # {{{
         assert self.ndim == other.ndim
         return self.contractWith(other,range(self.ndim),range(self.ndim))
     # }}}
-    def computeMinimizersOver(self,expectation_multiplier,normalization_multiplier=None,k=1,maximum_number_of_tries=5): # {{{
-        initial = self.toArray().ravel()
-        N = len(initial)
-        if k >= N-1:
-            raise ValueError("Number of desired eigenvectors must be less than the number of degrees of freedom minus 1. ({} >= prod{}-1 = {})".format(k,self.shape,N-1))
-
-        if 2*(k+1) >= N and normalization_multiplier is not None and normalization_multiplier.isCheaperToFormMatrix(2*N):
-            expectation_matrix = expectation_multiplier.formMatrix().toArray()
-            del expectation_multiplier
-            if normalization_multiplier is None:
-                normalization_matrix = None
-            else:
-                normalization_matrix = normalization_multiplier.formMatrix().toArray()
-            del normalization_multiplier
-            return tuple(map(NDArrayData,eigh(expectation_matrix,normalization_matrix)[1].transpose()[:k].reshape((k,) + self.shape)))
-        else:
-            if normalization_multiplier is None:
-                applyInverseNormalization = lambda x: x
-            elif normalization_multiplier.isCheaperToFormMatrix(1000*k):
-                applyInverseNormalization = partial(lu_solve,lu_factor(normalization_multiplier.formMatrix().toArray()))
-                del normalization_multiplier
-            else:
-                normalization_matvec = lambda v: normalization_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
-                normalization_operator = LinearOperator(matvec=normalization_matvec,shape=(N,N),dtype=self.dtype)
-                def applyInverseNormalization(in_v):
-                    out_v, info = gmres(normalization_operator,in_v)
-                    assert info == 0
-                    return out_v
-
-            if expectation_multiplier.isCheaperToFormMatrix(100*k):
-                expectation_matrix = expectation_multiplier.formMatrix().toArray()
-                multiplyExpectation = lambda v: dot(expectation_matrix,v)
-                del expectation_multiplier
-            else:
-                multiplyExpectation = lambda v: expectation_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
-
-            matrix = \
-                LinearOperator(
-                    matvec=lambda v: applyInverseNormalization(multiplyExpectation(v)),
-                    shape=(N,N),
-                    dtype=self.dtype
-                )
-
-            guess = self.ravel().toArray()
-            for _ in range(maximum_number_of_tries):
-                try:
-                    evals, evecs = eigs(k=k,A=matrix,which='SR',v0=guess,ncv=3*k+1)
-                    return tuple(map(NDArrayData,evecs.transpose()[argsort(evals.real)].reshape((k,) + self.shape)))
-                except ArpackNoConvergence:
-                    guess = None
-
-            #save("A.npy",expectation_multiplier.formMatrix().toArray())
-            #save("M.npy",normalization_multiplier.formMatrix().toArray())
-            raise ARPACKError("Unable to converge after {} tries.".format(maximum_number_of_tries))
-    # }}}
     def directSumWith(self,other,*non_summed_axes): # {{{
         if not self.ndim == other.ndim:
             raise ValueError("In a direct sum the number of axes must match ({} != {})".format(self.ndim,other.ndim))
@@ -339,6 +285,78 @@ class NDArrayData(Data): # {{{
     # }}}
     def ravel(self): # {{{
         return NDArrayData(self._arr.ravel())
+    # }}}
+    def relaxOver(self,expectation_multiplier,normalization_multiplier=None,k=1,maximum_number_of_multiplications=None,tolerance=1e-8,dimension_of_krylov_space=None): # {{{
+        initial = self.toArray().ravel()
+        initial /= norm(initial)
+        N = len(initial)
+        if dimension_of_krylov_space is None:
+            dimension_of_krylov_space = min(2*k+1,N)
+        if 2*dimension_of_krylov_space >= N and normalization_multiplier is not None and normalization_multiplier.isCheaperToFormMatrix(2*N):
+            expectation_matrix = expectation_multiplier.formMatrix().toArray()
+            del expectation_multiplier
+            if normalization_multiplier is None:
+                normalization_matrix = None
+            else:
+                normalization_matrix = normalization_multiplier.formMatrix().toArray()
+            del normalization_multiplier
+            return tuple(map(NDArrayData,eigh(expectation_matrix,normalization_matrix)[1].transpose()[:k].reshape((k,) + self.shape)))
+        else:
+            if normalization_multiplier is None:
+                applyInverseNormalization = lambda x: x
+            elif normalization_multiplier.isCheaperToFormMatrix(10*2*dimension_of_krylov_space):
+                applyInverseNormalization = partial(lu_solve,lu_factor(normalization_multiplier.formMatrix().toArray()))
+                del normalization_multiplier
+            else:
+                normalization_matvec = lambda v: normalization_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
+                normalization_operator = LinearOperator(matvec=normalization_matvec,shape=(N,N),dtype=self.dtype)
+                def applyInverseNormalization(in_v):
+                    out_v, info = gmres(normalization_operator,in_v)
+                    assert info == 0
+                    return out_v
+
+            if expectation_multiplier.isCheaperToFormMatrix(2*dimension_of_krylov_space):
+                expectation_matrix = expectation_multiplier.formMatrix().toArray()
+                multiplyExpectation = lambda v: dot(expectation_matrix,v)
+                del expectation_multiplier
+            else:
+                multiplyExpectation = lambda v: expectation_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
+
+            multiply = lambda v: applyInverseNormalization(multiplyExpectation(v))
+
+            number_of_multiplications = 0
+            last_lowest_eigenvalue = None
+            space_is_complete = dimension_of_krylov_space == N
+            while True:
+                krylov_basis = zeros((dimension_of_krylov_space,N),dtype=complex128)
+                multiplied_krylov_basis = zeros((dimension_of_krylov_space,N),dtype=complex128)
+                krylov_basis[0] = initial
+                del initial
+                for i in range(0,dimension_of_krylov_space):
+                    multiplied_krylov_basis[i] = multiply(krylov_basis[i])
+                    if i < dimension_of_krylov_space-1:
+                        krylov_basis[i+1] = multiplied_krylov_basis[i] - dot(dot(krylov_basis[:i+1].conj(),multiplied_krylov_basis[i]),krylov_basis[:i+1])
+                        normalization = norm(krylov_basis[i+1])
+                        if normalization <= 1e-12:
+                            space_is_complete = True
+                            krylov_basis = krylov_basis[:i+1]
+                            multiplied_krylov_basis = multiplied_krylov_basis[:i+1]
+                            break
+                        krylov_basis[i+1] /= normalization
+                number_of_multiplications += dimension_of_krylov_space
+
+                matrix_in_krylov_subspace = dot(krylov_basis.conj(),multiplied_krylov_basis.transpose())
+                evals, evecs = eig(matrix_in_krylov_subspace)
+                evecs = evecs.transpose()
+                permutation = argsort(evals)
+                evals = evals[permutation]
+                evecs = evecs[permutation]
+                if space_is_complete or last_lowest_eigenvalue is not None and (abs(last_lowest_eigenvalue-evals[0])<=tolerance) or maximum_number_of_multiplications is not None and number_of_multiplications >= maximum_number_of_multiplications:
+                    return [NDArrayData(dot(x,krylov_basis).reshape(self.shape)) for x in evecs[:k]]
+                else:
+                    initial = dot(evecs[0],krylov_basis)
+                    initial /= norm(initial)
+                    last_lowest_eigenvalue = evals[0]
     # }}}
     def split(self,*splits): # {{{
         return NDArrayData(self._arr.reshape(splits))

@@ -464,7 +464,7 @@ class System(BaseSystem): # {{{
             return map(type(state_center_data),solutions[1:1+number_of_additional_solutions])
         else:
             minimizers = \
-                state_center_data.computeMinimizersOver(
+                state_center_data.relaxOver(
                     *self.formExpectationAndNormalizationMultipliers(),
                     k=1+number_of_additional_solutions
                 )
