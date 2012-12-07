@@ -286,22 +286,13 @@ class NDArrayData(Data): # {{{
     def ravel(self): # {{{
         return NDArrayData(self._arr.ravel())
     # }}}
-    def relaxOver(self,expectation_multiplier,normalization_multiplier=None,k=1,maximum_number_of_multiplications=None,tolerance=1e-8,dimension_of_krylov_space=None): # {{{
+    def relaxOver(self,expectation_multiplier,normalization_multiplier=None,maximum_number_of_multiplications=None,tolerance=1e-8,dimension_of_krylov_space=None): # {{{
         initial = self.toArray().ravel()
         initial /= norm(initial)
         N = len(initial)
         if dimension_of_krylov_space is None:
-            dimension_of_krylov_space = min(2*k+1,N)
-        if 2*dimension_of_krylov_space >= N and normalization_multiplier is not None and normalization_multiplier.isCheaperToFormMatrix(2*N):
-            expectation_matrix = expectation_multiplier.formMatrix().toArray()
-            del expectation_multiplier
-            if normalization_multiplier is None:
-                normalization_matrix = None
-            else:
-                normalization_matrix = normalization_multiplier.formMatrix().toArray()
-            del normalization_multiplier
-            return tuple(map(NDArrayData,eigh(expectation_matrix,normalization_matrix)[1].transpose()[:k].reshape((k,) + self.shape)))
-        else:
+            dimension_of_krylov_space = 3
+
             if normalization_multiplier is None:
                 applyInverseNormalization = lambda x: x
             elif normalization_multiplier.isCheaperToFormMatrix(10*2*dimension_of_krylov_space):
@@ -337,7 +328,7 @@ class NDArrayData(Data): # {{{
                     if i < dimension_of_krylov_space-1:
                         krylov_basis[i+1] = multiplied_krylov_basis[i] - dot(dot(krylov_basis[:i+1].conj(),multiplied_krylov_basis[i]),krylov_basis[:i+1])
                         normalization = norm(krylov_basis[i+1])
-                        if normalization <= 1e-12:
+                        if normalization <= 1e-14:
                             space_is_complete = True
                             krylov_basis = krylov_basis[:i+1]
                             multiplied_krylov_basis = multiplied_krylov_basis[:i+1]
@@ -352,11 +343,14 @@ class NDArrayData(Data): # {{{
                 evals = evals[permutation]
                 evecs = evecs[permutation]
                 if space_is_complete or last_lowest_eigenvalue is not None and (abs(last_lowest_eigenvalue-evals[0])<=tolerance) or maximum_number_of_multiplications is not None and number_of_multiplications >= maximum_number_of_multiplications:
-                    return [NDArrayData(dot(x,krylov_basis).reshape(self.shape)) for x in evecs[:k]]
+                    return NDArrayData(dot(evecs[0],krylov_basis).reshape(self.shape))
                 else:
                     initial = dot(evecs[0],krylov_basis)
                     initial /= norm(initial)
                     last_lowest_eigenvalue = evals[0]
+    # }}}
+    def reverseLastAxis(self): # {{{
+        return NDArrayData(self._arr[...,::-1])
     # }}}
     def split(self,*splits): # {{{
         return NDArrayData(self._arr.reshape(splits))

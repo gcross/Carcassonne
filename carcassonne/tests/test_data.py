@@ -129,13 +129,12 @@ class TestNDArrayData(TestCase): # {{{
     # }}}
     @with_checker # test_relaxOver_generalized {{{
     def test_relaxOver_generalized(self,N=irange(3,10)):
-        k = randint(1,N)
         matrix1 = NDArrayData.newRandomHermitian(N,N)
         matrix2 = NDArrayData.newRandomHermitian(N,N)
         matrix2 += -2*NDArrayData.newIdentity(N)*eigvalsh(matrix2.toArray())[0]
         old_vec = NDArrayData.newRandom(N).normalized()
         old_val = old_vec.conj().contractWith(matrix1.contractWith(old_vec,(1,),(0,)),(0,),(0,)).extractScalar().real/old_vec.conj().contractWith(matrix2.contractWith(old_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
-        new_vec = old_vec.relaxOver(Multiplier.fromMatrix(matrix1),Multiplier.fromMatrix(matrix2),k=k)[0]
+        new_vec = old_vec.relaxOver(Multiplier.fromMatrix(matrix1),Multiplier.fromMatrix(matrix2))
         new_val = new_vec.conj().contractWith(matrix1.contractWith(new_vec,(1,),(0,)),(0,),(0,)).extractScalar().real/new_vec.conj().contractWith(matrix2.contractWith(new_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
         self.assertLess(new_val,old_val)
     # }}}
@@ -145,7 +144,7 @@ class TestNDArrayData(TestCase): # {{{
         matrix = NDArrayData.newRandomHermitian(N,N)
         old_vec = NDArrayData.newRandom(N).normalized()
         old_val = old_vec.conj().contractWith(matrix.contractWith(old_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
-        new_vec = old_vec.relaxOver(Multiplier.fromMatrix(matrix),k=k)[0]
+        new_vec = old_vec.relaxOver(Multiplier.fromMatrix(matrix))
         new_val = new_vec.conj().contractWith(matrix.contractWith(new_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
         self.assertLess(new_val,old_val)
     # }}}

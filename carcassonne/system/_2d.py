@@ -422,7 +422,7 @@ class System(BaseSystem): # {{{
                 new_dimension = old_dimension + increment
             else:
                 raise ValueError("Increment of {} in the bandwidth dimensions {} and {} is too great given the current shape of {} (maximum increment is {}).".format(increment,direction,direction+2,state_center_data.shape,maximum_increment))
-        extra_state_center_data, = self.minimizeExpectation(number_of_additional_solutions=1)
+        extra_state_center_data = self.state_center_data.reverseLastAxis()
         axes = (direction,direction+2)
         self.setStateCenter(
             state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
@@ -448,12 +448,10 @@ class System(BaseSystem): # {{{
         self.increaseBandwidth(direction,by,to)
         self.normalize()
     # }}}
-    def minimizeExpectation(self,number_of_additional_solutions=0): # {{{
+    def minimizeExpectation(self): # {{{
         state_center_data = self.state_center_data
         if prod(state_center_data.shape[:4]) == 1:
             N = state_center_data.shape[4]
-            if 1+number_of_additional_solutions > N:
-                raise ValueError("{} solutions in total are required but there are only {} degrees of freedom available.".format(1+number_of_additional_solutions,N))
             operator = state_center_data.newZeros(shape=(N,N),dtype=state_center_data.dtype)
             for tag, data in self.operator_center_tensor.items():
                 if isinstance(tag,OneSiteOperator):
@@ -461,15 +459,13 @@ class System(BaseSystem): # {{{
             evals, evecs = eigh(operator.toArray())
             solutions = evecs.transpose().reshape((N,) + state_center_data.shape)
             self.setStateCenter(type(state_center_data)(solutions[0]))
-            return map(type(state_center_data),solutions[1:1+number_of_additional_solutions])
         else:
-            minimizers = \
+            self.setStateCenter(
                 state_center_data.relaxOver(
                     *self.formExpectationAndNormalizationMultipliers(),
-                    k=1+number_of_additional_solutions
+                    maximum_number_of_multiplications=100
                 )
-            self.setStateCenter(minimizers[0])
-            return minimizers[1:]
+            )
     # }}}
     def normalize(self): # {{{
         for corner_id in range(4):
