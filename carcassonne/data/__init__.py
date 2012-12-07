@@ -376,55 +376,6 @@ NDArrayData.Y = NDArrayData(array([[0,1j],[1j,0]],dtype=complex128))
 NDArrayData.Z = NDArrayData(array([[1,0],[0,-1]],dtype=complex128))
   # }}}
 # }}}
-class ScalarData(Data): # {{{
-  # Class construction methods {{{
-    def __init__(self,value): # {{{
-        self.value = value
-    # }}}
-    @classmethod # newRandom {{{
-    def newRandom(cls):
-        return crand()
-    # }}}
-  # }}}
-  # Instance methods {{{
-    def __iadd__(self,other): # {{{
-        assert isinstance(other,ScalarData)
-        self.value += other.value
-        return self
-    # }}}
-    def __repr__(self): # {{{
-        return "ScalarData({})".format(self.value)
-    # }}}
-    def contractWith(self,other,self_sum_axes,other_sum_axes): # {{{
-        if isinstance(other,ScalarData):
-            assert self_sum_axes == []
-            assert other_sum_axes == []
-            return ScalarData(self.value*other.value)
-        elif isinstance(other,NDArrayData):
-            return NDArrayData(self.value*other.toArray())
-        else:
-            raise TypeError("contraction of ScalarData with {} not supported".format(other.__class__.__name__))
-    # }}}
-    def extractScalar(self): # {{{
-        return self.value
-    # }}}
-    def join(self,*grouping): # {{{
-        assert grouping == []
-        return copy(self)
-    # }}}
-    def toArray(self): # {{{
-        return array(self.value)
-    # }}}
-    def transpose(self,transposition): # {{{
-        assert transposition == [0]
-        return copy(self)
-    # }}}
-  # }}}
-  # Properties {{{
-    ndim = property(lambda _: 0)
-    shape = property(lambda _: ())
-  # }}}
-# }}}
 # }}}
 
 # Exports {{{
@@ -434,7 +385,6 @@ __all__ = [
     # }}}
     # Classes {{{
     "NDArrayData",
-    "ScalarData",
     # }}}
 ]
 # }}}
