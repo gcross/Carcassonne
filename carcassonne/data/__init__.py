@@ -233,6 +233,15 @@ class NDArrayData(Data): # {{{
         new_arr[old_indices] = self._arr
         return NDArrayData(new_arr)
     # }}}
+    def isCloseTo(self,other,rtol=1e-7,atol=1e-7): # {{{
+        ndiff = (self-other).norm()
+        if not (ndiff <= atol or ndiff/(self.norm()+other.norm())/2 <= rtol):
+            print(self._arr,other._arr)
+            print(self.hasNaN(),other.hasNaN())
+            print(max(self._arr.ravel()),max(other._arr.ravel()))
+            print(self.norm(),other.norm(),ndiff,ndiff/(self.norm()+other.norm()))
+        return ndiff <= atol or ndiff/(self.norm()+other.norm())/2 <= rtol
+    # }}}
     def join(self,*groups): # {{{
         groups = [[group] if isinstance(group,int) else group for group in groups]
         _arr = self._arr.transpose([index for group in groups for index in group])
