@@ -91,6 +91,9 @@ class NDArrayData(Data): # {{{
     # }}}
   # }}}
   # Instance methods {{{
+    def __add__(self,other): # {{{
+        return NDArrayData(self._arr + other._arr)
+    # }}}
     def __copy__(self): # {{{
         return NDArrayData(copy(self._arr))
     # }}}
@@ -128,6 +131,9 @@ class NDArrayData(Data): # {{{
     # }}}
     def __str__(self): # {{{
         return "NDArrayData({})".format(self._arr)
+    # }}}
+    def __sub__(self,other): # {{{
+        return NDArrayData(self._arr-other._arr)
     # }}}
     def __truediv__(self,other): # {{{
         return NDArrayData(self._arr / other._arr)
