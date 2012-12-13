@@ -36,7 +36,7 @@ class CostTracker(Data): # {{{
 
 # Functions {{{
 def computeCostOfContracting(contractor,*tensors): # {{{
-    return contractor(*(CostTracker(tensor.shape) for tensor in tensors)).cost
+    return contractor(*(CostTracker(tensor.shape) if not isinstance(tensor,tuple) else CostTracker(tensor) for tensor in tensors)).cost
 # }}}
 # }}}
 
