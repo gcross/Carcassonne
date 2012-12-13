@@ -545,7 +545,8 @@ class System(BaseSystem): # {{{
             self.setStateCenter(type(state_center_data)(solutions[0]))
         else:
             self.setStateCenter(
-                state_center_data.relaxOver(
+                relaxOver(
+                    state_center_data,
                     *self.formExpectationAndNormalizationMultipliers(),
                     maximum_number_of_multiplications=100
                 )

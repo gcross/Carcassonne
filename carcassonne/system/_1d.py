@@ -1,5 +1,7 @@
 # Imports {{{
+from .base import *
 from ..tensors._1d import *
+from ..utils import relaxOver
 # }}}
 
 # Classes {{{
@@ -57,10 +59,17 @@ class System(BaseSystem): # {{{
                 self.center_operator
             )
     # }}}
+    def minimizeExpectation(self): # {{{
+        self.setCenterState(relaxOver(
+            initial=NDArrayData(self.center_state),
+            expectation_multiplier=self.formExpectationMultiplier(),
+            maximum_number_of_multiplications=100
+        ).toArray())
+    # }}}
     def setCenterState(self,center_state,center_state_conj=None): # {{{
         self.center_state = center_state
         if center_state_conj is None:
-            center_state_conj = conter_state.conj()
+            center_state_conj = center_state.conj()
         self.center_state_conj = center_state_conj
     # }}}
   # }}}

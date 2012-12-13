@@ -161,7 +161,7 @@ def formNormalizationStage3(contractor,stage2_0,stage2_1,center_identity):
 def formDenseStage3_multiply_and_cost(contractor,stage2_0,stage2_1,site_operator):
     stage2_0_joined = stage2_0.join((0,1),4,5,2,3)
     stage2_1_joined = stage2_1.join((1,0),4,5,2,3)
-    dummy_state_center_data = CostTracker(stage2_0_joined.shape[-2:] + stage2_1_joined.shape[-2:] + (site_operator.shape[0],))
+    state_shape = stage2_0_joined.shape[-2:] + stage2_1_joined.shape[-2:] + (site_operator.shape[0],)
     return (
         partial(
             contractor,
@@ -169,7 +169,7 @@ def formDenseStage3_multiply_and_cost(contractor,stage2_0,stage2_1,site_operator
             stage2_1_joined,
             site_operator,
         ),
-        computeCostOfContracting(contractor,stage2_0_joined,stage2_1_joined,site_operator,dummy_state_center_data)
+        computeCostOfContracting(contractor,stage2_0_joined,stage2_1_joined,site_operator,state_shape)
     )
 # }}}
 # def formDenseStage3_formMatrix_and_cost(stage2_0,stage2_1,site_operator) {{{

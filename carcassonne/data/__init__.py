@@ -3,10 +3,9 @@ from copy import copy
 from functools import partial, reduce
 from math import ceil
 from numpy import allclose, any, argsort, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
-from scipy.linalg import eig, eigh, lu_factor, lu_solve, norm, svd, qr
-from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigs, gmres
+from scipy.linalg import norm
 
-from ..utils import crand, dropAt, randomComplexSample
+from ..utils import crand, dropAt, randomComplexSample, relaxOver
 # }}}
 
 # Exception classes {{{
@@ -300,69 +299,6 @@ class NDArrayData(Data): # {{{
     # }}}
     def ravel(self): # {{{
         return NDArrayData(self._arr.ravel())
-    # }}}
-    def relaxOver(self,expectation_multiplier,normalization_multiplier=None,maximum_number_of_multiplications=None,tolerance=1e-8,dimension_of_krylov_space=None): # {{{
-        initial = self.toArray().ravel()
-        initial /= norm(initial)
-        N = len(initial)
-        if dimension_of_krylov_space is None:
-            dimension_of_krylov_space = 3
-
-            if normalization_multiplier is None:
-                applyInverseNormalization = lambda x: x
-            elif normalization_multiplier.isCheaperToFormMatrix(10*2*dimension_of_krylov_space):
-                applyInverseNormalization = partial(lu_solve,lu_factor(normalization_multiplier.formMatrix().toArray()))
-                del normalization_multiplier
-            else:
-                normalization_matvec = lambda v: normalization_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
-                normalization_operator = LinearOperator(matvec=normalization_matvec,shape=(N,N),dtype=self.dtype)
-                def applyInverseNormalization(in_v):
-                    out_v, info = gmres(normalization_operator,in_v)
-                    assert info == 0
-                    return out_v
-
-            if expectation_multiplier.isCheaperToFormMatrix(2*dimension_of_krylov_space):
-                expectation_matrix = expectation_multiplier.formMatrix().toArray()
-                multiplyExpectation = lambda v: dot(expectation_matrix,v)
-                del expectation_multiplier
-            else:
-                multiplyExpectation = lambda v: expectation_multiplier(NDArrayData(v.reshape(self.shape))).toArray().ravel()
-
-            multiply = lambda v: applyInverseNormalization(multiplyExpectation(v))
-
-            number_of_multiplications = 0
-            last_lowest_eigenvalue = None
-            space_is_complete = dimension_of_krylov_space == N
-            while True:
-                krylov_basis = zeros((dimension_of_krylov_space,N),dtype=complex128)
-                multiplied_krylov_basis = zeros((dimension_of_krylov_space,N),dtype=complex128)
-                krylov_basis[0] = initial
-                del initial
-                for i in range(0,dimension_of_krylov_space):
-                    multiplied_krylov_basis[i] = multiply(krylov_basis[i])
-                    if i < dimension_of_krylov_space-1:
-                        krylov_basis[i+1] = multiplied_krylov_basis[i] - dot(dot(krylov_basis[:i+1].conj(),multiplied_krylov_basis[i]),krylov_basis[:i+1])
-                        normalization = norm(krylov_basis[i+1])
-                        if normalization <= 1e-14:
-                            space_is_complete = True
-                            krylov_basis = krylov_basis[:i+1]
-                            multiplied_krylov_basis = multiplied_krylov_basis[:i+1]
-                            break
-                        krylov_basis[i+1] /= normalization
-                number_of_multiplications += dimension_of_krylov_space
-
-                matrix_in_krylov_subspace = dot(krylov_basis.conj(),multiplied_krylov_basis.transpose())
-                evals, evecs = eig(matrix_in_krylov_subspace)
-                evecs = evecs.transpose()
-                permutation = argsort(evals)
-                evals = evals[permutation]
-                evecs = evecs[permutation]
-                if space_is_complete or last_lowest_eigenvalue is not None and (abs(last_lowest_eigenvalue-evals[0])<=tolerance) or maximum_number_of_multiplications is not None and number_of_multiplications >= maximum_number_of_multiplications:
-                    return NDArrayData(dot(evecs[0],krylov_basis).reshape(self.shape))
-                else:
-                    initial = dot(evecs[0],krylov_basis)
-                    initial /= norm(initial)
-                    last_lowest_eigenvalue = evals[0]
     # }}}
     def reverseLastAxis(self): # {{{
         return NDArrayData(self._arr[...,::-1])
