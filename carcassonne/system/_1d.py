@@ -7,14 +7,41 @@ from ..utils import relaxOver
 # Classes {{{
 class System(BaseSystem): # {{{
   # Instance methods {{{
-    def __init__(self,left_environment,right_environment,center_state,center_operator): # {{{
-        self.left_environment = left_environment
-        self.right_environment = right_environment
-        self.center_state = center_state
+    def __init__(self,left_operator_boundary,right_operator_boundary,center_operator): # {{{
+        self.left_operator_boundary = array(left_operator_boundary)
+        self.left_environment = buildProductTensor(left_operator_boundary,[1],[1])
+        self.right_environment = buildProductTensor(right_operator_boundary,[1],[1])
+        self.center_state = ones((1,1,center_operator.shape[2]))
         self.center_operator = center_operator
     # }}}
     def computeExpectation(self): # {{{
         return self.computeScalarUsingMultiplier(self.formExpectationMultiplier())
+    # }}}
+    def computeOneSiteExpectation(self): # {{{
+        def multiplyRightBoundary(v):
+            return \
+                absorbCenterOSSIntoRightEnvironment(
+                    v.reshape(self.right_environment.shape),
+                    self.center_operator,
+                    self.center_state,
+                    self.center_state_conj,
+                ).ravel()
+        ovecs = eigs(LinearOperator(N=prod(self.right_environment.shape),matmul=multiplyRightBoundary),k=2,which='LM')[1].transpose()
+
+        Omatrix = zeros((2,2),dtype=complex128)
+        for i in range(2):
+            for j in range(2):
+                Omatrix[i,j] = dot(ovecs[i].conj(),multiplyRightBoundary(ovecs[j]))
+        numerator = sqrt(trace(dot(Omatrix.transpose().conj(),Omatrix))-2)
+
+        lnvecs = tensordot(self.left_operator_boundary,ovecs.reshape((2,) + self.left_operator_boundary.shape,(0,1))
+        rnvecs = tensordot(self.right_operator_boundary,ovecs.reshape((2,) + self.right_operator_boundary.shape,(0,1))
+        Nmatrix = zeros((2,2),dtype=complex128)
+        for i in range(2):
+            for j in range(2):
+                Nmatrix[i,j] = dot(lnvecs[i].conj().ravel(),absorbCenterSSIntoRightEnvironment(rnvecs[j],self.center_state,self.center_state_conj).ravel())
+        denominator = sqrt(trace(dot(Nmatrix.transpose().conj(),Nmatrix)))
+        return numerator/denominator
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.center_state.contractWith(multiply(self.center_state),range(3),range(3)).extractScalar()

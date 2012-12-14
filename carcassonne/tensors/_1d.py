@@ -38,6 +38,18 @@ absorbCenterOSSIntoRightEnvironment = formContractor(
         [("S*",0)],
     ]
 ) # }}}
+# def absorbCenterSSIntoRightEnvironment(R,O,S,S*) {{{
+absorbCenterSSIntoRightEnvironment = formContractor(
+    ["R","S","S*"],
+    [
+        (("R",0),("S",1)),
+        (("R",1),("S*",1)),
+        (("S",2),("S*",2)),
+    ],[
+        [("S",0)],
+        [("S*",0)],
+    ]
+) # }}}
 # def formExpectationMultiplier(L,R,O,S) {{{
 @prependDataContractor(
     [
