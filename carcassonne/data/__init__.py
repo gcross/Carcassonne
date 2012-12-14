@@ -2,7 +2,7 @@
 from copy import copy
 from functools import partial, reduce
 from math import ceil
-from numpy import allclose, any, argsort, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
+from numpy import allclose, any, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
 from scipy.linalg import norm
 
 from ..utils import crand, dropAt, randomComplexSample, relaxOver
@@ -302,6 +302,9 @@ class NDArrayData(Data): # {{{
     # }}}
     def reverseLastAxis(self): # {{{
         return NDArrayData(self._arr[...,::-1])
+    # }}}
+    def size(self): # {{{
+        return prod(self.shape)
     # }}}
     def split(self,*splits): # {{{
         return NDArrayData(self._arr.reshape(splits))

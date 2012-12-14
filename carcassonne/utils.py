@@ -230,7 +230,7 @@ def applyPermutation(permutation,values): # {{{
     return [values[i] for i in permutation]
 # }}}
 def buildProductTensor(*factors): # {{{
-    return reduce(multiply.outer,[array(factor,dtype=complex128) for factor in factors],zeros((),complex128))
+    return reduce(multiply.outer,(array(factor,dtype=complex128) for factor in factors)) #,zeros((),dtype=complex128))
 # }}}
 def buildTensor(dimension,components): # {{{
     tensor = zeros(dimension,dtype=complex128)
