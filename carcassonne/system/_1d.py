@@ -55,18 +55,11 @@ class System(BaseSystem): # {{{
             for i in range(n):
                 matrix.append(multiplyRightBoundary(array([0]*i+[1]+[0]*(n-1-i))))
             matrix = array(matrix)
-            print("matrix =",repr(matrix))
             evals = eigvals(matrix)
             lam = evals[argmax(abs(evals))]
-            print("transformed matrix =",repr(matrix-lam*identity(n)))
-            print("lam =",lam)
-            print("evals (original) =",evals)
-            print("evals (transformed) =",eigvals(matrix-lam*identity(n)))
-            print("svdvals (original) =",svd(matrix)[1])
-            print("svdvals (transformed) =",svd(matrix-lam*identity(n))[1])
-            ovecs = svd(matrix-lam*identity(n))[-1][-2:]
+            tmatrix = matrix-lam*identity(n)
+            ovecs = svd(dot(tmatrix,tmatrix))[-1][-2:]
             assert ovecs.shape == (2,n)
-            print("dpr =",dot(matrix-lam*identity(n),crand(n)))
         else:
             ovecs = eigs(LinearOperator((self.right_environment.size,)*2,matvec=multiplyRightBoundary),k=2,which='LM',ncv=9)[1].transpose()
 
@@ -75,8 +68,6 @@ class System(BaseSystem): # {{{
             for j in range(2):
                 Omatrix[i,j] = dot(ovecs[i].conj(),multiplyRightBoundary(ovecs[j]))
         numerator = sqrt(trace(dot(Omatrix.transpose().conj(),Omatrix))-2)
-        print("Omatrix=",Omatrix)
-        print("numerator=",numerator)
 
         lnvecs = tensordot(self.left_operator_boundary,ovecs.reshape((2,) + self.left_environment.shape),(0,1))
         rnvecs = tensordot(self.right_operator_boundary,ovecs.reshape((2,) + self.right_environment.shape),(0,1))
@@ -85,9 +76,6 @@ class System(BaseSystem): # {{{
             for j in range(2):
                 Nmatrix[i,j] = dot(lnvecs[i].conj().ravel(),absorbCenterSSIntoRightEnvironment(rnvecs[j],self.center_state,self.center_state_conj).ravel())
         denominator = sqrt(trace(dot(Nmatrix.transpose().conj(),Nmatrix)))
-        print("Nmatrix=",Nmatrix)
-        print("denominator=",denominator)
-        print("ratio=",numerator/denominator)
         return numerator/denominator
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
