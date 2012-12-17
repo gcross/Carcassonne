@@ -1,11 +1,9 @@
 # Imports {{{
-from numpy import argmax, array, complex128, conj, dot, identity, multiply, sqrt, tensordot, trace, zeros
-from scipy.linalg import eigvals, svd
-from scipy.sparse.linalg import LinearOperator, eigs
+from numpy import array, complex128, conj, dot, identity, multiply, sqrt, tensordot, trace, zeros
 
 from .base import *
 from ..tensors._1d import *
-from ..utils import buildProductTensor, computeAndCheckNewDimension, crand, relaxOver, normalizeAndDenormalize
+from ..utils import buildProductTensor, computeAndCheckNewDimension, computeLimitingLinearCoefficient, crand, relaxOver, normalizeAndDenormalize
 # }}}
 
 # Classes {{{
@@ -38,45 +36,40 @@ class System(BaseSystem): # {{{
         return self.computeScalarUsingMultiplier(self.formExpectationMultiplier())
     # }}}
     def computeOneSiteExpectation(self): # {{{
-        def multiplyRightBoundary(v):
-            return \
-                absorbCenterOSSIntoRightEnvironment(
-                    v.reshape(self.right_environment.shape),
-                    self.center_operator,
-                    self.center_state,
-                    self.center_state_conj,
-                ).ravel()
         assert self.left_environment.size >= 2
         assert self.left_operator_boundary.size >= 2
-
-        n = self.left_environment.size
-        if n <= 3:
-            matrix = []
-            for i in range(n):
-                matrix.append(multiplyRightBoundary(array([0]*i+[1]+[0]*(n-1-i))))
-            matrix = array(matrix)
-            evals = eigvals(matrix)
-            lam = evals[argmax(abs(evals))]
-            tmatrix = matrix-lam*identity(n)
-            ovecs = svd(dot(tmatrix,tmatrix))[-1][-2:]
-            assert ovecs.shape == (2,n)
-        else:
-            ovecs = eigs(LinearOperator((self.right_environment.size,)*2,matvec=multiplyRightBoundary),k=2,which='LM',ncv=9)[1].transpose()
-
-        Omatrix = zeros((2,2),dtype=complex128)
-        for i in range(2):
-            for j in range(2):
-                Omatrix[i,j] = dot(ovecs[i].conj(),multiplyRightBoundary(ovecs[j]))
-        numerator = sqrt(trace(dot(Omatrix.transpose().conj(),Omatrix))-2)
-
-        lnvecs = tensordot(self.left_operator_boundary,ovecs.reshape((2,) + self.left_environment.shape),(0,1))
-        rnvecs = tensordot(self.right_operator_boundary,ovecs.reshape((2,) + self.right_environment.shape),(0,1))
-        Nmatrix = zeros((2,2),dtype=complex128)
-        for i in range(2):
-            for j in range(2):
-                Nmatrix[i,j] = dot(lnvecs[i].conj().ravel(),absorbCenterSSIntoRightEnvironment(rnvecs[j],self.center_state,self.center_state_conj).ravel())
-        denominator = sqrt(trace(dot(Nmatrix.transpose().conj(),Nmatrix)))
-        return numerator/denominator
+        right_O_environment_shape = self.right_environment.shape
+        right_N_environment_shape = (self.center_state.shape[1],)*2
+        right_N_environment_size = prod(right_N_environment_shape)
+        return \
+            computeLimitingLinearCoefficient(
+                prod(right_O_environment_shape),
+                lambda v: \
+                    absorbCenterOSSIntoRightEnvironment(
+                        v.reshape(right_O_environment_shape),
+                        self.center_operator,
+                        self.center_state,
+                        self.center_state_conj,
+                    ).ravel(),
+                lambda v: \
+                    absorbCenterSSIntoRightEnvironment(
+                        v.reshape(right_N_environment_shape),
+                        self.center_state,
+                        self.center_state_conj
+                    ).ravel(),
+                lambda vs: \
+                    tensordot(
+                        self.left_operator_boundary,
+                        vs.reshape((vs.shape[0],) + right_O_environment_shape),
+                        (0,1)
+                    ).reshape(vs.shape[0],right_N_environment_size),
+                lambda vs: \
+                    tensordot(
+                        self.right_operator_boundary,
+                        vs.reshape((vs.shape[0],) + right_O_environment_shape),
+                        (0,1)
+                    ).reshape(vs.shape[0],right_N_environment_size)
+            )
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.center_state.contractWith(multiply(self.center_state),range(3),range(3)).extractScalar()
