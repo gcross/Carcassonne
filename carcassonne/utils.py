@@ -232,8 +232,8 @@ def applyPermutation(permutation,values): # {{{
 def buildProductTensor(*factors): # {{{
     return reduce(multiply.outer,(array(factor,dtype=complex128) for factor in factors)) #,zeros((),dtype=complex128))
 # }}}
-def buildTensor(dimension,components): # {{{
-    tensor = zeros(dimension,dtype=complex128)
+def buildTensor(dimensions,components): # {{{
+    tensor = zeros(dimensions,dtype=complex128)
     for index, value in components.items():
         tensor[index] = value
     return tensor
@@ -244,6 +244,19 @@ def checkForNaNsIn(data): # {{{
 # }}}
 def crand(*shape): # {{{
     return rand(*shape)*2-1+rand(*shape)*2j-1j
+# }}}
+def computeAndCheckNewDimension(state_center,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
+    old_dimension = state_center.shape[direction]
+    new_dimension = computeNewDimension(old_dimension,by=by,to=to)
+    increment = new_dimension-old_dimension
+    maximum_increment = maximumBandwidthIncrement(direction,state_center.shape)
+    if increment > maximum_increment:
+        if do_as_much_as_possible:
+            increment = maximum_increment
+            new_dimension = old_dimension + increment
+        else:
+            raise ValueError("Increment of {} in the bandwidth dimensions {} and {} is too great given the current shape of {} (maximum increment is {}).".format(increment,direction,direction+2,state_center_data.shape,maximum_increment))
+    return old_dimension, new_dimension, increment
 # }}}
 def computeCompressor(old_dimension,new_dimension,multiplier,dtype,normalize=False): # {{{
     if new_dimension < 0:
@@ -852,6 +865,7 @@ __all__ = [
     "buildProductTensor",
     "buildTensor",
     "checkForNaNsIn",
+    "computeAndCheckNewDimension",
     "computeCompressor",
     "computeCompressorForMatrixTimesItsDagger",
     "computeNewDimension",

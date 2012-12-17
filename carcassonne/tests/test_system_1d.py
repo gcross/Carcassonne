@@ -24,6 +24,7 @@ class TestSystem1D(TestCase): # {{{
                 }),
                 array([[[cos(phase)+1j*sin(phase),0]]]),
             )
+        print("field strength =",field_strength)
         self.assertAlmostEqual(system.computeOneSiteExpectation(),abs(field_strength))
     # }}}
     @with_checker # test_computeOneSiteExpectation_ZZ_field_all_up {{{

@@ -15,19 +15,19 @@ class TestSimulator1D(TestCase): # {{{
     def test_on_magnetic_field(self,direction=choiceof((0,1))):
         system = \
             System(
-                buildProductTensor([1,0],[1],[1]),
-                buildProductTensor([0,1],[1],[1]),
-                ones((1,1,2)),
+                buildProductTensor([1,0]),
+                buildProductTensor([0,1]),
                 buildTensor((2,2,2,2),{
                    (0,0): Pauli.I,
                    (1,1): Pauli.I,
                    (0,1): Pauli.Z,
                 }),
+                ones((1,1,2)),
             )
         system.sweep_convergence_policy = RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7)
         system.run_convergence_policy = RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7)
         system.increase_bandwidth_policy = OneDirectionIncrementBandwidthPolicy(0)
-        system.contraction_policy = RepeatPatternContractionPolicy([0,2])
+        system.contraction_policy = RepeatPatternContractionPolicy([0,1])
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),-1)
     # }}}
