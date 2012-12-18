@@ -85,6 +85,7 @@ class RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(Policy): # 
             self.last = self.current
             self.current = self.system.computeOneSiteExpectation()
             print("current energy =",self.current)
+            print("total energy =",self.system.computeExpectation())
 # }}}
 class RelativeStateDifferenceThresholdConvergencePolicy(Policy): # {{{
     def __init__(self,threshold):

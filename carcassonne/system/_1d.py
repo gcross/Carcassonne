@@ -75,7 +75,7 @@ class System(BaseSystem): # {{{
             )
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
-        return self.center_state.contractWith(multiply(self.center_state),range(3),range(3)).extractScalar()
+        return dot(self.center_state_conj.ravel(),multiply(NDArrayData(self.center_state)).toArray().ravel())
     # }}}
     def contractLeft(self): # {{{
         normalized_center_state, denormalized_center_state =\

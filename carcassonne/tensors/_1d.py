@@ -81,9 +81,9 @@ def formExpectationMultiplier(multiply,formMatrix,L,R,O):
     return \
         Multiplier(
             (prod(S_shape),)*2,
-            lambda v: partial(multiply,L,R,O),
+            partial(multiply,L,R,O),
             computeCostOfContracting(multiply,L,R,O,S_shape),
-            lambda: formMatrix(L,R,O),
+            partial(formMatrix,L,R,O),
             computeCostOfContracting(formMatrix,L,R,O),
         )
 # }}}
