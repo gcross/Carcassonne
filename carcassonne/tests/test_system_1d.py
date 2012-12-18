@@ -42,6 +42,23 @@ class TestSystem1D(TestCase): # {{{
             )
         self.assertAlmostEqual(system.computeOneSiteExpectation(),abs(field_strength))
     # }}}
+    @with_checker # test_computeOneSiteExpectation_ZZZ_field_all_up {{{
+    def test_computeOneSiteExpectation_ZZZ_field_all_up(self,phase=float,field_strength=float):
+        system = \
+            System(
+                [1,0,0,0],
+                [0,0,0,1],
+                buildTensor((4,4,2,2),{
+                    (0,0): Pauli.I,
+                    (0,1): field_strength*Pauli.Z,
+                    (1,2): Pauli.Z,
+                    (2,3): Pauli.Z,
+                    (3,3): Pauli.I,
+                }),
+                array([[[cos(phase)+1j*sin(phase),0]]]),
+            )
+        self.assertAlmostEqual(system.computeOneSiteExpectation(),abs(field_strength))
+    # }}}
 # }}}
 
 # }}}

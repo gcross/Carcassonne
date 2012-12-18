@@ -335,12 +335,16 @@ def computeLimitingLinearCoefficient(n,multiplyO,multiplyN,multiplyL,multiplyR):
         ovecs = svd(dot(tmatrix,tmatrix))[-1][-2:]
         assert ovecs.shape == (2,n)
     else:
-        ovecs = eigs(LinearOperator((n,n),matvec=multiplyO),k=2,which='LM',ncv=9)[1].transpose()
+        ovals, ovecs = eigs(LinearOperator((n,n),matvec=multiplyO),k=2,which='LM',ncv=9)
+        ovecs = ovecs.transpose()
+        print("ovals=",ovals)
+        print("ovecs=",ovecs)
 
     Omatrix = zeros((2,2),dtype=complex128)
     for i in range(2):
         for j in range(2):
             Omatrix[i,j] = dot(ovecs[i].conj(),multiplyO(ovecs[j]))
+    print("Omatrix=",repr(Omatrix))
     numerator = sqrt(trace(dot(Omatrix.transpose().conj(),Omatrix))-2)
 
     lnvecs = multiplyL(ovecs)
@@ -350,6 +354,7 @@ def computeLimitingLinearCoefficient(n,multiplyO,multiplyN,multiplyL,multiplyR):
         for j in range(2):
             Nmatrix[i,j] = dot(lnvecs[i].conj(),multiplyN(rnvecs[j]))
     denominator = sqrt(trace(dot(Nmatrix.transpose().conj(),Nmatrix)))
+    print("Nmatrix=",repr(Nmatrix))
     return numerator/denominator
 # }}}
 def computeNewDimension(old_dimension,by=None,to=None): # {{{

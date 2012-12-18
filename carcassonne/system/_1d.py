@@ -1,9 +1,10 @@
 # Imports {{{
-from numpy import array, complex128, conj, dot, identity, multiply, sqrt, tensordot, trace, zeros
+from numpy import array, complex128, conj, dot, identity, multiply, sqrt, tensordot, zeros
+from scipy.linalg import svd
 
 from .base import *
 from ..tensors._1d import *
-from ..utils import buildProductTensor, computeAndCheckNewDimension, computeLimitingLinearCoefficient, crand, relaxOver, normalizeAndDenormalize
+from ..utils import buildProductTensor, computeAndCheckNewDimension, computeLimitingLinearCoefficient, crand, relaxOver, normalize, normalizeAndDenormalize
 # }}}
 
 # Classes {{{
@@ -41,6 +42,8 @@ class System(BaseSystem): # {{{
         right_O_environment_shape = self.right_environment.shape
         right_N_environment_shape = (self.center_state.shape[1],)*2
         right_N_environment_size = prod(right_N_environment_shape)
+        normalized_center_state = normalize(self.center_state,1)
+        normalized_center_state_conj = normalized_center_state.conj()
         return \
             computeLimitingLinearCoefficient(
                 prod(right_O_environment_shape),
@@ -48,14 +51,14 @@ class System(BaseSystem): # {{{
                     absorbCenterOSSIntoRightEnvironment(
                         v.reshape(right_O_environment_shape),
                         self.center_operator,
-                        self.center_state,
-                        self.center_state_conj,
+                        normalized_center_state,
+                        normalized_center_state_conj
                     ).ravel(),
                 lambda v: \
                     absorbCenterSSIntoRightEnvironment(
                         v.reshape(right_N_environment_shape),
-                        self.center_state,
-                        self.center_state_conj
+                        normalized_center_state,
+                        normalized_center_state_conj
                     ).ravel(),
                 lambda vs: \
                     tensordot(
