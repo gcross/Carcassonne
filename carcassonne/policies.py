@@ -1,3 +1,7 @@
+# Imports {{{
+from numpy.linalg import norm
+# }}}
+
 # Base classes {{{
 class Policy: # {{{
     def __call__(self,system):
@@ -62,7 +66,7 @@ class RepeatPatternContractionPolicy(Policy): # {{{
 # }}}
 
 # Convergence policies {{{
-class RelativeCenterSiteExpectationDifferenceThresholdConvergencePolicy(Policy): # {{{{
+class RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(Policy): # {{{
     def __init__(self,threshold):
         self.threshold = threshold
     class BoundPolicy(BoundPolicyBase):
@@ -73,13 +77,32 @@ class RelativeCenterSiteExpectationDifferenceThresholdConvergencePolicy(Policy):
         def converged(self):
             last = self.last
             current = self.current
-            return last is not None and current is not None and abs(current-last)/abs(current+last)*2 < self.parent.threshold
+            return last is not None and current is not None and (abs(current+last) < 1e-15 or abs(current-last)/abs(current+last)*2 < self.parent.threshold)
         def reset(self):
             self.last = None
             self.current = None
         def update(self):
             self.last = self.current
-            self.current = self.system.computeCenterSiteExpectation()
+            self.current = self.system.computeOneSiteExpectation()
+# }}}
+class RelativeStateDifferenceThresholdConvergencePolicy(Policy): # {{{
+    def __init__(self,threshold):
+        self.threshold = threshold
+    class BoundPolicy(BoundPolicyBase):
+        def __init__(self,system,parent):
+            BoundPolicyBase.__init__(self,system,parent)
+            self.last = None
+            self.current = None
+        def converged(self):
+            last = self.last
+            current = self.current
+            return last is not None and current is not None and (norm(current+last) < 1e-15 or norm(current-last)/norm(current+last)*2 < self.parent.threshold)
+        def reset(self):
+            self.last = None
+            self.current = None
+        def update(self):
+            self.last = self.current
+            self.current = self.system.getCenterStateAsArray().ravel()
 # }}}
 # }}}
 
@@ -108,7 +131,8 @@ __all__ = [
 
     "RepeatPatternContractionPolicy",
 
-    "RelativeCenterSiteExpectationDifferenceThresholdConvergencePolicy",
+    "RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy",
+    "RelativeStateDifferenceThresholdConvergencePolicy",
 
     "PolicyField",
 ]
