@@ -1,10 +1,10 @@
 # Imports {{{
 from collections import defaultdict
-from functools import partial
-from numpy import dot, prod, sqrt, set_printoptions, tensordot, zeros
+from functools import partial, reduce
+from numpy import argmax, argmin, array, complex128, dot, identity, multiply, prod, sqrt, set_printoptions, tensordot, trace, zeros
 from numpy.random import rand, random_sample
-from scipy.linalg import LinAlgError, eigh, svd
-from scipy.sparse.linalg import LinearOperator, eigs, eigsh
+from scipy.linalg import LinAlgError, eig, eigh, eigvals, lu_factor, lu_solve, norm, svd, qr
+from scipy.sparse.linalg import LinearOperator, eigs, eigsh, gmres
 # }}}
 
 set_printoptions(linewidth=132)
@@ -735,6 +735,70 @@ def replaceAt(iterable,index,new_value): # {{{
     except TypeError:
         return tuple(new_values)
 # }}}
+def relaxOver(initial,expectation_multiplier,normalization_multiplier=None,maximum_number_of_multiplications=None,tolerance=1e-7,dimension_of_krylov_space=None): # {{{
+    DataClass = type(initial)
+    shape = initial.shape
+    initial = initial.toArray().ravel()
+    initial /= norm(initial)
+    N = len(initial)
+    if dimension_of_krylov_space is None:
+        dimension_of_krylov_space = 3
+
+        if normalization_multiplier is None:
+            applyInverseNormalization = lambda x: x
+        elif normalization_multiplier.isCheaperToFormMatrix(10*2*dimension_of_krylov_space):
+            applyInverseNormalization = partial(lu_solve,lu_factor(normalization_multiplier.formMatrix().toArray()))
+            del normalization_multiplier
+        else:
+            normalization_matvec = lambda v: normalization_multiplier(DataClass(v.reshape(shape))).toArray().ravel()
+            normalization_operator = LinearOperator(matvec=normalization_matvec,shape=(N,N),dtype=initial.dtype)
+            def applyInverseNormalization(in_v):
+                out_v, info = gmres(normalization_operator,in_v)
+                assert info == 0
+                return out_v
+
+        if expectation_multiplier.isCheaperToFormMatrix(2*dimension_of_krylov_space):
+            expectation_matrix = expectation_multiplier.formMatrix().toArray()
+            multiplyExpectation = lambda v: dot(expectation_matrix,v)
+            del expectation_multiplier
+        else:
+            multiplyExpectation = lambda v: expectation_multiplier(DataClass(v.reshape(shape))).toArray().ravel()
+
+        multiply = lambda v: applyInverseNormalization(multiplyExpectation(v))
+
+        number_of_multiplications = 0
+        last_lowest_eigenvalue = None
+        space_is_complete = dimension_of_krylov_space == N
+        while True:
+            krylov_basis = zeros((dimension_of_krylov_space,N),dtype=complex128)
+            multiplied_krylov_basis = zeros((dimension_of_krylov_space,N),dtype=complex128)
+            krylov_basis[0] = initial
+            del initial
+            for i in range(0,dimension_of_krylov_space):
+                multiplied_krylov_basis[i] = multiply(krylov_basis[i])
+                if i < dimension_of_krylov_space-1:
+                    krylov_basis[i+1] = multiplied_krylov_basis[i] - dot(dot(krylov_basis[:i+1].conj(),multiplied_krylov_basis[i]),krylov_basis[:i+1])
+                    normalization = norm(krylov_basis[i+1])
+                    if normalization <= 1e-14:
+                        space_is_complete = True
+                        krylov_basis = krylov_basis[:i+1]
+                        multiplied_krylov_basis = multiplied_krylov_basis[:i+1]
+                        break
+                    krylov_basis[i+1] /= normalization
+            number_of_multiplications += dimension_of_krylov_space
+
+            matrix_in_krylov_subspace = dot(krylov_basis.conj(),multiplied_krylov_basis.transpose())
+            evals, evecs = eig(matrix_in_krylov_subspace)
+            mindex = argmin(evals.real)
+            mineval = evals[mindex]
+            minevec = evecs[:,mindex]
+            if space_is_complete or last_lowest_eigenvalue is not None and (abs(last_lowest_eigenvalue-mineval)<=tolerance) or maximum_number_of_multiplications is not None and number_of_multiplications >= maximum_number_of_multiplications:
+                return DataClass(dot(minevec,krylov_basis).reshape(shape))
+            else:
+                initial = dot(minevec,krylov_basis)
+                initial /= norm(initial)
+                last_lowest_eigenvalue = mineval
+    # }}}
 # }}}
 
 # Index functions {{{
@@ -783,6 +847,7 @@ __all__ = [
     "normalizeAndDenormalize",
     "randomComplexSample",
     "replaceAt",
+    "relaxOver",
 
     "O",
     "L",

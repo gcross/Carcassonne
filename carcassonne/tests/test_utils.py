@@ -2,6 +2,8 @@
 from functools import reduce
 from numpy import dot, multiply, prod
 from paycheck import *
+from scipy.linalg import eigh, eigvalsh
+from scipy.sparse.linalg import eigs, eigsh
 
 from ..data import NDArrayData
 from ..utils import *
@@ -850,4 +852,28 @@ class TestNormalizeAndDenormalize(TestCase): # {{{
         normalized_tensor_A_2, unnormalized_tensor_B_2 = normalizeAndDenormalize(tensor_A,index_to_normalize,tensor_B,index_to_denormalize)
         self.assertTrue(allclose(normalized_tensor_A_1,normalized_tensor_A_2))
         self.assertTrue(allclose(unnormalized_tensor_B_1,unnormalized_tensor_B_2))
+# }}}
+
+class TestRelaxOver(TestCase): # {{{
+    @with_checker # test_relaxOver_generalized {{{
+    def test_relaxOver_generalized(self,N=irange(3,10)):
+        matrix1 = NDArrayData.newRandomHermitian(N,N)
+        matrix2 = NDArrayData.newRandomHermitian(N,N)
+        matrix2 += -2*NDArrayData.newIdentity(N)*eigvalsh(matrix2.toArray())[0]
+        old_vec = NDArrayData.newRandom(N).normalized()
+        old_val = old_vec.conj().contractWith(matrix1.contractWith(old_vec,(1,),(0,)),(0,),(0,)).extractScalar().real/old_vec.conj().contractWith(matrix2.contractWith(old_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
+        new_vec = relaxOver(old_vec,Multiplier.fromMatrix(matrix1),Multiplier.fromMatrix(matrix2))
+        new_val = new_vec.conj().contractWith(matrix1.contractWith(new_vec,(1,),(0,)),(0,),(0,)).extractScalar().real/new_vec.conj().contractWith(matrix2.contractWith(new_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
+        self.assertLess(new_val,old_val)
+    # }}}
+    @with_checker # test_relaxOver_standard {{{
+    def test_relaxOver_standard(self,N=irange(3,10)):
+        k = randint(1,N)
+        matrix = NDArrayData.newRandomHermitian(N,N)
+        old_vec = NDArrayData.newRandom(N).normalized()
+        old_val = old_vec.conj().contractWith(matrix.contractWith(old_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
+        new_vec = relaxOver(old_vec,Multiplier.fromMatrix(matrix))
+        new_val = new_vec.conj().contractWith(matrix.contractWith(new_vec,(1,),(0,)),(0,),(0,)).extractScalar().real
+        self.assertLess(new_val,old_val)
+    # }}}
 # }}}
