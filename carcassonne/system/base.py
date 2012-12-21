@@ -19,7 +19,10 @@ class BaseSystem: # {{{
         self.sweep_convergence_policy.update()
         while not self.sweep_convergence_policy.converged():
             self.contraction_policy.apply()
+            pre = self.computeExpectation()
             self.minimizeExpectation()
+            post = self.computeExpectation()
+            assert post < pre + 1e-7
             self.sweep_convergence_policy.update()
     # }}}
   # }}}
