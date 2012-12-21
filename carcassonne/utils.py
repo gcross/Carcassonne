@@ -214,6 +214,14 @@ def prependDataContractor(*args,**keywords): # {{{
 # }}}
 # }}}
 
+# Pauli Operators {{{
+class Pauli:
+    I = identity(2,dtype=complex128)
+    X = array([[0,1],[1,0]],dtype=complex128)
+    Y = array([[0,-1j],[1j,0]],dtype=complex128)
+    Z = array([[1,0],[0,-1]],dtype=complex128)
+# }}}
+
 # Functions {{{
 def applyIndexMapTo(index_map,indices): # {{{
     return [index_map[index] for index in indices]
@@ -221,12 +229,34 @@ def applyIndexMapTo(index_map,indices): # {{{
 def applyPermutation(permutation,values): # {{{
     return [values[i] for i in permutation]
 # }}}
+def buildProductTensor(*factors): # {{{
+    return reduce(multiply.outer,(array(factor,dtype=complex128) for factor in factors)) #,zeros((),dtype=complex128))
+# }}}
+def buildTensor(dimensions,components): # {{{
+    tensor = zeros(dimensions,dtype=complex128)
+    for index, value in components.items():
+        tensor[index] = value
+    return tensor
+# }}}
 def checkForNaNsIn(data): # {{{
     assert not data.hasNaN()
     return data
 # }}}
 def crand(*shape): # {{{
     return rand(*shape)*2-1+rand(*shape)*2j-1j
+# }}}
+def computeAndCheckNewDimension(state_center,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
+    old_dimension = state_center.shape[direction]
+    new_dimension = computeNewDimension(old_dimension,by=by,to=to)
+    increment = new_dimension-old_dimension
+    maximum_increment = maximumBandwidthIncrement(direction,state_center.shape)
+    if increment > maximum_increment:
+        if do_as_much_as_possible:
+            increment = maximum_increment
+            new_dimension = old_dimension + increment
+        else:
+            raise ValueError("Increment of {} in the bandwidth dimensions {} and {} is too great given the current shape of {} (maximum increment is {}).".format(increment,direction,direction+2,state_center_data.shape,maximum_increment))
+    return old_dimension, new_dimension, increment
 # }}}
 def computeCompressor(old_dimension,new_dimension,multiplier,dtype,normalize=False): # {{{
     if new_dimension < 0:
@@ -292,6 +322,36 @@ def computeLengthAndCheckForGaps(indices,error_message): # {{{
     if unobserved_indices:
         raise ValueError(error_message + ": " + str(unobserved_indices))
     return length
+# }}}
+def computeLimitingLinearCoefficient(n,multiplyO,multiplyN,multiplyL,multiplyR): # {{{
+    if True: # n <= 3:
+        matrix = []
+        for i in range(n):
+            matrix.append(multiplyO(array([0]*i+[1]+[0]*(n-1-i))))
+        matrix = array(matrix)
+        evals = eigvals(matrix)
+        lam = evals[argmax(abs(evals))]
+        tmatrix = matrix-lam*identity(n)
+        ovecs = svd(dot(tmatrix,tmatrix))[-1][-2:]
+        assert ovecs.shape == (2,n)
+    else:
+        ovals, ovecs = eigs(LinearOperator((n,n),matvec=multiplyO),k=2,which='LM',ncv=9)
+        ovecs = ovecs.transpose()
+
+    Omatrix = zeros((2,2),dtype=complex128)
+    for i in range(2):
+        for j in range(2):
+            Omatrix[i,j] = dot(ovecs[i].conj(),multiplyO(ovecs[j]))
+    numerator = sqrt(trace(dot(Omatrix.transpose().conj(),Omatrix))-2)
+
+    lnvecs = multiplyL(ovecs)
+    rnvecs = multiplyR(ovecs)
+    Nmatrix = zeros((2,2),dtype=complex128)
+    for i in range(2):
+        for j in range(2):
+            Nmatrix[i,j] = dot(lnvecs[i].conj(),multiplyN(rnvecs[j]))
+    denominator = sqrt(trace(dot(Nmatrix.transpose().conj(),Nmatrix)))
+    return numerator/denominator
 # }}}
 def computeNewDimension(old_dimension,by=None,to=None): # {{{
     if by is None and to is None:
@@ -827,11 +887,17 @@ __all__ = [
     "prependContractor",
     "prependDataContractor",
 
+    "Pauli",
+
     "applyIndexMapTo",
     "applyPermutation",
+    "buildProductTensor",
+    "buildTensor",
     "checkForNaNsIn",
+    "computeAndCheckNewDimension",
     "computeCompressor",
     "computeCompressorForMatrixTimesItsDagger",
+    "computeLimitingLinearCoefficient",
     "computeNewDimension",
     "computeNormalizerAndInverse",
     "crand",
