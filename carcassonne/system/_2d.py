@@ -414,17 +414,14 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction not in (0,1):
             raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))
-        state_center_data = self.state_center_data
-        old_dimension = state_center_data.shape[direction]
-        new_dimension = computeNewDimension(old_dimension,by=by,to=to)
-        increment = new_dimension-old_dimension
-        maximum_increment = maximumBandwidthIncrement(direction,state_center_data.shape)
-        if increment > maximum_increment:
-            if do_as_much_as_possible:
-                increment = maximum_increment
-                new_dimension = old_dimension + increment
-            else:
-                raise ValueError("Increment of {} in the bandwidth dimensions {} and {} is too great given the current shape of {} (maximum increment is {}).".format(increment,direction,direction+2,state_center_data.shape,maximum_increment))
+        old_dimension, new_dimension, increment = \
+            computeAndCheckNewDimension(
+                self.state_center_data,
+                direction,
+                by=by,
+                to=to,
+                do_as_much_as_possible=do_as_much_as_possible
+            )
         extra_state_center_data = self.state_center_data.reverseLastAxis()
         axes = (direction,direction+2)
         self.setStateCenter(
