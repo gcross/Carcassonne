@@ -10,7 +10,7 @@ from ..data import NDArrayData
 from ..sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData, stripAllButIdentityFrom
 from ..tensors._2d.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from ..tensors._2d.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
-from ..utils import InvariantViolatedError, Multiplier, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt, maximumBandwidthIncrement, L, O, R
+from ..utils import InvariantViolatedError, Multiplier, computeAndCheckNewDimension, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt, maximumBandwidthIncrement, relaxOver, L, O, R
 # }}}
 
 # Classes {{{
@@ -414,15 +414,16 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction not in (0,1):
             raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))
+        state_center_data = self.state_center_data
         old_dimension, new_dimension, increment = \
             computeAndCheckNewDimension(
-                self.state_center_data,
+                state_center_data,
                 direction,
                 by=by,
                 to=to,
                 do_as_much_as_possible=do_as_much_as_possible
             )
-        extra_state_center_data = self.state_center_data.reverseLastAxis()
+        extra_state_center_data = state_center_data.reverseLastAxis()
         axes = (direction,direction+2)
         self.setStateCenter(
             state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
