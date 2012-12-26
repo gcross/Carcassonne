@@ -409,7 +409,7 @@ class System(BaseSystem): # {{{
         return formNormalizationSubmatrix(tuple(corner[Identity()] for corner in self.corners),tuple(side[Identity()] for side in self.sides))
     # }}}
     def getCenterStateAsArray(self): # {{{
-        return self.center_state_data.toArray()
+        return self.state_center_data.toArray()
     # }}}
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction not in (0,1):
