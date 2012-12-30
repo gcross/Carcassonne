@@ -4,50 +4,47 @@ from numpy import prod
 
 from ..data import NDArrayData
 from ..data.cost_tracker import computeCostOfContracting
-from ..utils import Join, Multiplier, formContractor, prependDataContractor
+from ..utils import Join, Multiplier, formDataContractor, prependDataContractor
 # }}}
 
 # Functions {{{
 # def absorbCenterOSSIntoLeftEnvironment(L,O,S,S*) {{{
-absorbCenterOSSIntoLeftEnvironment = formContractor(
-    ["L","O","S","S*"],
+absorbCenterOSSIntoLeftEnvironment = formDataContractor(
     [
-        (("L",0),("O",0)),
-        (("L",1),("S",0)),
-        (("L",2),("S*",0)),
-        (("O",2),("S*",2)),
-        (("O",3),("S",2)),
+        Join(0,0,1,0),
+        Join(0,1,2,0),
+        Join(0,2,3,0),
+        Join(1,2,3,2),
+        Join(1,3,2,2),
     ],[
-        [("O",1)],
-        [("S",1)],
-        [("S*",1)],
+        [(1,1)],
+        [(2,1)],
+        [(3,1)],
     ]
 ) # }}}
 # def absorbCenterOSSIntoRightEnvironment(R,O,S,S*) {{{
-absorbCenterOSSIntoRightEnvironment = formContractor(
-    ["R","O","S","S*"],
+absorbCenterOSSIntoRightEnvironment = formDataContractor(
     [
-        (("R",0),("O",1)),
-        (("R",1),("S",1)),
-        (("R",2),("S*",1)),
-        (("O",2),("S*",2)),
-        (("O",3),("S",2)),
+        Join(0,0,1,1),
+        Join(0,1,2,1),
+        Join(0,2,3,1),
+        Join(1,2,3,2),
+        Join(1,3,2,2),
     ],[
-        [("O",0)],
-        [("S",0)],
-        [("S*",0)],
+        [(1,0)],
+        [(2,0)],
+        [(3,0)],
     ]
 ) # }}}
-# def absorbCenterSSIntoRightEnvironment(R,O,S,S*) {{{
-absorbCenterSSIntoRightEnvironment = formContractor(
-    ["R","S","S*"],
+# def absorbCenterSSIntoRightEnvironment(R,S,S*) {{{
+absorbCenterSSIntoRightEnvironment = formDataContractor(
     [
-        (("R",0),("S",1)),
-        (("R",1),("S*",1)),
-        (("S",2),("S*",2)),
+        Join(0,0,1,1),
+        Join(0,1,2,1),
+        Join(1,2,2,2),
     ],[
-        [("S",0)],
-        [("S*",0)],
+        [(1,0)],
+        [(2,0)],
     ]
 ) # }}}
 # def formExpectationMultiplier(L,R,O,S) {{{
@@ -74,9 +71,6 @@ absorbCenterSSIntoRightEnvironment = formContractor(
     ]
 )
 def formExpectationMultiplier(multiply,formMatrix,L,R,O):
-    L = NDArrayData(L)
-    R = NDArrayData(R)
-    O = NDArrayData(O)
     S_shape = (L.shape[1],R.shape[1],O.shape[2])
     return \
         Multiplier(

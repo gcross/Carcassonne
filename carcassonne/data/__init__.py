@@ -290,6 +290,15 @@ class NDArrayData(Data): # {{{
         else:
             return U.split(*U_split).join(*U_join), (V*SI).conj(), V*S
     # }}}
+    def normalizeAxisAndDenormalize(self,axis_to_norm,axis_to_denorm,data_to_denormalize=None,sqrt_svals=False,dont_recip_under=1e-14): # {{{
+        if data_to_denormalize is None:
+            data_to_denormalize = self
+        if self.shape[axis_to_norm] != data_to_denormalize.shape[axis_to_denorm]:
+            raise ValueError("Normalized axis and denormalized axis have different sizes ({} != {}).".format(self.shape[axis_to_norm],data_to_denormalize.shape[axis_to_denorm]))
+        normalized_data, _, denormalizer = self.normalizeAxis(axis_to_norm,sqrt_svals,dont_recip_under)
+        denormalized_data = data_to_denormalize.absorbMatrixAt(axis_to_denorm,denormalizer)
+        return normalized_data, denormalized_data
+    # }}}
     def normalized(self): # {{{
         return type(self)(self._arr/self.norm())
     # }}}

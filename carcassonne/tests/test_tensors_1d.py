@@ -10,9 +10,9 @@ class TestFormExpectationMultiplier(TestCase): # {{{
         ls=irange(1,5),rs=irange(1,5),
         p=irange(1,5)
     ):
-        left_environment = crand(lo,ls,ls)
-        right_environment = crand(ro,rs,rs)
-        center_operator = crand(lo,ro,p,p)
+        left_environment = NDArrayData.newRandom(lo,ls,ls)
+        right_environment = NDArrayData.newRandom(ro,rs,rs)
+        center_operator = NDArrayData.newRandom(lo,ro,p,p)
         center_state = NDArrayData.newRandom(ls,rs,p)
         multiply = formExpectationMultiplier(left_environment,right_environment,center_operator)
         multiply(center_state)

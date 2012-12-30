@@ -254,18 +254,16 @@ def checkForNaNsIn(data): # {{{
 def crand(*shape): # {{{
     return rand(*shape)*2-1+rand(*shape)*2j-1j
 # }}}
-def computeAndCheckNewDimension(state_center,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
-    old_dimension = state_center.shape[direction]
+def computeAndCheckNewDimension(shape,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
+    old_dimension = shape[direction]
     new_dimension = computeNewDimension(old_dimension,by=by,to=to)
-    increment = new_dimension-old_dimension
-    maximum_increment = maximumBandwidthIncrement(direction,state_center.shape)
-    if increment > maximum_increment:
+    maximum_new_dimension = maximumNewBandwidth(direction,shape)
+    if new_dimension > maximum_new_dimension:
         if do_as_much_as_possible:
-            increment = maximum_increment
-            new_dimension = old_dimension + increment
+            new_dimension = maximum_new_dimension
         else:
-            raise ValueError("Increment of {} in the bandwidth dimensions {} and {} is too great given the current shape of {} (maximum increment is {}).".format(increment,direction,direction+2,state_center_data.shape,maximum_increment))
-    return old_dimension, new_dimension, increment
+            raise ValueError("New dimension {} is greater than the current maximum dimension for direction {}, which is {} (shape = {}).".format(new_dimension,direction,shape,maximum_new_dimension,shape))
+    return old_dimension, new_dimension, new_dimension-old_dimension
 # }}}
 def computeCompressor(old_dimension,new_dimension,multiplier,dtype,normalize=False): # {{{
     if new_dimension < 0:
@@ -715,8 +713,8 @@ def formDataContractor(joins,final_groups,tensor_ranks=None): # {{{
 def invertPermutation(permutation): # {{{
     return [permutation.index(i) for i in range(len(permutation))]
 # }}}
-def maximumBandwidthIncrement(direction,shape): # {{{
-    return min(shape[direction],prod(dropAt(shape,direction)))
+def maximumNewBandwidth(direction,shape): # {{{
+    return prod(dropAt(shape,direction))
 # }}}
 def multiplyBySingleSiteOperator(state,operator): # {{{
     return state.absorbMatrixAt(4,operator)
@@ -922,7 +920,7 @@ __all__ = [
     "formContractor",
     "formDataContractor",
     "invertPermutation",
-    "maximumBandwidthIncrement",
+    "maximumNewBandwidth",
     "multiplyTensorByMatrixAtIndex",
     "normalize",
     "normalizeAndReturnInverseNormalizer",
