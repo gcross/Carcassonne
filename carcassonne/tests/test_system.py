@@ -297,10 +297,10 @@ class TestSystem(TestCase): # {{{
         system1.minimizeExpectation()
 
         old_shape = system1.state_center_data.shape
-        increment = randint(0,maximumBandwidthIncrement(direction,old_shape))
+        new_bandwidth = randint(old_shape[direction]+1,2*old_shape[direction])
         system2 = copy(system1)
 
-        system1.increaseBandwidth(direction,by=increment)
+        system1.increaseBandwidth(direction,to=new_bandwidth)
         system2.contractUnnormalizedTowards(O(direction))
         system2.contractUnnormalizedTowards(direction)
         self.assertAlmostEqual(system1.computeNormalization(),system2.computeNormalization())

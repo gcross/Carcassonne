@@ -10,7 +10,7 @@ from ..data import NDArrayData
 from ..sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData, stripAllButIdentityFrom
 from ..tensors._2d.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from ..tensors._2d.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
-from ..utils import InvariantViolatedError, Multiplier, computeAndCheckNewDimension, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt, maximumBandwidthIncrement, relaxOver, L, O, R
+from ..utils import InvariantViolatedError, Multiplier, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt, relaxOver, L, O, R
 # }}}
 
 # Classes {{{
@@ -499,14 +499,21 @@ class System(BaseSystem): # {{{
         if direction not in (0,1):
             raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))
         state_center_data = self.state_center_data
-        old_dimension, new_dimension, increment = \
-            computeAndCheckNewDimension(
-                state_center_data,
-                direction,
+        old_dimension = state_center_data.shape[direction]
+        new_dimension = \
+            computeNewDimension(
+                old_dimension,
                 by=by,
                 to=to,
-                do_as_much_as_possible=do_as_much_as_possible
             )
+        if new_dimension == old_dimension:
+            return
+        if new_dimension > 2*old_dimension:
+            if do_as_much_as_possible:
+                new_dimension = 2*old_dimension
+            else:
+                raise ValueError("New dimension must be less than twice the old dimension ({} > 2*{}).".format(new_dimension,old_dimension))
+        increment = new_dimension-old_dimension
         extra_state_center_data = state_center_data.reverseLastAxis()
         axes = (direction,direction+2)
         self.setStateCenter(
