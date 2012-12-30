@@ -448,8 +448,8 @@ class System(BaseSystem): # {{{
     def contractTowards(self,direction,state_center_data=None,normalize_center=True): # {{{
         if state_center_data is None:
             state_center_data = self.state_center_data
-        normalized_state_center_data, _, denormalizer = state_center_data.normalizeAxis(O(direction))
-        denormalized_state_center_data = self.state_center_data.absorbMatrixAt(direction,denormalizer)
+        normalized_state_center_data, denormalized_state_center_data = \
+            state_center_data.normalizeAxisAndDenormalize(O(direction),direction,self.state_center_data)
         if normalize_center:
             denormalized_state_center_data = denormalized_state_center_data.normalized()
         self.contractUnnormalizedTowards(direction,normalized_state_center_data)
