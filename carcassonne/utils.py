@@ -22,6 +22,15 @@ class DimensionMismatchError(ValueError): # {{{
     # }}}
 # }}}
 class InvariantViolatedError(Exception): pass
+class RelaxFailed(Exception): # {{{
+    def __init__(self,initial_value,final_value):
+        self.initial_value = initial_value
+        self.final_value = final_value
+    def __str__(self):
+        return "{} --> {}".format(self.initial_value,self.final_value)
+    def __repr__(self):
+        return "RelaxFailed({},{})".format(self.initial_value,self.final_value)
+# }}}
 class UnexpectedTensorRankError(ValueError): # {{{
     def __init__(self,tensor_number,expected_rank,actual_rank): # {{{
         self.tensor_number = tensor_number
@@ -825,6 +834,7 @@ def relaxOver(initial,expectation_multiplier,normalization_multiplier=None,maxim
             multiplyExpectation = lambda v: expectation_multiplier(DataClass(v.reshape(shape))).toArray().ravel()
 
         multiply = lambda v: applyInverseNormalization(multiplyExpectation(v))
+        initial_value = dot(initial.conj(),multiply(initial))
 
         number_of_multiplications = 0
         last_lowest_eigenvalue = None
@@ -853,7 +863,12 @@ def relaxOver(initial,expectation_multiplier,normalization_multiplier=None,maxim
             mineval = evals[mindex]
             minevec = evecs[:,mindex]
             if space_is_complete or last_lowest_eigenvalue is not None and (abs(last_lowest_eigenvalue-mineval)<=tolerance) or maximum_number_of_multiplications is not None and number_of_multiplications >= maximum_number_of_multiplications:
-                return DataClass(dot(minevec,krylov_basis).reshape(shape))
+                final = dot(minevec,krylov_basis)
+                final /= norm(final)
+                final_value = dot(final.conj(),multiply(final))
+                if (final_value-initial_value)/(abs(final_value)+abs(initial_value)) > 1 + 1e-7:
+                    raise RelaxFailed(initial_value,final_value)
+                return DataClass(final.reshape(shape))
             else:
                 initial = dot(minevec,krylov_basis)
                 initial /= norm(initial)
@@ -875,6 +890,7 @@ def RA(i): return A(i,R(i))
 __all__ = [
     "DimensionMismatchError",
     "InvariantViolatedError",
+    "RelaxFailed",
     "UnexpectedTensorRankError",
 
     "FromLeft",
