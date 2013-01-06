@@ -71,14 +71,14 @@ class System(BaseSystem): # {{{
         _1d_right_environment = self._1d.right_environment.toArray()
         _2d_right_environment = zeros((3,) + (bandwidth,)*2,dtype=complex128)
         for tag, value in self._2d.sides[0].items():
-            _2d_right_environment[2-slot_of[tag]] = value.toArray().reshape(bandwidth,bandwidth)
+            _2d_right_environment[slot_of[tag]] = value.toArray().reshape(bandwidth,bandwidth)
         if norm(_1d_right_environment-_2d_right_environment) > 1e-7:
             raise Exception(prefix + ": for the right environment, norm(_1d-_2d)={} > 1e-7".format(norm(_1d_right_environment-_2d_right_environment)))
 
         _1d_left_environment = self._1d.left_environment.toArray()
         _2d_left_environment = zeros((3,) + (bandwidth,)*2,dtype=complex128)
         for tag, value in self._2d.sides[2].items():
-            _2d_left_environment[slot_of[tag]] = value.toArray().reshape(bandwidth,bandwidth)
+            _2d_left_environment[2-slot_of[tag]] = value.toArray().reshape(bandwidth,bandwidth)
         if norm(_1d_left_environment-_2d_left_environment) > 1e-7:
             raise Exception(prefix + ": for the left environment, norm(_1d-_2d)={} > 1e-7".format(norm(_1d_left_environment-_2d_left_environment)))
     # }}}
