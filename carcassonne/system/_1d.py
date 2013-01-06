@@ -88,13 +88,15 @@ class System(BaseSystem): # {{{
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.center_state_conj.ravel().contractWith(multiply(self.center_state).ravel(),(0,),(0,)).extractScalar()
     # }}}
-    def contractLeft(self,center_state=None): # {{{
+    def contractLeft(self,center_state=None,normalize_center=True): # {{{
         if center_state is None:
             center_state = self.center_state
         if center_state.shape[0] != self.left_environment.shape[1]:
-            raise ValueError("state dimension of the left environment ({}) does not match the left dimension of the center state ({})".format(center_state.shape[0],self.left_environment.shape[1]))
+            raise ValueError("state dimension of the left environment ({}) does not match the left dimension of the center state ({})".format(self.left_environment.shape[1],center_state.shape[0]))
         normalized_center_state, denormalized_center_state = \
             center_state.normalizeAxisAndDenormalize(1,0,self.center_state)
+        if normalize_center:
+            denormalized_center_state = denormalized_center_state.normalized()
         self.contractLeftUnnormalized(normalized_center_state)
         self.setCenterState(denormalized_center_state)
     # }}}
@@ -109,13 +111,15 @@ class System(BaseSystem): # {{{
                 center_state.conj(),
             )
     # }}}
-    def contractRight(self,center_state=None): # {{{
+    def contractRight(self,center_state=None,normalize_center=True): # {{{
         if center_state is None:
             center_state = self.center_state
         if center_state.shape[1] != self.right_environment.shape[1]:
-            raise ValueError("state dimension of the right environment ({}) does not match the right dimension of the center state ({})".format(center_state.shape[1],self.right_environment.shape[1]))
+            raise ValueError("state dimension of the right environment ({}) does not match the right dimension of the center state ({})".format(self.right_environment.shape[1],center_state.shape[1]))
         normalized_center_state, denormalized_center_state = \
             center_state.normalizeAxisAndDenormalize(0,1,self.center_state)
+        if normalize_center:
+            denormalized_center_state = denormalized_center_state.normalized()
         self.contractRightUnnormalized(normalized_center_state)
         self.setCenterState(denormalized_center_state)
     # }}}
@@ -130,19 +134,19 @@ class System(BaseSystem): # {{{
                 center_state.conj(),
             )
     # }}}
-    def contractTowards(self,direction,center_state=None): # {{{
+    def contractTowards(self,direction,center_state=None,normalize_center=True): # {{{
         if direction == 0:
-            self.contractRight(center_state)
+            self.contractRight(center_state,normalize_center)
         elif direction == 1:
-            self.contractLeft(center_state)
+            self.contractLeft(center_state,normalize_center)
         else:
             raise ValueError("Direction must be 0 for right or 1 for left, not {}.".format(direction))
     # }}}
-    def contractUnnormalizedTowards(self,direction,center_state=None): # {{{
+    def contractUnnormalizedTowards(self,direction,center_state=None,normalize_center=True): # {{{
         if direction == 0:
-            self.contractRightUnnormalized(center_state)
+            self.contractRightUnnormalized(center_state,normalize_center)
         elif direction == 1:
-            self.contractLeftUnnormalized(center_state)
+            self.contractLeftUnnormalized(center_state,normalize_center)
         else:
             raise ValueError("Direction must be 0 for right or 1 for left, not {}.".format(direction))
     # }}}
@@ -193,6 +197,7 @@ class System(BaseSystem): # {{{
                     extra_center_state.absorbMatrixAt(axis,NDArrayData(compressor)),
                     *dropAt(range(3),axis)
                 ),
+                False,
             )
         self.just_increased_bandwidth = True
     # }}}

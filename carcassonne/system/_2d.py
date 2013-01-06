@@ -356,6 +356,7 @@ class System(BaseSystem): # {{{
         return cond(self.formNormalizationMatrix().toArray())
     # }}}
     def computeOneSiteExpectation(self): # {{{
+        return self.computeCenterSiteExpectation()
         #expectation_double_counting_one_site_operator = self.computeExpectation({tag:value*2 if tag == OneSiteOperator() else value for tag, value in self.operator_center_tensor.items()})
         #expectation_without_center = self.computeExpectationWithoutCenter()
         #return (expectation_double_counting_one_site_operator-expectation_without_center)/2
@@ -363,9 +364,9 @@ class System(BaseSystem): # {{{
         expectation = 0
 
         sself = copy(self)
-        print("A. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
-        print("A. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
-        print("A. TSOEXP1=",sself.computeExpectation({TwoSiteOperator(2,0):sself.operator_center_tensor[TwoSiteOperator(2,0)]}))
+        #print("A. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
+        #print("A. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
+        #print("A. TSOEXP1=",sself.computeExpectation({TwoSiteOperator(2,0):sself.operator_center_tensor[TwoSiteOperator(2,0)]}))
         #sself.corners = [{Identity():corner[Identity()]} for corner in sself.corners]
         #print("B. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
         #print("B. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
@@ -380,9 +381,9 @@ class System(BaseSystem): # {{{
         #print("D. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
         #print("D. TSOEXP1=",sself.computeExpectation({TwoSiteOperator(2,0):sself.operator_center_tensor[TwoSiteOperator(2,0)]}))
         sself.contractTowards(0)
-        print("E. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
-        print("E. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
-        print("E. TSOEXP1=",sself.computeExpectation({TwoSiteOperator(2,0):sself.operator_center_tensor[TwoSiteOperator(2,0)]}))
+        #print("E. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
+        #print("E. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
+        #print("E. TSOEXP1=",sself.computeExpectation({TwoSiteOperator(2,0):sself.operator_center_tensor[TwoSiteOperator(2,0)]}))
         sself.contractTowards(0)
         sself.minimizeExpectation()
         print("F. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
