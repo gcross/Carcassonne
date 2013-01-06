@@ -102,7 +102,7 @@ class RelativeStateDifferenceThresholdConvergencePolicy(Policy): # {{{
             self.current = None
         def update(self):
             self.last = self.current
-            self.current = self.system.getCenterStateAsArray().ravel()
+            self.current = self.system.getCenterStateAsArray()
 # }}}
 # }}}
 
