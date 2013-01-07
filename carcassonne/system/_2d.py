@@ -347,7 +347,11 @@ class System(BaseSystem): # {{{
         return unnormalized_expectation/normalization, normalization
     # }}}
     def computeExpectationAndNormalizationWithoutCenter(self): # {{{
-        return self.computeExpectationAndNormalization({Identity():self.operator_center_tensor[Identity()]})
+        return self.computeExpectationAndNormalization({
+            tag: value
+                for (tag,value) in self.operator_center_tensor.items()
+                if tag in [Identity(),TwoSiteOperator(2,0),TwoSiteOperator(3,0)]
+        })
     # }}}
     def computeNormalization(self): # {{{
         return self.computeScalarUsingMultiplier(self.formNormalizationMultiplier())
