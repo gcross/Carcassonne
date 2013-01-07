@@ -116,6 +116,8 @@ class System(BaseSystem): # {{{
             center_state = self.center_state
         if center_state.shape[0] != self.right_environment.shape[1]:
             raise ValueError("state dimension of the right environment ({}) does not match the right dimension of the center state ({})".format(self.right_environment.shape[1],center_state.shape[0]))
+        #print("denormalizer:")
+        #print(center_state.normalizeAxis(1)[-1])
         normalized_center_state, denormalized_center_state = \
             center_state.normalizeAxisAndDenormalize(1,0,self.center_state)
         if normalize_center:
@@ -150,6 +152,9 @@ class System(BaseSystem): # {{{
         else:
             raise ValueError("Direction must be 0 for right or 1 for left, not {}.".format(direction))
     # }}}
+    def formExpectationMatrix(self): # {{{
+        return self.formExpectationMultiplier().formMatrix()
+    # }}}
     def formExpectationMultiplier(self): # {{{
         return \
             formExpectationMultiplier(
@@ -164,6 +169,7 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction=0,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction != 0:
             raise ValueError("Direction for bandwidth increase must be 0, not {}.".format(direction))
+        #print("1D:{}".format(self.center_state))
         center_state = self.center_state
         old_dimension = center_state.shape[0]
         new_dimension = \
@@ -184,24 +190,43 @@ class System(BaseSystem): # {{{
         self.setCenterState(
             center_state.increaseDimensionsAndFillWithZeros((0,new_dimension),(1,new_dimension))
         )
-        for axis in (0,1):
-            compressor, _ = \
-                computeCompressorForMatrixTimesItsDagger(
-                    old_dimension,
-                    increment,
-                    extra_center_state.fold(axis).transpose().toArray()
+        if increment == old_dimension:
+            for axis in (0,1):
+                #x = center_state.directSumWith(
+                #        extra_center_state,
+                #        *dropAt(range(3),axis)
+                #    ).toArray()
+                #x[abs(x)<1e-7] = 0
+                #print("1D x({}) = {}".format(axis,x))
+                self.contractTowards(
+                    1-axis,
+                    center_state.directSumWith(
+                        extra_center_state,
+                        *dropAt(range(3),axis)
+                    ),
+                    False,
                 )
-            self.contractTowards(
-                1-axis,
-                center_state.directSumWith(
-                    extra_center_state.absorbMatrixAt(axis,NDArrayData(compressor)),
-                    *dropAt(range(3),axis)
-                ),
-                False,
-            )
+                #print("1D({}):{}".format(axis,self.center_state))
+        else:
+            for axis in (0,1):
+                compressor, _ = \
+                    computeCompressorForMatrixTimesItsDagger(
+                        old_dimension,
+                        increment,
+                        extra_center_state.fold(axis).transpose().toArray()
+                    )
+                self.contractTowards(
+                    1-axis,
+                    center_state.directSumWith(
+                        extra_center_state.absorbMatrixAt(axis,NDArrayData(compressor)),
+                        *dropAt(range(3),axis)
+                    ),
+                    False,
+                )
         self.just_increased_bandwidth = True
     # }}}
     def minimizeExpectation(self): # {{{
+        print("minimizing 1D")
         self.setCenterState(relaxOver(
             initial=self.center_state,
             expectation_multiplier=self.formExpectationMultiplier(),

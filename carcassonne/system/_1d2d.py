@@ -1,6 +1,6 @@
 # Imports {{{
 from copy import copy
-from numpy import complex128, ones, zeros
+from numpy import complex128, ones, sqrt, zeros
 from numpy.linalg import norm
 
 from . import _1d, _2d
@@ -26,11 +26,11 @@ class System(BaseSystem): # {{{
             buildTensor((3,3,2,2),{
                 (0,0): Pauli.I,
                 (0,2): O,
-                (0,1): OO[0],
-                (1,2): OO[1],
+                (0,1): OO[1],
+                (1,2): OO[0],
                 (2,2): Pauli.I,
             }),
-            ones((1,1,2)),
+            ones((1,1,2),dtype=complex128)/sqrt(2),
         )
 
         if O is not None:
@@ -56,29 +56,26 @@ class System(BaseSystem): # {{{
         return System(self.rotation,copy(self._1d),copy(self._2d))
     # }}}
     def check(self,prefix): # {{{
-        self.checkEnvironments(prefix)
         self.checkStates(prefix)
+        self.checkEnvironments(prefix)
+        self.checkNormalization(prefix)
         self.checkExpectation(prefix)
+        self.checkExpectationMatrix(prefix)
     # }}}
     def checkEnvironments(self,prefix): # {{{
         bandwidth = self._1d.center_state.shape[0]
-        slot_of = { 
-            Identity(): 0,
-            TwoSiteOperator(2): 1,
-            Complete(): 2,
-        }
+        _1d_left_environment = self._1d.left_environment.toArray()
+        _2d_left_environment = self.convert2DLeftEnvironment().toArray()
 
         _1d_right_environment = self._1d.right_environment.toArray()
-        _2d_right_environment = zeros((3,) + (bandwidth,)*2,dtype=complex128)
-        for tag, value in self._2d.sides[0].items():
-            _2d_right_environment[slot_of[tag]] = value.toArray().reshape(bandwidth,bandwidth)
+        _2d_right_environment = self.convert2DRightEnvironment().toArray()
         if norm(_1d_right_environment-_2d_right_environment) > 1e-7:
+            #print(_1d_left_environment)
+            #print(_2d_left_environment)
+            #print(_1d_right_environment)
+            #print(_2d_right_environment)
             raise Exception(prefix + ": for the right environment, norm(_1d-_2d)={} > 1e-7".format(norm(_1d_right_environment-_2d_right_environment)))
 
-        _1d_left_environment = self._1d.left_environment.toArray()
-        _2d_left_environment = zeros((3,) + (bandwidth,)*2,dtype=complex128)
-        for tag, value in self._2d.sides[2].items():
-            _2d_left_environment[2-slot_of[tag]] = value.toArray().reshape(bandwidth,bandwidth)
         if norm(_1d_left_environment-_2d_left_environment) > 1e-7:
             raise Exception(prefix + ": for the left environment, norm(_1d-_2d)={} > 1e-7".format(norm(_1d_left_environment-_2d_left_environment)))
     # }}}
@@ -86,19 +83,27 @@ class System(BaseSystem): # {{{
         _1d_exp = self._1d.computeExpectation()
         _2d_exp = self._2d.computeExpectation()
         if abs(_1d_exp-_2d_exp) > 1e-7:
-            raise Exception(prefix + ": for the expectation, abs(1D@{} - 2D@{})={}>1e-7".format(_1d_exp,_2d_exp,abs(_1d_exp-_2d_exp)))
+            raise Exception(prefix + ": for the expectation, abs(1D@{} - 2D@{})={} > 1e-7".format(_1d_exp,_2d_exp,abs(_1d_exp-_2d_exp)))
+    # }}}
+    def checkExpectationMatrix(self,prefix): # {{{
+        _1d = self._1d.formExpectationMatrix().toArray()
+        _2d = self._2d.formExpectationMatrix().toArray().reshape(_1d.shape)
+        if norm(_1d-_2d) > 1e-7:
+            raise Exception(prefix + ": for the expectation matrix, norm(1D 2D)={} > 1e-7".format(norm(_1d-_2d)))
+    # }}}
+    def checkNormalization(self,prefix): # {{{
+        if abs(self._2d.computeNormalization()-1) > 1e-7:
+            raise Exception(prefix + ": the 2D normalization is {} != 1".format(self._2d.computeNormalization()))
     # }}}
     def checkStates(self,prefix): # {{{
-        _1d = self._1d.getCenterStateAsArray()
-        _2d = self._2d.getCenterStateAsArray().reshape(_1d.shape)
-        if norm(_1d-_2d) > 1e-7:
-            _1d = copy(_1d)
-            _1d[abs(_1d)<1e-10] = 0
-            print(_1d)
-            _2d = copy(_2d)
-            _2d[abs(_2d)<1e-10] = 0
-            print(_2d)
-            raise Exception(prefix + ": for the center state, norm(_1d-_2d)={} > 1e-7".format(norm(_1d-_2d)))
+        _1d = copy(self._1d.getCenterStateAsArray()).real
+        _2d = copy(self._2d.getCenterStateAsArray().reshape(_1d.shape)).real
+        if norm(_1d-_2d) > 1e-5:
+            #_1d[abs(_1d)<1e-7] = 0
+            #_2d[abs(_2d)<1e-7] = 0
+            #print(_1d)
+            #print(_2d)
+            raise Exception(prefix + ": for the center state, norm(_1d-_2d)={} > 1e-5".format(norm(_1d-_2d)))
     # }}}
     def computeExpectation(self): #{{{
         self.check("while computing expectation")
@@ -114,9 +119,41 @@ class System(BaseSystem): # {{{
     def contractTowards(self,direction): # {{{
         print("contracting towards ",direction,2*direction+self.rotation)
         self.check("before contraction, ")
-        self._1d.contractTowards(direction)
+        #self._1d.contractTowards(direction)
         self._2d.contractTowards(2*direction+self.rotation)
+        self.copy2Dto1D()
         self.check("after contraction, ")
+    # }}}
+    def convert2DLeftEnvironment(self): # {{{
+        slot_of = { 
+            Identity(): 2,
+            TwoSiteOperator(2): 1,
+            Complete(): 0,
+        }
+
+        bandwidth = self._2d.state_center_data.shape[self.rotation]
+        _1d_left_environment = zeros((3,) + (bandwidth,)*2,dtype=complex128)
+        for tag, value in self._2d.sides[self.rotation+2].items():
+            _1d_left_environment[slot_of[tag]] = value.toArray().reshape(bandwidth,bandwidth)
+        return NDArrayData(_1d_left_environment)
+    # }}}
+    def convert2DRightEnvironment(self): # {{{
+        slot_of = { 
+            Identity(): 0,
+            TwoSiteOperator(2): 1,
+            Complete(): 2,
+        }
+
+        bandwidth = self._2d.state_center_data.shape[self.rotation]
+        _1d_right_environment = zeros((3,) + (bandwidth,)*2,dtype=complex128)
+        for tag, value in self._2d.sides[self.rotation].items():
+            _1d_right_environment[slot_of[tag]] = value.toArray().reshape(bandwidth,bandwidth)
+        return NDArrayData(_1d_right_environment)
+    # }}}
+    def copy2Dto1D(self): # {{{
+        self._1d.setCenterState(self._2d.state_center_data.join((0,1),(2,3),4))
+        self._1d.left_environment = self.convert2DLeftEnvironment()
+        self._1d.right_environment = self.convert2DRightEnvironment()
     # }}}
     def getCenterStateAsArray(self): # {{{
         self.check("while getting center state as array")
@@ -124,8 +161,9 @@ class System(BaseSystem): # {{{
     # }}}
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         self.check("before increasing bandwidth")
-        self._1d.increaseBandwidth(direction,by,to,do_as_much_as_possible)
+        #self._1d.increaseBandwidth(direction,by,to,do_as_much_as_possible)
         self._2d.increaseBandwidth(direction,by,to,do_as_much_as_possible)
+        self.copy2Dto1D()
         self.check("after increasing bandwidth")
     # }}}
     def minimizeExpectation(self): # {{{

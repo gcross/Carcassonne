@@ -808,10 +808,13 @@ def relaxOver(initial,expectation_multiplier,normalization_multiplier=None,maxim
     initial = initial.toArray().ravel()
     initial /= norm(initial)
     N = len(initial)
+    #print("initial =",initial)
+    #print("expectation matrix =",expectation_multiplier.formMatrix())
+    #print("normalization matrix =",normalization_multiplier.formMatrix() if normalization_multiplier is not None else None)
     if dimension_of_krylov_space is None:
         dimension_of_krylov_space = 3
 
-        if normalization_multiplier is None:
+        if True: # normalization_multiplier is None:
             applyInverseNormalization = lambda x: x
         elif normalization_multiplier.isCheaperToFormMatrix(10*2*dimension_of_krylov_space):
             applyInverseNormalization = partial(lu_solve,lu_factor(normalization_multiplier.formMatrix().toArray()))

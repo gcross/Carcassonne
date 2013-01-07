@@ -338,7 +338,6 @@ class NDArrayData(Data): # {{{
     def transpose(self,*args): # {{{
         return NDArrayData(self._arr.transpose(*args))
     # }}}
-  # }}}
   # Properties {{{
     dtype = property(fget = lambda self: self._arr.dtype)
     ndim = property(fget = lambda self: self._arr.ndim)

@@ -70,6 +70,7 @@ def formExpectationAndNormalizationMultipliers(corners,sides,center_operator): #
     )
 # }}}
 def formExpectationStage1(corner,side): # {{{
+    #return {(TwoSiteOperator(0,0) if tag == TwoSiteOperator(2) else tag):value.join((0,1,2),(3,4,5),(6,),(7,)) for (tag,value) in side.items()}
     terms = {}
     formStage = formNormalizationStage1
     addStandardCompleteAndIdentityTerms(terms,formStage)
@@ -83,7 +84,8 @@ def formExpectationStage1(corner,side): # {{{
     })
     return contractSparseTensors(terms,corner,side)
 # }}}
-def formExpectationStage2(corner,side): # {{{
+def formExpectationStage2(right,left): # {{{
+    #return {tag:value.split(*(1,1) + (value.shape[-1],1)*2) for (tag,value) in right.items()}
     terms = {}
     formStage = formNormalizationStage2
     addStandardCompleteAndIdentityTerms(terms,formStage)
@@ -95,7 +97,7 @@ def formExpectationStage2(corner,side): # {{{
         (Identity,TwoSiteOperatorCompressed): lambda r,l: (l.matchesStage1IdentityOnRight(),formStage),
         (TwoSiteOperatorCompressed,TwoSiteOperatorCompressed): lambda r,l: (l.matches(r),formStage),
     })
-    return contractSparseTensors(terms,corner,side)
+    return contractSparseTensors(terms,right,left)
 # }}}
 def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
     rules = {

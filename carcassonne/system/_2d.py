@@ -78,7 +78,7 @@ class System(BaseSystem): # {{{
         return cls(
             tuple({Identity():DataClass.newTrivial((1,)*6,dtype=complex128)} for _ in range(4)),
             tuple({Identity():DataClass.newTrivial((1,)*8,dtype=complex128)} for _ in range(4)),
-            DataClass.newTrivial((1,1,1,1,physical_dimension),dtype=complex128),
+            DataClass.newFilled((1,1,1,1,physical_dimension),1.0/sqrt(physical_dimension),dtype=complex128),
             operator_center_tensor,
         )
     # }}}
@@ -449,6 +449,8 @@ class System(BaseSystem): # {{{
     def contractTowards(self,direction,state_center_data=None,normalize_center=True): # {{{
         if state_center_data is None:
             state_center_data = self.state_center_data
+        #print("denormalizer:")
+        #print(state_center_data.normalizeAxis(O(direction))[-1])
         normalized_state_center_data, denormalized_state_center_data = \
             state_center_data.normalizeAxisAndDenormalize(O(direction),direction,self.state_center_data)
         if normalize_center:
@@ -499,6 +501,7 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction not in (0,1):
             raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))
+        #print("2D:{}".format(self.state_center_data.join((0,1),(2,3),4)))
         state_center_data = self.state_center_data
         old_dimension = state_center_data.shape[direction]
         new_dimension = \
@@ -520,21 +523,40 @@ class System(BaseSystem): # {{{
         self.setStateCenter(
             state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
         )
-        for axis in axes:
-            compressor, _ = \
-                computeCompressorForMatrixTimesItsDagger(
-                    old_dimension,
-                    increment,
-                    extra_state_center_data.fold(axis).transpose().toArray()
+        if increment == old_dimension:
+            for axis in axes:
+                #x = state_center_data.directSumWith(
+                #        extra_state_center_data,
+                #        *dropAt(range(5),axis)
+                #    ).toArray()
+                #x[abs(x)<1e-7] = 0
+                #print("2D x({}) = {}".format(axis,x))
+                self.contractTowards(
+                    O(axis),
+                    state_center_data.directSumWith(
+                        extra_state_center_data,
+                        *dropAt(range(5),axis)
+                    ),
+                    False,
                 )
-            self.contractTowards(
-                O(axis),
-                state_center_data.directSumWith(
-                    extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
-                    *dropAt(range(5),axis)
-                ),
-                normalize_center=False
-            )
+                #print("2D({}):{}".format(axis,self.state_center_data.join((0,1),(2,3),4)))
+        else:
+            for axis in axes:
+                compressor, _ = \
+                    computeCompressorForMatrixTimesItsDagger(
+                        old_dimension,
+                        increment,
+                        extra_state_center_data.fold(axis).transpose().toArray()
+                    )
+                self.contractTowards(
+                    O(axis),
+                    state_center_data.directSumWith(
+                        extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
+                        *dropAt(range(5),axis)
+                    ),
+                    normalize_center=False
+                )
+        self.setStateCenter(self.state_center_data.normalized())
         self.just_increased_bandwidth = True
     # }}}
     def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
@@ -543,7 +565,7 @@ class System(BaseSystem): # {{{
     # }}}
     def minimizeExpectation(self): # {{{
         state_center_data = self.state_center_data
-        if prod(state_center_data.shape[:4]) == 1:
+        if False: #prod(state_center_data.shape[:4]) == 1:
             N = state_center_data.shape[4]
             operator = state_center_data.newZeros(shape=(N,N),dtype=state_center_data.dtype)
             for tag, data in self.operator_center_tensor.items():
@@ -553,6 +575,7 @@ class System(BaseSystem): # {{{
             solutions = evecs.transpose().reshape((N,) + state_center_data.shape)
             self.setStateCenter(type(state_center_data)(solutions[0]))
         else:
+            print("minimizing 2D")
             self.setStateCenter(
                 relaxOver(
                     state_center_data,
