@@ -270,7 +270,7 @@ class NDArrayData(Data): # {{{
         U, S, V = self.join(svd_axes_to_merge,axis).svd(full_matrices=False)
         U_split = list(self.shape)
         del U_split[axis]
-        U_split.append(V.shape[1])
+        U_split.append(U.shape[1])
         U_join = list(range(self.ndim-1))
         U_join.insert(axis,self.ndim-1)
         S = S.split(S.shape[0],1)
@@ -288,7 +288,7 @@ class NDArrayData(Data): # {{{
             SI = SI.sqrt()
             return (V*SI).conj(), V*S
         else:
-            return U.contractWith(V,(1,),(0,)).split(*U_split).join(*U_join), V.conj().transpose().contractWith(V*SI,(1,),(0,)).conj(), V.conj().transpose().contractWith(V*S,(1,),(0,))
+            return U.split(*U_split).join(*U_join), (V*SI).conj(), V*S
     # }}}
     def normalizeAxisAndDenormalize(self,axis_to_norm,axis_to_denorm,data_to_denormalize=None,sqrt_svals=False,dont_recip_under=1e-14): # {{{
         if data_to_denormalize is None:
