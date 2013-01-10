@@ -3,6 +3,11 @@ from copy import copy
 from numpy.linalg import norm
 # }}}
 
+from numpy import arccos, dot
+from scipy.linalg import svd
+
+from .data import NDArrayData
+
 # Base classes {{{
 class Policy: # {{{
     def __call__(self,system):
@@ -98,6 +103,7 @@ class RelativeExpectationChangeDifferenceThresholdConvergencePolicy(Policy): # {
         def converged(self):
             last = self.last
             current = self.current
+            print("EXPS =",last,current)
             return last is not None and current is not None and (abs(current+last) < 1e-15 or abs(current-last)/abs(current+last)*2 < self.parent.threshold)
         def reset(self):
             self.last = None
@@ -127,7 +133,7 @@ class RelativeStateDifferenceThresholdConvergencePolicy(Policy): # {{{
             self.current = None
         def update(self):
             self.last = self.current
-            self.current = self.system.getCenterStateAsArray().ravel()
+            self.current = self.system.getCenterStateAsArray()
 # }}}
 # }}}
 

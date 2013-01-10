@@ -360,56 +360,8 @@ class System(BaseSystem): # {{{
         return cond(self.formNormalizationMatrix().toArray())
     # }}}
     def computeOneSiteExpectation(self): # {{{
-        return self.computeCenterSiteExpectation()
-        #expectation_double_counting_one_site_operator = self.computeExpectation({tag:value*2 if tag == OneSiteOperator() else value for tag, value in self.operator_center_tensor.items()})
-        #expectation_without_center = self.computeExpectationWithoutCenter()
-        #return (expectation_double_counting_one_site_operator-expectation_without_center)/2
-
         expectation = 0
-
-        sself = copy(self)
-        #print("A. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
-        #print("A. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
-        #print("A. TSOEXP1=",sself.computeExpectation({TwoSiteOperator(2,0):sself.operator_center_tensor[TwoSiteOperator(2,0)]}))
-        #sself.corners = [{Identity():corner[Identity()]} for corner in sself.corners]
-        #print("B. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
-        #print("B. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
-        #print("B. TSOEXP1=",sself.computeExpectation({TwoSiteOperator(2,0):sself.operator_center_tensor[TwoSiteOperator(2,0)]}))
-        #sself.sides = [{Identity():side[Identity()]} if i in (1,3) else side for i, side in enumerate(sself.sides)]
-        #print("C. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
-        #print("C. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
-        #print("C. TSOEXP1=",sself.computeExpectation({TwoSiteOperator(2,0):sself.operator_center_tensor[TwoSiteOperator(2,0)]}))
-        ##sself.sides = [{tag:value for tag, value in side.items() if isinstance(tag,TwoSiteOperator) or isinstance(tag,Identity)} for i, side in enumerate(sself.sides)]
-        #sself.sides = [{tag:value for tag, value in side.items() if tag == TwoSiteOperator(2) or isinstance(tag,Identity)} for i, side in enumerate(sself.sides)]
-        #print("D. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
-        #print("D. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
-        #print("D. TSOEXP1=",sself.computeExpectation({TwoSiteOperator(2,0):sself.operator_center_tensor[TwoSiteOperator(2,0)]}))
-        sself.contractTowards(0)
-        #print("E. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
-        #print("E. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
-        #print("E. TSOEXP1=",sself.computeExpectation({TwoSiteOperator(2,0):sself.operator_center_tensor[TwoSiteOperator(2,0)]}))
-        sself.contractTowards(0)
-        sself.minimizeExpectation()
-        print("F. OSOEXP=",sself.computeExpectation({OneSiteOperator():sself.operator_center_tensor[OneSiteOperator()]}))
-        print("F. TSOEXP0=",sself.computeExpectation({TwoSiteOperator(0,0):sself.operator_center_tensor[TwoSiteOperator(0,0)]}))
-        print("F. TSOEXP1=",sself.computeExpectation({TwoSiteOperator(2,0):sself.operator_center_tensor[TwoSiteOperator(2,0)]}))
-
         stripped_self = self.stripExpectationEnvironment()
-
-        test_self = copy(stripped_self)
-        test_self.operator_center_tensor = self.operator_center_tensor
-        #print("C=",test_self.computeExpectation())
-        test_self.contractTowards(0)
-        exp1 = test_self.computeExpectation()
-        test_self.contractTowards(2)
-        exp2 = test_self.computeExpectation()
-        test_self.contractTowards(0)
-        exp3 = test_self.computeExpectation()
-        test_self.contractTowards(2)
-        exp4 = test_self.computeExpectation()
-        #print('D=',exp2-exp3)
-        #print('D=',exp3-exp2)
-        #print('D=',exp4-exp2)
 
         if OneSiteOperator() in self.operator_center_tensor:
             system = copy(stripped_self)
@@ -423,25 +375,20 @@ class System(BaseSystem): # {{{
             system.operator_center_tensor[TwoSiteOperator(0,0)] = self.operator_center_tensor[TwoSiteOperator(0,0)]
             system.operator_center_tensor[TwoSiteOperator(2,0)] = self.operator_center_tensor[TwoSiteOperator(2,0)]
             system.contractTowards(0)
-            system.contractTowards(0)
-            #system.contractTowards(2)
-            print("two-site V=",system.computeExpectationAndNormalization({Identity():self.operator_center_tensor[Identity()]}))
-            expectation += system.computeExpectation({Identity():self.operator_center_tensor[Identity()]})
-            #print("two-site V=",system.computeExpectation({TwoSiteOperator(0,0):self.operator_center_tensor[TwoSiteOperator(0,0)]}))
-            #expectation += system.computeExpectation({TwoSiteOperator(0,0):self.operator_center_tensor[TwoSiteOperator(0,0)]})
+            print("two-site V=",system.computeExpectationAndNormalization())
+            expectation += system.computeExpectation()
             del system
 
         if TwoSiteOperator(1,0) in self.operator_center_tensor:
             system = copy(stripped_self)
             system.operator_center_tensor[TwoSiteOperator(1,0)] = self.operator_center_tensor[TwoSiteOperator(1,0)]
             system.operator_center_tensor[TwoSiteOperator(3,0)] = self.operator_center_tensor[TwoSiteOperator(3,0)]
-            system.contractUnnormalizedTowards(1)
+            system.contractTowards(1)
             #system.contractTowards(3)
             print("two-site H=",system.computeExpectation())
             expectation += system.computeExpectation()
             del system
 
-        #print("exp=",expectation,self.computeCenterSiteExpectation())
         return expectation
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
@@ -450,17 +397,18 @@ class System(BaseSystem): # {{{
     def computeUnnormalizedExpectation(self): # {{{
         return self.computeScalarUsingMultiplier(self.formExpectationMultipliers())
     # }}}
-    def contractTowards(self,direction,state_center_data=None,normalize_center=True): # {{{
+    def contractTowards(self,direction,state_center_data=None,denormalize_center=False,renormalize_center=True): # {{{
         if state_center_data is None:
             state_center_data = self.state_center_data
-        #print("denormalizer:")
-        #print(state_center_data.normalizeAxis(O(direction))[-1])
-        normalized_state_center_data, denormalized_state_center_data = \
-            state_center_data.normalizeAxisAndDenormalize(O(direction),direction,self.state_center_data)
-        if normalize_center:
-            denormalized_state_center_data = denormalized_state_center_data.normalized()
-        self.contractUnnormalizedTowards(direction,normalized_state_center_data)
-        self.setStateCenter(denormalized_state_center_data)
+        if denormalize_center:
+            normalized_state_center_data, denormalized_state_center_data = \
+                state_center_data.normalizeAxisAndDenormalize(O(direction),direction,self.state_center_data)
+            if renormalize_center:
+                denormalized_state_center_data = denormalized_state_center_data.normalized()
+            self.contractUnnormalizedTowards(direction,normalized_state_center_data)
+            self.setStateCenter(denormalized_state_center_data)
+        else:
+            self.contractUnnormalizedTowards(direction,state_center_data.normalizeAxis(O(direction))[0])
     # }}}
     def contractUnnormalizedTowards(self,direction,state_center_data=None,state_center_data_conj=None): # {{{
         if state_center_data is None:
@@ -505,7 +453,6 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction not in (0,1):
             raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))
-        #print("2D:{}".format(self.state_center_data.join((0,1),(2,3),4)))
         state_center_data = self.state_center_data
         old_dimension = state_center_data.shape[direction]
         new_dimension = \
@@ -529,12 +476,6 @@ class System(BaseSystem): # {{{
         )
         if increment == old_dimension:
             for axis in axes:
-                #x = state_center_data.directSumWith(
-                #        extra_state_center_data,
-                #        *dropAt(range(5),axis)
-                #    ).toArray()
-                #x[abs(x)<1e-7] = 0
-                #print("2D x({}) = {}".format(axis,x))
                 self.contractTowards(
                     O(axis),
                     state_center_data.directSumWith(
@@ -543,7 +484,6 @@ class System(BaseSystem): # {{{
                     ),
                     False,
                 )
-                #print("2D({}):{}".format(axis,self.state_center_data.join((0,1),(2,3),4)))
         else:
             for axis in axes:
                 compressor, _ = \
@@ -558,7 +498,6 @@ class System(BaseSystem): # {{{
                         extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
                         *dropAt(range(5),axis)
                     ),
-                    normalize_center=False
                 )
         self.setStateCenter(self.state_center_data.normalized())
         self.just_increased_bandwidth = True

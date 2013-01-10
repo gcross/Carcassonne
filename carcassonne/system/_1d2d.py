@@ -110,7 +110,46 @@ class System(BaseSystem): # {{{
         return self._1d.computeExpectation()
     # }}}
     def computeOneSiteExpectation(self): #{{{
-        _1d = self._1d.computeOneSiteExpectation()
+        #_1d = self._1d.computeOneSiteExpectation()
+        print("limiting exp = {:.15}".format(self._1d.computeOneSiteExpectation().real))
+
+        _1d = 0
+        _1d_system = copy(self._1d)
+
+        left_environment = 0*_1d_system.left_environment.toArray()
+        left_environment[-1] = self._1d.left_environment.toArray()[-1]
+        _1d_system.left_environment = NDArrayData(left_environment)
+        del left_environment
+
+        right_environment = 0*_1d_system.right_environment.toArray()
+        right_environment[0] = self._1d.right_environment.toArray()[0]
+        _1d_system.right_environment = NDArrayData(right_environment)
+        del right_environment
+
+        center_operator = 0*_1d_system.center_operator.toArray()
+        center_operator[0,2] = self._1d.center_operator.toArray()[0,2]
+        _1d_system.center_operator = NDArrayData(center_operator)
+        _1d += _1d_system.computeExpectation()
+        print("O EXP =",_1d_system.computeExpectation())
+        del center_operator
+
+        center_operator = 0*_1d_system.center_operator.toArray()
+        center_operator[0,1] = self._1d.center_operator.toArray()[0,1]
+        _1d_system.center_operator = NDArrayData(center_operator)
+        del center_operator
+        _1d_system.contractRight()
+        _1d_system.center_operator = self._1d.center_operator
+        #_1d_system.minimizeExpectation()
+        center_operator = 0*_1d_system.center_operator.toArray()
+        center_operator[1,2] = self._1d.center_operator.toArray()[1,2]
+        _1d_system.center_operator = NDArrayData(center_operator)
+        del center_operator
+        _1d += _1d_system.computeExpectation()
+        print("OO EXP =",_1d_system.computeExpectation())
+
+        del _1d_system
+
+
         _2d = self._2d.computeOneSiteExpectation()
         if abs(abs(_1d)-abs(_2d)) > 1e-7:
             raise Exception("for the one-site expectation, abs({}-{})={}>1e-7".format(abs(_1d),abs(_2d),abs(abs(_1d)-abs(_2d))))

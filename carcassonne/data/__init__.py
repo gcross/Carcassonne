@@ -2,8 +2,8 @@
 from copy import copy
 from functools import partial, reduce
 from math import ceil
-from numpy import allclose, any, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
-from scipy.linalg import norm, qr, svd
+from numpy import allclose, any, arange, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
+from scipy.linalg import eigh, norm, qr, svd
 
 from ..utils import crand, dropAt, randomComplexSample
 # }}}
@@ -268,6 +268,18 @@ class NDArrayData(Data): # {{{
         svd_axes_to_merge = list(range(self.ndim))
         del svd_axes_to_merge[axis]
         U, S, V = self.join(svd_axes_to_merge,axis).svd(full_matrices=False)
+        #phases = V.toArray()[:,0]
+        #phases /= abs(phases)
+        #phases = NDArrayData(phases)
+        #U *= phases.split(1,S.shape[0])
+        #V /= phases.split(S.shape[0],1)
+        #for i in range(S.shape[0]):
+        #    for phase in U.toArray()[:,i]:
+        #        if phase != 0:
+        #            break
+        #    phase /= abs(phase)
+        #    U._arr[:,i] /= phase
+        #    V._arr[i] *= phase
         U_split = list(self.shape)
         del U_split[axis]
         U_split.append(U.shape[1])
@@ -282,6 +294,30 @@ class NDArrayData(Data): # {{{
         else:
             SI = 1.0/SI
         SI = NDArrayData(SI)
+
+        #random_phases = crand(S.shape[0])
+        #random_phases /= abs(random_phases)
+        #randomizer = NDArrayData(diag(random_phases))
+        #inverse_randomizer = NDArrayData(diag(1/random_phases))
+        #U = U.absorbMatrixAt(1,randomizer)
+        #V = V.absorbMatrixAt(0,inverse_randomizer)
+
+        #degaugifier = identity(S.shape[0])
+        #i = 0
+        #s = S.toArray()
+        #ss = s.shape[0]
+        #print("S =",S)
+        #while i < ss:
+        #    j = i+1
+        #    while j < ss and abs(s[i]-s[j])/(abs(s[i])+abs(s[j])) < 1e-10:
+        #        j += 1
+        #    if j-i > 1:
+        #        v = V.toArray()[i:j]
+        #        weight_function = diag(arange(1,j+1))
+        #        weight_matrix = dot(v.conj().transpose(),dot(weight_function,v))
+        #        rvals, rotation = eigh(weight_matrix)
+        #        print("rvals =",rvals)
+        #    i = j
 
         if sqrt_svals:
             S = S.sqrt()

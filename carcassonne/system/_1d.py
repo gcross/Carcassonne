@@ -93,12 +93,15 @@ class System(BaseSystem): # {{{
             center_state = self.center_state
         if center_state.shape[1] != self.left_environment.shape[1]:
             raise ValueError("state dimension of the left environment ({}) does not match the left dimension of the center state ({})".format(self.left_environment.shape[1],center_state.shape[1]))
-        normalized_center_state, denormalized_center_state = \
-            center_state.normalizeAxisAndDenormalize(0,1,self.center_state)
-        if normalize_center:
-            denormalized_center_state = denormalized_center_state.normalized()
-        self.contractLeftUnnormalized(normalized_center_state)
-        self.setCenterState(denormalized_center_state)
+        if denormalize_center:
+            normalized_center_state, denormalized_center_state = \
+                center_state.normalizeAxisAndDenormalize(0,1,self.center_state)
+            if normalize_center:
+                denormalized_center_state = denormalized_center_state.normalized()
+            self.contractLeftUnnormalized(normalized_center_state)
+            self.setCenterState(denormalized_center_state)
+        else:
+            self.contractLeftUnnormalized(center_state.normalizeAxis(0)[0])
     # }}}
     def contractLeftUnnormalized(self,center_state=None): # {{{
         if center_state is None:
@@ -111,19 +114,22 @@ class System(BaseSystem): # {{{
                 center_state.conj(),
             )
     # }}}
-    def contractRight(self,center_state=None,normalize_center=True): # {{{
+    def contractRight(self,center_state=None,denormalize_center=False,renormalize_center=True): # {{{
         if center_state is None:
             center_state = self.center_state
         if center_state.shape[0] != self.right_environment.shape[1]:
             raise ValueError("state dimension of the right environment ({}) does not match the right dimension of the center state ({})".format(self.right_environment.shape[1],center_state.shape[0]))
         #print("denormalizer:")
         #print(center_state.normalizeAxis(1)[-1])
-        normalized_center_state, denormalized_center_state = \
-            center_state.normalizeAxisAndDenormalize(1,0,self.center_state)
-        if normalize_center:
-            denormalized_center_state = denormalized_center_state.normalized()
-        self.contractRightUnnormalized(normalized_center_state)
-        self.setCenterState(denormalized_center_state)
+        if denormalize_center:
+            normalized_center_state, denormalized_center_state = \
+                center_state.normalizeAxisAndDenormalize(1,0,self.center_state)
+            if renormalize_center:
+                denormalized_center_state = denormalized_center_state.normalized()
+            self.contractRightUnnormalized(normalized_center_state)
+            self.setCenterState(denormalized_center_state)
+        else:
+            self.contractRightUnnormalized(center_state.normalizeAxis(1)[0])
     # }}}
     def contractRightUnnormalized(self,center_state=None): # {{{
         if center_state is None:
