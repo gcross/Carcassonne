@@ -9,7 +9,6 @@ class BaseSystem: # {{{
         self.sweepUntilConverged()
         self.run_convergence_policy.update()
         while not self.run_convergence_policy.converged():
-            print("increasing bandwidth")
             self.increase_bandwidth_policy.apply()
             self.sweepUntilConverged()
             self.run_convergence_policy.update()
@@ -26,7 +25,6 @@ class BaseSystem: # {{{
                 self.sweep_convergence_policy.update()
             except RelaxFailed:
                 pass
-        print("finished sweep")
     # }}}
   # }}}
   # Policy fields {{{

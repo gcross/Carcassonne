@@ -366,7 +366,6 @@ class System(BaseSystem): # {{{
         if OneSiteOperator() in self.operator_center_tensor:
             system = copy(stripped_self)
             system.operator_center_tensor[OneSiteOperator()] = self.operator_center_tensor[OneSiteOperator()]
-            print("one-site=",system.computeExpectation())
             expectation += system.computeExpectation()
             del system
 
@@ -375,7 +374,6 @@ class System(BaseSystem): # {{{
             system.operator_center_tensor[TwoSiteOperator(0,0)] = self.operator_center_tensor[TwoSiteOperator(0,0)]
             system.operator_center_tensor[TwoSiteOperator(2,0)] = self.operator_center_tensor[TwoSiteOperator(2,0)]
             system.contractTowards(0)
-            print("two-site V=",system.computeExpectationAndNormalization())
             expectation += system.computeExpectation()
             del system
 
@@ -384,8 +382,6 @@ class System(BaseSystem): # {{{
             system.operator_center_tensor[TwoSiteOperator(1,0)] = self.operator_center_tensor[TwoSiteOperator(1,0)]
             system.operator_center_tensor[TwoSiteOperator(3,0)] = self.operator_center_tensor[TwoSiteOperator(3,0)]
             system.contractTowards(1)
-            #system.contractTowards(3)
-            print("two-site H=",system.computeExpectation())
             expectation += system.computeExpectation()
             del system
 
@@ -518,7 +514,6 @@ class System(BaseSystem): # {{{
             solutions = evecs.transpose().reshape((N,) + state_center_data.shape)
             self.setStateCenter(type(state_center_data)(solutions[0]))
         else:
-            print("minimizing 2D")
             self.setStateCenter(
                 relaxOver(
                     state_center_data,

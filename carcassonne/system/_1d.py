@@ -232,7 +232,6 @@ class System(BaseSystem): # {{{
         self.just_increased_bandwidth = True
     # }}}
     def minimizeExpectation(self): # {{{
-        print("minimizing 1D")
         self.setCenterState(relaxOver(
             initial=self.center_state,
             expectation_multiplier=self.formExpectationMultiplier(),

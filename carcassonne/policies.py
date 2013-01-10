@@ -103,7 +103,6 @@ class RelativeExpectationChangeDifferenceThresholdConvergencePolicy(Policy): # {
         def converged(self):
             last = self.last
             current = self.current
-            print("EXPS =",last,current)
             return last is not None and current is not None and (abs(current+last) < 1e-15 or abs(current-last)/abs(current+last)*2 < self.parent.threshold)
         def reset(self):
             self.last = None

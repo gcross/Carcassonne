@@ -70,10 +70,6 @@ class System(BaseSystem): # {{{
         _1d_right_environment = self._1d.right_environment.toArray()
         _2d_right_environment = self.convert2DRightEnvironment().toArray()
         if norm(_1d_right_environment-_2d_right_environment) > 1e-7:
-            #print(_1d_left_environment)
-            #print(_2d_left_environment)
-            #print(_1d_right_environment)
-            #print(_2d_right_environment)
             raise Exception(prefix + ": for the right environment, norm(_1d-_2d)={} > 1e-7".format(norm(_1d_right_environment-_2d_right_environment)))
 
         if norm(_1d_left_environment-_2d_left_environment) > 1e-7:
@@ -99,10 +95,6 @@ class System(BaseSystem): # {{{
         _1d = copy(self._1d.getCenterStateAsArray()).real
         _2d = copy(self._2d.getCenterStateAsArray().reshape(_1d.shape)).real
         if norm(_1d-_2d) > 1e-5:
-            #_1d[abs(_1d)<1e-7] = 0
-            #_2d[abs(_2d)<1e-7] = 0
-            #print(_1d)
-            #print(_2d)
             raise Exception(prefix + ": for the center state, norm(_1d-_2d)={} > 1e-5".format(norm(_1d-_2d)))
     # }}}
     def computeExpectation(self): #{{{
@@ -110,53 +102,13 @@ class System(BaseSystem): # {{{
         return self._1d.computeExpectation()
     # }}}
     def computeOneSiteExpectation(self): #{{{
-        #_1d = self._1d.computeOneSiteExpectation()
-        print("limiting exp = {:.15}".format(self._1d.computeOneSiteExpectation().real))
-
-        _1d = 0
-        _1d_system = copy(self._1d)
-
-        left_environment = 0*_1d_system.left_environment.toArray()
-        left_environment[-1] = self._1d.left_environment.toArray()[-1]
-        _1d_system.left_environment = NDArrayData(left_environment)
-        del left_environment
-
-        right_environment = 0*_1d_system.right_environment.toArray()
-        right_environment[0] = self._1d.right_environment.toArray()[0]
-        _1d_system.right_environment = NDArrayData(right_environment)
-        del right_environment
-
-        center_operator = 0*_1d_system.center_operator.toArray()
-        center_operator[0,2] = self._1d.center_operator.toArray()[0,2]
-        _1d_system.center_operator = NDArrayData(center_operator)
-        _1d += _1d_system.computeExpectation()
-        print("O EXP =",_1d_system.computeExpectation())
-        del center_operator
-
-        center_operator = 0*_1d_system.center_operator.toArray()
-        center_operator[0,1] = self._1d.center_operator.toArray()[0,1]
-        _1d_system.center_operator = NDArrayData(center_operator)
-        del center_operator
-        _1d_system.contractRight()
-        _1d_system.center_operator = self._1d.center_operator
-        #_1d_system.minimizeExpectation()
-        center_operator = 0*_1d_system.center_operator.toArray()
-        center_operator[1,2] = self._1d.center_operator.toArray()[1,2]
-        _1d_system.center_operator = NDArrayData(center_operator)
-        del center_operator
-        _1d += _1d_system.computeExpectation()
-        print("OO EXP =",_1d_system.computeExpectation())
-
-        del _1d_system
-
-
+        _1d = self._1d.computeOneSiteExpectation()
         _2d = self._2d.computeOneSiteExpectation()
         if abs(abs(_1d)-abs(_2d)) > 1e-7:
             raise Exception("for the one-site expectation, abs({}-{})={}>1e-7".format(abs(_1d),abs(_2d),abs(abs(_1d)-abs(_2d))))
-        return _1d
+        return _2d
     # }}}
     def contractTowards(self,direction): # {{{
-        print("contracting towards ",direction,2*direction+self.rotation)
         self.check("before contraction, ")
         #self._1d.contractTowards(direction)
         self._2d.contractTowards(2*direction+self.rotation)
