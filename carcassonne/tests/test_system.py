@@ -320,17 +320,6 @@ class TestSystem(TestCase): # {{{
 
         self.assertAlmostEqual(system1.computeNormalizationMatrixConditionNumber(),1)
     # }}}
-    @with_checker # test_minimizer_works_after_some_steps {{{
-    def dont_test_minimizer_works_after_some_steps(self,moves=(irange(0,1),)*4):
-        system = System.newRandom(makeOperator=lambda N: NDArrayData.newDiagonal([1]*(N-1)+[-1]))
-        N = system.state_center_data.shape[-1]
-        system.minimizeExpectation()
-        self.assertDataAlmostEqual(system.state_center_data,NDArrayData.newOuterProduct([1],[1],[1],[1],[0]*(N-1)+[1]))
-        directions = sum(([i]*moves[i] for i in range(4)),[])
-        for direction in directions:
-            system.contractTowards(direction)
-            system.increaseBandwidth(direction=direction+1,by=1)
-    # }}}
     @with_checker # test_normalizeCenterAndDenormalizeSide {{{
     def test_normalizeCenterAndDenormalizeSide(self,direction=irange(0,3)):
         system = System.newRandom()
