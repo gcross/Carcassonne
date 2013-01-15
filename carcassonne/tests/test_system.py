@@ -420,8 +420,8 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
         self.assertEqual(system.computeExpectation(),spins[s1])
         self.assertEqual(system.computeNormalization(),1)
         system.setStateCenter(states[s2])
-        system.minimizeExpectation()
-        self.assertDataAlmostEqual(system.state_center_data,states[1])
+        self.assertEqual(system.computeExpectation(),spins[s2])
+        self.assertEqual(system.computeNormalization(),1)
     # }}}
     @with_checker(number_of_calls=10) # test_magnetic_field_single_step {{{
     def test_magnetic_field_single_step(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1)):
