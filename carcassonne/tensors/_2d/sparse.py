@@ -83,7 +83,7 @@ def formExpectationStage1(corner,side): # {{{
     })
     return contractSparseTensors(terms,corner,side)
 # }}}
-def formExpectationStage2(corner,side): # {{{
+def formExpectationStage2(right,left): # {{{
     terms = {}
     formStage = formNormalizationStage2
     addStandardCompleteAndIdentityTerms(terms,formStage)
@@ -95,7 +95,7 @@ def formExpectationStage2(corner,side): # {{{
         (Identity,TwoSiteOperatorCompressed): lambda r,l: (l.matchesStage1IdentityOnRight(),formStage),
         (TwoSiteOperatorCompressed,TwoSiteOperatorCompressed): lambda r,l: (l.matches(r),formStage),
     })
-    return contractSparseTensors(terms,corner,side)
+    return contractSparseTensors(terms,right,left)
 # }}}
 def formExpectationStage3(stage2_0,stage2_1,operator_center): # {{{
     rules = {
