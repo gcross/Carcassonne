@@ -1,4 +1,5 @@
 # Imports {{{
+from copy import copy
 from numpy.linalg import norm
 # }}}
 
@@ -66,6 +67,30 @@ class RepeatPatternContractionPolicy(Policy): # {{{
 # }}}
 
 # Convergence policies {{{
+class RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(Policy): # {{{
+    def __init__(self,direction,threshold):
+        self.direction = direction
+        self.threshold = threshold
+    class BoundPolicy(BoundPolicyBase):
+        def __init__(self,system,parent):
+            BoundPolicyBase.__init__(self,system,parent)
+            self.last = None
+            self.current = None
+        def converged(self):
+            last = self.last
+            current = self.current
+            return last is not None and current is not None and (abs(current+last) < 1e-15 or abs(current-last)/abs(current+last)*2 < self.parent.threshold)
+        def reset(self):
+            self.last = None
+            self.current = None
+        def update(self):
+            self.last = self.current
+            system = copy(self.system)
+            exp1 = system.computeExpectation()
+            system.contractTowards(self.parent.direction)
+            exp2 = system.computeExpectation()
+            self.current = exp2-exp1
+# }}}
 class RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(Policy): # {{{
     def __init__(self,threshold):
         self.threshold = threshold
@@ -131,6 +156,7 @@ __all__ = [
 
     "RepeatPatternContractionPolicy",
 
+    "RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy",
     "RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy",
     "RelativeStateDifferenceThresholdConvergencePolicy",
 
