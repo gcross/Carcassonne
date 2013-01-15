@@ -78,7 +78,7 @@ class System(BaseSystem): # {{{
         return cls(
             tuple({Identity():DataClass.newTrivial((1,)*6,dtype=complex128)} for _ in range(4)),
             tuple({Identity():DataClass.newTrivial((1,)*8,dtype=complex128)} for _ in range(4)),
-            DataClass.newTrivial((1,1,1,1,physical_dimension),dtype=complex128),
+            DataClass.newFilled((1,1,1,1,physical_dimension),1.0/sqrt(physical_dimension),dtype=complex128),
             operator_center_tensor,
         )
     # }}}
@@ -374,25 +374,17 @@ class System(BaseSystem): # {{{
             system.operator_center_tensor[TwoSiteOperator(0,0)] = self.operator_center_tensor[TwoSiteOperator(0,0)]
             system.operator_center_tensor[TwoSiteOperator(2,0)] = self.operator_center_tensor[TwoSiteOperator(2,0)]
             system.contractTowards(0)
-            system.contractTowards(0)
-            #system.contractTowards(2)
-            print("two-site V=",system.computeExpectationAndNormalization({Identity():self.operator_center_tensor[Identity()]}))
-            expectation += system.computeExpectation({Identity():self.operator_center_tensor[Identity()]})
-            #print("two-site V=",system.computeExpectation({TwoSiteOperator(0,0):self.operator_center_tensor[TwoSiteOperator(0,0)]}))
-            #expectation += system.computeExpectation({TwoSiteOperator(0,0):self.operator_center_tensor[TwoSiteOperator(0,0)]})
+            expectation += system.computeExpectation()
             del system
 
         if TwoSiteOperator(1,0) in self.operator_center_tensor:
             system = copy(stripped_self)
             system.operator_center_tensor[TwoSiteOperator(1,0)] = self.operator_center_tensor[TwoSiteOperator(1,0)]
             system.operator_center_tensor[TwoSiteOperator(3,0)] = self.operator_center_tensor[TwoSiteOperator(3,0)]
-            system.contractUnnormalizedTowards(1)
-            #system.contractTowards(3)
-            print("two-site H=",system.computeExpectation())
+            system.contractTowards(1)
             expectation += system.computeExpectation()
             del system
 
-        #print("exp=",expectation,self.computeCenterSiteExpectation())
         return expectation
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
@@ -401,15 +393,18 @@ class System(BaseSystem): # {{{
     def computeUnnormalizedExpectation(self): # {{{
         return self.computeScalarUsingMultiplier(self.formExpectationMultipliers())
     # }}}
-    def contractTowards(self,direction,state_center_data=None,normalize_center=True): # {{{
+    def contractTowards(self,direction,state_center_data=None,denormalize_center=False,renormalize_center=True): # {{{
         if state_center_data is None:
             state_center_data = self.state_center_data
-        normalized_state_center_data, denormalized_state_center_data = \
-            state_center_data.normalizeAxisAndDenormalize(O(direction),direction,self.state_center_data)
-        if normalize_center:
-            denormalized_state_center_data = denormalized_state_center_data.normalized()
-        self.contractUnnormalizedTowards(direction,normalized_state_center_data)
-        self.setStateCenter(denormalized_state_center_data)
+        if denormalize_center:
+            normalized_state_center_data, denormalized_state_center_data = \
+                state_center_data.normalizeAxisAndDenormalize(O(direction),direction,self.state_center_data)
+            if renormalize_center:
+                denormalized_state_center_data = denormalized_state_center_data.normalized()
+            self.contractUnnormalizedTowards(direction,normalized_state_center_data)
+            self.setStateCenter(denormalized_state_center_data)
+        else:
+            self.contractUnnormalizedTowards(direction,state_center_data.normalizeAxis(O(direction))[0])
     # }}}
     def contractUnnormalizedTowards(self,direction,state_center_data=None,state_center_data_conj=None): # {{{
         if state_center_data is None:
@@ -475,21 +470,30 @@ class System(BaseSystem): # {{{
         self.setStateCenter(
             state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
         )
-        for axis in axes:
-            compressor, _ = \
-                computeCompressorForMatrixTimesItsDagger(
-                    old_dimension,
-                    increment,
-                    extra_state_center_data.fold(axis).transpose().toArray()
+        if increment == old_dimension:
+            for axis in axes:
+                self.contractTowards(
+                    O(axis),
+                    state_center_data.directSumWith(
+                        extra_state_center_data,
+                        *dropAt(range(5),axis)
+                    ),
                 )
-            self.contractTowards(
-                O(axis),
-                state_center_data.directSumWith(
-                    extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
-                    *dropAt(range(5),axis)
-                ),
-                normalize_center=False
-            )
+        else:
+            for axis in axes:
+                compressor, _ = \
+                    computeCompressorForMatrixTimesItsDagger(
+                        old_dimension,
+                        increment,
+                        extra_state_center_data.fold(axis).transpose().toArray()
+                    )
+                self.contractTowards(
+                    O(axis),
+                    state_center_data.directSumWith(
+                        extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
+                        *dropAt(range(5),axis)
+                    ),
+                )
         self.just_increased_bandwidth = True
     # }}}
     def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{

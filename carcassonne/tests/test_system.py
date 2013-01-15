@@ -205,7 +205,7 @@ class TestSystem(TestCase): # {{{
         system2 = copy(system1)
 
         system1.contractUnnormalizedTowards(direction)
-        system2.contractTowards(direction,normalize_center=False)
+        system2.contractTowards(direction,denormalize_center=True,renormalize_center=False)
 
         expectation1, normalization1 = system1.computeExpectationAndNormalization()
         expectation2, normalization2 = system2.computeExpectationAndNormalization()
@@ -290,35 +290,6 @@ class TestSystem(TestCase): # {{{
         m1 = system.formNormalizationMultiplier()(random_data)
         m2 = system.formNormalizationSubmatrix().contractWith(random_data.join(range(4),4),(1,),(0,)).split(*random_data.shape)
         self.assertDataAlmostEqual(m1,m2)
-    # }}}
-    @with_checker(number_of_calls=10) # test_increaseBandwidth {{{
-    def test_increaseBandwidth(self,direction=irange(0,1),physical_dimension=irange(3,4)):
-        system1 = System.newRandom()
-        system1.minimizeExpectation()
-
-        old_shape = system1.state_center_data.shape
-        new_bandwidth = randint(old_shape[direction]+1,2*old_shape[direction])
-        system2 = copy(system1)
-
-        system1.increaseBandwidth(direction,to=new_bandwidth)
-        system2.contractUnnormalizedTowards(O(direction))
-        system2.contractUnnormalizedTowards(direction)
-        self.assertAlmostEqual(system1.computeNormalization(),system2.computeNormalization())
-        self.assertAlmostEqual(system1.computeExpectation(),system2.computeExpectation())
-    # }}}
-    @with_checker(number_of_calls=10) # test_increaseBandwidth_trivial # {{{
-    def test_increaseBandwidth_trivial(self,direction=irange(0,1),physical_dimension=irange(2,8)):
-        system1 = System.newTrivialWithSparseOperator(NDArrayData.newRandomHermitian(physical_dimension,physical_dimension))
-        system1.minimizeExpectation()
-        system2 = copy(system1)
-
-        system1.increaseBandwidth(direction,by=1)
-        system2.contractTowards(O(direction),normalize_center=False)
-        system2.contractTowards(direction,normalize_center=False)
-        self.assertAlmostEqual(system1.computeNormalization(),system2.computeNormalization())
-        self.assertAlmostEqual(system1.computeExpectation(),system2.computeExpectation())
-
-        self.assertAlmostEqual(system1.computeNormalizationMatrixConditionNumber(),1)
     # }}}
     @with_checker # test_normalizeCenterAndDenormalizeSide {{{
     def test_normalizeCenterAndDenormalizeSide(self,direction=irange(0,3)):

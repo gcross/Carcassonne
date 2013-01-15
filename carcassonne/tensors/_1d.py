@@ -11,20 +11,6 @@ from ..utils import Join, Multiplier, formDataContractor, prependDataContractor
 # def absorbCenterOSSIntoLeftEnvironment(L,O,S,S*) {{{
 absorbCenterOSSIntoLeftEnvironment = formDataContractor(
     [
-        Join(0,0,1,0),
-        Join(0,1,2,0),
-        Join(0,2,3,0),
-        Join(1,2,3,2),
-        Join(1,3,2,2),
-    ],[
-        [(1,1)],
-        [(2,1)],
-        [(3,1)],
-    ]
-) # }}}
-# def absorbCenterOSSIntoRightEnvironment(R,O,S,S*) {{{
-absorbCenterOSSIntoRightEnvironment = formDataContractor(
-    [
         Join(0,0,1,1),
         Join(0,1,2,1),
         Join(0,2,3,1),
@@ -36,18 +22,32 @@ absorbCenterOSSIntoRightEnvironment = formDataContractor(
         [(3,0)],
     ]
 ) # }}}
+# def absorbCenterOSSIntoRightEnvironment(R,O,S,S*) {{{
+absorbCenterOSSIntoRightEnvironment = formDataContractor(
+    [
+        Join(0,0,1,0),
+        Join(0,1,2,0),
+        Join(0,2,3,0),
+        Join(1,2,3,2),
+        Join(1,3,2,2),
+    ],[
+        [(1,1)],
+        [(2,1)],
+        [(3,1)],
+    ]
+) # }}}
 # def absorbCenterSSIntoRightEnvironment(R,S,S*) {{{
 absorbCenterSSIntoRightEnvironment = formDataContractor(
     [
-        Join(0,0,1,1),
-        Join(0,1,2,1),
+        Join(0,0,1,0),
+        Join(0,1,2,0),
         Join(1,2,2,2),
     ],[
-        [(1,0)],
-        [(2,0)],
+        [(1,1)],
+        [(2,1)],
     ]
 ) # }}}
-# def formExpectationMultiplier(L,R,O,S) {{{
+# def formExpectationMultiplier(R,L,O,S) {{{
 @prependDataContractor(
     [
         Join(0,0,2,0),
@@ -70,15 +70,15 @@ absorbCenterSSIntoRightEnvironment = formDataContractor(
         [(2,2)],
     ]
 )
-def formExpectationMultiplier(multiply,formMatrix,L,R,O):
-    S_shape = (L.shape[1],R.shape[1],O.shape[2])
+def formExpectationMultiplier(multiply,formMatrix,R,L,O):
+    S_shape = (R.shape[1],L.shape[1],O.shape[2])
     return \
         Multiplier(
             (prod(S_shape),)*2,
-            partial(multiply,L,R,O),
-            computeCostOfContracting(multiply,L,R,O,S_shape),
-            partial(formMatrix,L,R,O),
-            computeCostOfContracting(formMatrix,L,R,O),
+            partial(multiply,R,L,O),
+            computeCostOfContracting(multiply,R,L,O,S_shape),
+            partial(formMatrix,R,L,O),
+            computeCostOfContracting(formMatrix,R,L,O),
         )
 # }}}
 # }}}

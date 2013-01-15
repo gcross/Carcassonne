@@ -23,17 +23,17 @@ class System(BaseSystem): # {{{
     # }}}
   # }}}
   # Instance methods {{{
-    def __init__(self,left_operator_boundary,right_operator_boundary,center_operator,center_state=None,left_state_boundary=None,right_state_boundary=None): # {{{
-        self.left_operator_boundary = NDArrayData(array(left_operator_boundary))
+    def __init__(self,right_operator_boundary,left_operator_boundary,center_operator,center_state=None,right_state_boundary=None,left_state_boundary=None): # {{{
         self.right_operator_boundary = NDArrayData(array(right_operator_boundary))
-        if left_state_boundary is None:
-            self.left_environment = NDArrayData(buildProductTensor(left_operator_boundary,[1],[1]))
-        else:
-            self.left_environment = NDArrayData(buildProductTensor(left_operator_boundary,left_state_boundary,list(map(conj,left_state_boundary))))
+        self.left_operator_boundary = NDArrayData(array(left_operator_boundary))
         if right_state_boundary is None:
             self.right_environment = NDArrayData(buildProductTensor(right_operator_boundary,[1],[1]))
         else:
             self.right_environment = NDArrayData(buildProductTensor(right_operator_boundary,right_state_boundary,list(map(conj,right_state_boundary))))
+        if left_state_boundary is None:
+            self.left_environment = NDArrayData(buildProductTensor(left_operator_boundary,[1],[1]))
+        else:
+            self.left_environment = NDArrayData(buildProductTensor(left_operator_boundary,left_state_boundary,list(map(conj,left_state_boundary))))
         self.center_operator = NDArrayData(center_operator)
         if center_state is None:
             self.setCenterState(NDArrayData.newTrivial(1,1,center_operator.shape[2]))
@@ -53,7 +53,7 @@ class System(BaseSystem): # {{{
         assert self.left_environment.size() >= 2
         assert self.left_operator_boundary.size() >= 2
         right_O_environment_shape = self.right_environment.shape
-        right_N_environment_shape = (self.center_state.shape[1],)*2
+        right_N_environment_shape = (self.center_state.shape[0],)*2
         right_N_environment_size = prod(right_N_environment_shape)
         normalized_center_state = self.center_state.normalizeAxis(1)[0]
         normalized_center_state_conj = normalized_center_state.conj()
@@ -88,15 +88,20 @@ class System(BaseSystem): # {{{
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.center_state_conj.ravel().contractWith(multiply(self.center_state).ravel(),(0,),(0,)).extractScalar()
     # }}}
-    def contractLeft(self,center_state=None): # {{{
+    def contractLeft(self,center_state=None,denormalize_center=False,renormalize_center=True): # {{{
         if center_state is None:
             center_state = self.center_state
-        if center_state.shape[0] != self.left_environment.shape[1]:
-            raise ValueError("state dimension of the left environment ({}) does not match the left dimension of the center state ({})".format(center_state.shape[0],self.left_environment.shape[1]))
-        normalized_center_state, denormalized_center_state = \
-            center_state.normalizeAxisAndDenormalize(1,0,self.center_state)
-        self.contractLeftUnnormalized(normalized_center_state)
-        self.setCenterState(denormalized_center_state)
+        if center_state.shape[1] != self.left_environment.shape[1]:
+            raise ValueError("state dimension of the left environment ({}) does not match the left dimension of the center state ({})".format(self.left_environment.shape[1],center_state.shape[1]))
+        if denormalize_center:
+            normalized_center_state, denormalized_center_state = \
+                center_state.normalizeAxisAndDenormalize(0,1,self.center_state)
+            if renormalize_center:
+                denormalized_center_state = denormalized_center_state.normalized()
+            self.contractLeftUnnormalized(normalized_center_state)
+            self.setCenterState(denormalized_center_state)
+        else:
+            self.contractLeftUnnormalized(center_state.normalizeAxis(0)[0])
     # }}}
     def contractLeftUnnormalized(self,center_state=None): # {{{
         if center_state is None:
@@ -109,15 +114,20 @@ class System(BaseSystem): # {{{
                 center_state.conj(),
             )
     # }}}
-    def contractRight(self,center_state=None): # {{{
+    def contractRight(self,center_state=None,denormalize_center=False,renormalize_center=True): # {{{
         if center_state is None:
             center_state = self.center_state
-        if center_state.shape[1] != self.right_environment.shape[1]:
-            raise ValueError("state dimension of the right environment ({}) does not match the right dimension of the center state ({})".format(center_state.shape[1],self.right_environment.shape[1]))
-        normalized_center_state, denormalized_center_state = \
-            center_state.normalizeAxisAndDenormalize(0,1,self.center_state)
-        self.contractRightUnnormalized(normalized_center_state)
-        self.setCenterState(denormalized_center_state)
+        if center_state.shape[0] != self.right_environment.shape[1]:
+            raise ValueError("state dimension of the right environment ({}) does not match the right dimension of the center state ({})".format(self.right_environment.shape[1],center_state.shape[0]))
+        if denormalize_center:
+            normalized_center_state, denormalized_center_state = \
+                center_state.normalizeAxisAndDenormalize(1,0,self.center_state)
+            if renormalize_center:
+                denormalized_center_state = denormalized_center_state.normalized()
+            self.contractRightUnnormalized(normalized_center_state)
+            self.setCenterState(denormalized_center_state)
+        else:
+            self.contractRightUnnormalized(center_state.normalizeAxis(1)[0])
     # }}}
     def contractRightUnnormalized(self,center_state=None): # {{{
         if center_state is None:
@@ -130,27 +140,30 @@ class System(BaseSystem): # {{{
                 center_state.conj(),
             )
     # }}}
-    def contractTowards(self,direction,center_state=None): # {{{
+    def contractTowards(self,direction,center_state=None,denormalize_center=False,renormalize_center=True): # {{{
         if direction == 0:
-            self.contractRight(center_state)
+            self.contractRight(center_state,denormalize_center,renormalize_center)
         elif direction == 1:
-            self.contractLeft(center_state)
+            self.contractLeft(center_state,denormalize_center,renormalize_center)
         else:
             raise ValueError("Direction must be 0 for right or 1 for left, not {}.".format(direction))
     # }}}
-    def contractUnnormalizedTowards(self,direction,center_state=None): # {{{
+    def contractUnnormalizedTowards(self,direction,center_state=None,normalize_center=True): # {{{
         if direction == 0:
-            self.contractRightUnnormalized(center_state)
+            self.contractRightUnnormalized(center_state,normalize_center)
         elif direction == 1:
-            self.contractLeftUnnormalized(center_state)
+            self.contractLeftUnnormalized(center_state,normalize_center)
         else:
             raise ValueError("Direction must be 0 for right or 1 for left, not {}.".format(direction))
+    # }}}
+    def formExpectationMatrix(self): # {{{
+        return self.formExpectationMultiplier().formMatrix()
     # }}}
     def formExpectationMultiplier(self): # {{{
         return \
             formExpectationMultiplier(
-                self.left_environment,
                 self.right_environment,
+                self.left_environment,
                 self.center_operator
             )
     # }}}
@@ -180,20 +193,33 @@ class System(BaseSystem): # {{{
         self.setCenterState(
             center_state.increaseDimensionsAndFillWithZeros((0,new_dimension),(1,new_dimension))
         )
-        for axis in (0,1):
-            compressor, _ = \
-                computeCompressorForMatrixTimesItsDagger(
-                    old_dimension,
-                    increment,
-                    extra_center_state.fold(axis).transpose().toArray()
+        if increment == old_dimension:
+            for axis in (0,1):
+                self.contractTowards(
+                    1-axis,
+                    center_state.directSumWith(
+                        extra_center_state,
+                        *dropAt(range(3),axis)
+                    ),
+                    False,
                 )
-            self.contractTowards(
-                axis,
-                center_state.directSumWith(
-                    extra_center_state.absorbMatrixAt(axis,NDArrayData(compressor)),
-                    *dropAt(range(3),axis)
-                ),
-            )
+                #print("1D({}):{}".format(axis,self.center_state))
+        else:
+            for axis in (0,1):
+                compressor, _ = \
+                    computeCompressorForMatrixTimesItsDagger(
+                        old_dimension,
+                        increment,
+                        extra_center_state.fold(axis).transpose().toArray()
+                    )
+                self.contractTowards(
+                    1-axis,
+                    center_state.directSumWith(
+                        extra_center_state.absorbMatrixAt(axis,NDArrayData(compressor)),
+                        *dropAt(range(3),axis)
+                    ),
+                    False,
+                )
         self.just_increased_bandwidth = True
     # }}}
     def minimizeExpectation(self): # {{{
