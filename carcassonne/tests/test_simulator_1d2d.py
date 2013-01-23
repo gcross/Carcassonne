@@ -4,8 +4,6 @@ from ..policies import *
 from ..system._1d2d import System
 # }}}
 
-
-
 class TestSimulator1D2D(): # {{{
     def test_on_magnetic_field(self): # {{{
         system = System.new(0,Pauli.Z)
