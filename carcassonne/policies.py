@@ -35,6 +35,14 @@ class AlternatingDirectionsIncrementBandwidthPolicy(Policy): # {{{
             self.system.increaseBandwidth(self.direction,by=self.parent.increment,do_as_much_as_possible=True)
             self.direction = O(self.direction)
 # }}}
+class AllDirectionsIncrementBandwidthPolicy(Policy): # {{{
+    def __init__(self,increment=1):
+        self.increment = increment
+    class BoundPolicy(BoundBandwidthPolicy):
+        def apply(self):
+            for direction in (0,1):
+                self.system.increaseBandwidth(direction,by=self.parent.increment,do_as_much_as_possible=True)
+# }}}
 class OneDirectionIncrementBandwidthPolicy(Policy): # {{{
     def __init__(self,direction,increment=1):
         self.direction = direction
@@ -151,6 +159,7 @@ __all__ = [
     "BoundBandwidthPolicy",
     "BoundContractionPolicy",
 
+    "AllDirectionsIncrementBandwidthPolicy",
     "AlternatingDirectionsIncrementBandwidthPolicy",
     "OneDirectionIncrementBandwidthPolicy",
 
