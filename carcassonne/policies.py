@@ -53,6 +53,18 @@ class OneDirectionIncrementBandwidthPolicy(Policy): # {{{
 # }}}
 # }}}
 
+# Compression policies {{{
+class ConstantStateCompressionPolicy(Policy): # {{{
+    def __init__(self,new_dimension):
+        self.new_dimension = new_dimension
+    class BoundPolicy(BoundBandwidthPolicy):
+        def apply(self):
+            for corner_id in range(4):
+                for direction in range(2):
+                    self.system.compressCornerStateTowards(corner_id,direction,self.parent.new_dimension)
+# }}}
+# }}}
+
 # Contraction policies {{{
 class RepeatPatternContractionPolicy(Policy): # {{{
     def __init__(self,directions):
@@ -152,6 +164,19 @@ class PolicyField:
         self.policy = unbound_policy(instance)
 # }}}
 
+# OptionalPolicy field descriptor class {{{
+class OptionalPolicyField(PolicyField):
+    def __get__(self,instance,owner):
+        try:
+            return self.policy
+        except AttributeError:
+            class Dummy:
+                @staticmethod
+                def __getattr__(_):
+                    return lambda: None
+            return Dummy()
+# }}}
+
 # Exports {{{
 __all__ = [
     "Policy",
@@ -163,6 +188,8 @@ __all__ = [
     "AlternatingDirectionsIncrementBandwidthPolicy",
     "OneDirectionIncrementBandwidthPolicy",
 
+    "ConstantStateCompressionPolicy",
+
     "RepeatPatternContractionPolicy",
 
     "RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy",
@@ -170,4 +197,5 @@ __all__ = [
     "RelativeStateDifferenceThresholdConvergencePolicy",
 
     "PolicyField",
+    "OptionalPolicyField",
 ]
