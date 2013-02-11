@@ -2,7 +2,7 @@
 from copy import copy
 from functools import partial, reduce
 from math import ceil
-from numpy import allclose, any, array, complex128, diag, dot, identity, inf, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
+from numpy import allclose, any, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
 from scipy.linalg import norm, qr, svd
 
 from ..utils import crand, dropAt, randomComplexSample
@@ -268,25 +268,6 @@ class NDArrayData(Data): # {{{
         svd_axes_to_merge = list(range(self.ndim))
         del svd_axes_to_merge[axis]
         U, S, V = self.join(svd_axes_to_merge,axis).svd(full_matrices=False)
-
-        # Generate noise --- for testing purposes
-        #for i in range(U.shape[1]):
-        #    phase = crand(1)[0]
-        #    phase /= abs(phase)
-        #    U._arr[:,i] *= phase
-        #    V._arr[i,:] /= phase
-        # 
-        
-        for i in range(U.shape[1]):
-            j = 0
-            while abs(V._arr[i,j]) < 1e-13:
-                j += 1
-            assert abs(V._arr[i,j]) > 1e-13
-            phase = V._arr[i,j]
-            phase /= abs(phase)
-            U._arr[:,i] *= phase
-            V._arr[i,:] /= phase
-
         U_split = list(self.shape)
         del U_split[axis]
         U_split.append(U.shape[1])

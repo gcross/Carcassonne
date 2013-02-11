@@ -137,4 +137,4 @@ class TestCase(unittest.TestCase): # {{{
 # }}}
 # }}}
 
-set_printoptions(linewidth=256)
+set_printoptions(linewidth=132)
