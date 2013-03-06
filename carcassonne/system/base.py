@@ -9,26 +9,26 @@ class BaseSystem: # {{{
         self.number_of_sweeps = 1
         self.number_of_iterations = 1
         self.sweepUntilConverged()
-        self.run_convergence_policy.update()
-        while not self.run_convergence_policy.converged():
-            self.increase_bandwidth_policy.apply()
+        self.run_convergence_policy.update(self)
+        while not self.run_convergence_policy.converged(self):
+            self.increase_bandwidth_policy.apply(self)
             self.sweepUntilConverged()
-            self.run_convergence_policy.update()
+            self.run_convergence_policy.update(self)
     # }}}
     def sweepUntilConverged(self): # {{{
         self.number_of_sweeps += 1
-        self.sweep_convergence_policy.reset()
-        self.contraction_policy.reset()
+        self.sweep_convergence_policy.reset(self)
+        self.contraction_policy.reset(self)
         self.minimizeExpectation()
-        self.sweep_convergence_policy.update()
-        while not self.sweep_convergence_policy.converged():
+        self.sweep_convergence_policy.update(self)
+        while not self.sweep_convergence_policy.converged(self):
             self.number_of_iterations += 1
-            self.contraction_policy.apply()
-            self.state_compression_policy.apply()
-            self.operator_compression_policy.apply()
+            self.contraction_policy.apply(self)
+            self.state_compression_policy.apply(self)
+            self.operator_compression_policy.apply(self)
             try:
                 self.minimizeExpectation()
-                self.sweep_convergence_policy.update()
+                self.sweep_convergence_policy.update(self)
             except RelaxFailed:
                 pass
     # }}}
