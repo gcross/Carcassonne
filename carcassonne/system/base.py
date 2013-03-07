@@ -45,6 +45,8 @@ class BaseSystem: # {{{
             "contraction",
             "operator compression",
             "run convergence",
+            "post-contraction hook",
+            "post-optimization hook",
             "state compression",
             "sweep convergence",
         ]}
@@ -74,23 +76,24 @@ class BaseSystem: # {{{
         log.info("Starting sweep #{}".format(sweep_number))
         self._resetPolicy("contraction")
         self._resetPolicy("sweep convergence")
-        iteration_number_for_sweep = 1
-        log.info("Iteration #{} of sweep #{}".format(iteration_number_for_sweep,sweep_number))
+        self.iteration_number_for_sweep = 1
+        log.info("Iteration #{} of sweep #{}".format(self.iteration_number_for_sweep,sweep_number))
         self.minimizeExpectation()
         self._updatePolicy("sweep convergence")
         while not self._hasConverged("sweep convergence"):
-            iteration_number_for_sweep += 1
-            log.info("Iteration #{} of sweep #{}".format(iteration_number_for_sweep,sweep_number))
+            self.iteration_number_for_sweep += 1
+            self.number_of_iterations += 1
+            log.info("Iteration #{} of sweep #{}".format(self.iteration_number_for_sweep,sweep_number))
             self._applyPolicy("contraction")
+            self._applyPolicy("post-contraction hook",optional=True)
             self._applyPolicy("state compression",optional=True)
             self._applyPolicy("operator compression",optional=True)
             try:
                 self.minimizeExpectation()
+                self._applyPolicy("post-optimization hook",optional=True)
                 self._updatePolicy("sweep convergence")
             except RelaxFailed:
                 pass
-        self.number_of_iterations += iteration_number_for_sweep
-        
     # }}}
   # }}}
 # }}}

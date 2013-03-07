@@ -175,6 +175,15 @@ class RelativeStateDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{
 # }}}
 # }}}
 
+# Hook Policy {{{
+class HookPolicy(Policy):
+    Proxy = ApplyProxy
+    def __init__(self,callback):
+        self.callback = callback
+    def apply(self):
+        return self.callback(self.system)
+# }}}
+
 # Exports {{{
 __all__ = [
     "Policy",
@@ -200,4 +209,6 @@ __all__ = [
     "RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy",
     "RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy",
     "RelativeStateDifferenceThresholdConvergencePolicy",
+
+    "HookPolicy",
 ]
