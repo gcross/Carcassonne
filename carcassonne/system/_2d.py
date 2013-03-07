@@ -89,6 +89,7 @@ class System(BaseSystem): # {{{
   # }}}
   # Instance methods {{{
     def __init__(self,corners,sides,state_center_data,operator_center_tensor,state_center_data_conj=None): # {{{
+        BaseSystem.__init__(self)
         self.corners = list(corners)
         self.sides = list(sides)
         self.operator_center_tensor = operator_center_tensor

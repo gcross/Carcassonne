@@ -14,10 +14,10 @@ class TestSimulator1D(TestCase): # {{{
     @ with_checker(number_of_calls=10) # test_on_magnetic_field {{{
     def test_on_magnetic_field(self,direction=choiceof((0,1))):
         system = System.newTrivialWithSparseOperator(O=NDArrayData.Z)
-        system.sweep_convergence_policy = RelativeStateDifferenceThresholdConvergencePolicy(1e-5)
-        system.run_convergence_policy = RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7)
-        system.increase_bandwidth_policy = OneDirectionIncrementBandwidthPolicy(direction)
-        system.contraction_policy = RepeatPatternContractionPolicy([0+direction,2+direction])
+        system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
+        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
+        system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(direction))
+        system.setPolicy("contraction",RepeatPatternContractionPolicy([0+direction,2+direction]))
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),-1)
     # }}}
@@ -27,10 +27,10 @@ class TestSimulator1D(TestCase): # {{{
             system = System.newTrivialWithSparseOperator(OO_LR=[NDArrayData.Z,-NDArrayData.Z])
         else:
             system = System.newTrivialWithSparseOperator(OO_UD=[NDArrayData.Z,-NDArrayData.Z])
-        system.sweep_convergence_policy = RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7)
-        system.run_convergence_policy = RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7)
-        system.increase_bandwidth_policy = OneDirectionIncrementBandwidthPolicy(direction)
-        system.contraction_policy = RepeatPatternContractionPolicy([0+direction,2+direction])
+        system.setPolicy("sweep convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
+        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
+        system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(direction))
+        system.setPolicy("contraction",RepeatPatternContractionPolicy([0+direction,2+direction]))
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),-1)
     # }}}
@@ -40,10 +40,10 @@ class TestSimulator1D(TestCase): # {{{
             system = System.newTrivialWithSparseOperator(O=-NDArrayData.Z,OO_LR=[NDArrayData.X,-0.01*NDArrayData.X])
         else:
             system = System.newTrivialWithSparseOperator(O=-NDArrayData.Z,OO_UD=[NDArrayData.X,-0.01*NDArrayData.X])
-        system.sweep_convergence_policy = RelativeStateDifferenceThresholdConvergencePolicy(1e-5)
-        system.run_convergence_policy = RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7)
-        system.increase_bandwidth_policy = OneDirectionIncrementBandwidthPolicy(direction,2)
-        system.contraction_policy = RepeatPatternContractionPolicy([0+direction,2+direction])
+        system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
+        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
+        system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(direction,2))
+        system.setPolicy("contraction",RepeatPatternContractionPolicy([0+direction,2+direction]))
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),-1.0000250001562545)
     # }}}

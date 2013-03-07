@@ -48,6 +48,7 @@ class System(BaseSystem): # {{{
         return cls(rotation,_1d_system,_2d_system)
     # }}}
     def __init__(self,rotation,_1d,_2d): # {{{
+        BaseSystem.__init__(self)
         self.rotation = rotation
         self._1d = _1d
         self._2d = _2d

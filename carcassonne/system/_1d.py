@@ -24,6 +24,7 @@ class System(BaseSystem): # {{{
   # }}}
   # Instance methods {{{
     def __init__(self,right_operator_boundary,left_operator_boundary,center_operator,center_state=None,right_state_boundary=None,left_state_boundary=None): # {{{
+        BaseSystem.__init__(self)
         self.right_operator_boundary = NDArrayData(array(right_operator_boundary))
         self.left_operator_boundary = NDArrayData(array(left_operator_boundary))
         if right_state_boundary is None:
