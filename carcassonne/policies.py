@@ -1,6 +1,7 @@
 # Imports {{{
 from copy import copy
 from numpy.linalg import norm
+from .utils import O
 # }}}
 
 # Loggign {{{
@@ -115,6 +116,25 @@ class ConvergencePolicy(Policy): # {{{
     class Proxy(ConvergedProxy,ResetProxy,UpdateProxy):
         pass
 # }}}
+class PeriodicyThresholdConvergencePolicy(ConvergencePolicy): # {{{
+    def __init__(self,threshold,*directions):
+        self.threshold = threshold
+        if not directions:
+            raise ValueError("at least one direction must be specified")
+        self.directions = directions
+    def converged(self):
+        state_center_data = self.system.state_center_data
+        difference = 0
+        for direction in self.directions:
+            normalized_data = state_center_data.normalizeAxis(direction)[0]
+            denormalizer = state_center_data.normalizeAxis(O(direction))[-1]
+            difference += (state_center_data-normalized_data.absorbMatrixAt(direction,denormalizer)).norm()
+        return difference < self.threshold
+    def reset(self):
+        pass
+    def update(self):
+        pass
+# }}}
 class RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{{
     def __init__(self,direction,threshold):
         self.direction = direction
@@ -206,6 +226,7 @@ __all__ = [
     "RepeatPatternContractionPolicy",
 
     "ConvergencePolicy",
+    "PeriodicyThresholdConvergencePolicy",
     "RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy",
     "RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy",
     "RelativeStateDifferenceThresholdConvergencePolicy",
