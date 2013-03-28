@@ -6,6 +6,7 @@ from random import randint
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 
 from .base import BaseSystem
+from ..compression import computeProductCompressor
 from ..data import NDArrayData
 from ..sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData, stripAllButIdentityFrom
 from ..tensors._2d.dense import formNormalizationMultiplier, formNormalizationSubmatrix
@@ -177,25 +178,43 @@ class System(BaseSystem): # {{{
             if not self.corners[i][Identity()].allcloseTo(self.corners[i][Identity()].join(1,0,2,4,3,5).conj()):
                 raise AssertionError("corner {} is not hermitian".format(i))
     # }}}
-    def compressCornerStateTowards(self,corner_id,direction,new_dimension,normalize=False): # {{{
-        axis = 3*direction
-        corner_data = self.corners[corner_id][Identity()]
-        old_dimension = corner_data.shape[axis]
-        corner_multiplier, side_multiplier_conj = \
-            computeCompressorForMatrixTimesItsDagger(
-                old_dimension,
-                new_dimension,
-                corner_data.fold(axis).toArray().transpose(),
-                normalize
-            )
-        corner_multiplier = NDArrayData(corner_multiplier)
-        side_multiplier_conj = NDArrayData(side_multiplier_conj)
-        corner_multiplier_conj = corner_multiplier.conj()
-        side_multiplier = side_multiplier_conj.conj()
-        self.corners[corner_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,corner_multiplier).absorbMatrixAt(axis+1,corner_multiplier_conj),self.corners[corner_id])
-        side_id = sideFromCorner(corner_id,direction)
-        axis = 3-axis
-        self.sides[side_id] = mapOverSparseData(lambda data: data.absorbMatrixAt(axis,side_multiplier).absorbMatrixAt(axis+1,side_multiplier_conj),self.sides[side_id])
+    def compressCornerStateTowards(self,corner_id,direction,new_dimension): # {{{
+        if direction == 0:
+            return self.compressCornerStateTowardsLeft(corner_id,new_dimension)
+        elif direction == 1:
+            return self.compressCornerStateTowardsRight(corner_id,new_dimension)
+        else:
+            raise ValueError("compression direction must be 0 or 1, not " + str(direction))
+    # }}}
+    def compressCornerStateTowardsLeft(self,corner_id,new_dimension): # {{{
+        side_data_joined = self.sides[L(corner_id)][Identity()].join((0,1,2,6,7),3,4,5)
+        corner_data_joined = self.corners[corner_id][Identity()].join(0,1,2,(3,4,5))
+        compressor = computeProductCompressor(side_data_joined,corner_data_joined,new_dimension)
+        self.sides[L(corner_id)] = mapOverSparseData(lambda data: (data
+            ).absorbMatrixAt(3,compressor
+            ).absorbMatrixAt(4,compressor.conj())
+        ,self.sides[L(corner_id)]
+        )
+        self.corners[corner_id] = mapOverSparseData(lambda data: (data
+            ).absorbMatrixAt(0,compressor.conj()
+            ).absorbMatrixAt(1,compressor)
+        ,self.corners[corner_id]
+        )
+    # }}}
+    def compressCornerStateTowardsRight(self,corner_id,new_dimension): # {{{
+        corner_data_joined = self.corners[corner_id][Identity()].join((0,1,2),3,4,5)
+        side_data_joined = self.sides[corner_id][Identity()].join(0,1,2,(3,4,5,6,7))
+        compressor = computeProductCompressor(corner_data_joined,side_data_joined,new_dimension)
+        self.corners[corner_id] = mapOverSparseData(lambda data: (data
+            ).absorbMatrixAt(3,compressor
+            ).absorbMatrixAt(4,compressor.conj())
+        ,self.corners[corner_id]
+        )
+        self.sides[corner_id] = mapOverSparseData(lambda data: (data
+            ).absorbMatrixAt(0,compressor.conj()
+            ).absorbMatrixAt(1,compressor)
+        ,self.sides[corner_id]
+        )
     # }}}
     def compressCornerTwoSiteOperatorTowards(self,corner_id,direction,new_dimension,normalize=False): # {{{
         axis = 3*direction+2
