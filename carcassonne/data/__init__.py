@@ -161,6 +161,9 @@ class NDArrayData(Data): # {{{
         assert self.ndim == other.ndim
         return self.contractWith(other,range(self.ndim),range(self.ndim))
     # }}}
+    def copy(self): # {{{
+        return self.__copy__()
+    # }}}
     def directSumWith(self,other,*non_summed_axes): # {{{
         if not self.ndim == other.ndim:
             raise ValueError("In a direct sum the number of axes must match ({} != {})".format(self.ndim,other.ndim))
