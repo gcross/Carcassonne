@@ -38,7 +38,7 @@ def computeProductCompressor(formMatrix,L,R,new_dimension):
         )
         assert info == 0
         compressor = NDArrayData(x.reshape(old_dimension,new_dimension)).unitize()
-    return compressor
+    return compressor.transpose()
 # }}}
 # }}}
 

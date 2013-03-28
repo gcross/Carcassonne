@@ -20,7 +20,7 @@ class TestCompression(TestCase): # {{{
         R = NDArrayData.newZeros((old,old,r),dtype=complex128)
         R._arr[:new,:new,:] = Rc1._arr
 
-        compressor = computeProductCompressor(L,R,new).transpose()
+        compressor = computeProductCompressor(L,R,new)
 
         Lc2 = L.absorbMatrixAt(1,compressor).absorbMatrixAt(2,compressor.conj())
         Rc2 = R.absorbMatrixAt(0,compressor.conj()).absorbMatrixAt(1,compressor)
