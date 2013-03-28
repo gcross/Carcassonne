@@ -5,7 +5,7 @@ from math import ceil
 from numpy import allclose, any, array, complex128, diag, dot, identity, isnan, multiply, ndarray, ones, prod, save, sqrt, tensordot, zeros
 from scipy.linalg import norm, qr, svd
 
-from ..utils import crand, dropAt, randomComplexSample
+from ..utils import crand, dropAt, randomComplexSample, unitize
 # }}}
 
 # Exception classes {{{
@@ -358,6 +358,9 @@ class NDArrayData(Data): # {{{
     # }}}
     def transpose(self,*args): # {{{
         return NDArrayData(self._arr.transpose(*args))
+    # }}}
+    def unitize(self): # {{{
+        return NDArrayData(unitize(self.toArray()))
     # }}}
   # }}}
   # Properties {{{

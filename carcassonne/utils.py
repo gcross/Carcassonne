@@ -872,6 +872,10 @@ def relaxOver(initial,expectation_multiplier,normalization_multiplier=None,maxim
                 initial /= norm(initial)
                 last_lowest_eigenvalue = mineval
     # }}}
+def unitize(matrix): # {{{
+    U, _, V = svd(matrix,full_matrices=False)
+    return dot(U,V)
+# }}}
 # }}}
 
 # Index functions {{{
@@ -928,6 +932,7 @@ __all__ = [
     "randomComplexSample",
     "replaceAt",
     "relaxOver",
+    "unitize",
 
     "O",
     "L",
