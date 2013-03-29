@@ -69,6 +69,7 @@ class OneDirectionIncrementBandwidthIncreasePolicy(BandwidthIncreasePolicy): # {
         self.direction = direction
         self.increment = increment
     def apply(self):
+        log.info("Increasing bandwidth in direction " + str(self.direction) + " by " + str(self.increment))
         self.system.increaseBandwidth(self.direction,by=self.increment,do_as_much_as_possible=True)
 # }}}
 # }}}
@@ -187,7 +188,14 @@ class RelativeStateDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{
     def converged(self):
         last = self.last
         current = self.current
-        return last is not None and current is not None and (norm(current+last) < 1e-15 or norm(current-last)/norm(current+last)*2 < self.threshold)
+        if last is not None and current is not None:
+            magnitude = norm(current+last)
+            relative_difference = norm(current-last)/magnitude*2
+            log.debug("site relative difference = {} (magnitude = {})".format(relative_difference,magnitude))
+            return magnitude < 1e-15 or relative_difference < self.threshold
+        else:
+            return False
+        return last is not None and current is not None and ()
     def reset(self):
         self.last = None
         self.current = None
