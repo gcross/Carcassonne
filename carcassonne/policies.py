@@ -4,7 +4,7 @@ from numpy.linalg import norm
 from .utils import O
 # }}}
 
-# Loggign {{{
+# Logging {{{
 import logging
 log = logging.getLogger(__name__)
 # }}}
