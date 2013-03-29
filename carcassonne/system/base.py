@@ -52,6 +52,7 @@ class BaseSystem: # {{{
         ]}
     # }}}
     def runUntilConverged(self): # {{{
+        log.info("Beginning run.")
         self.number_of_sweeps = 0
         self.number_of_iterations = 0
         self.sweepUntilConverged()
