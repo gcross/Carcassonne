@@ -165,7 +165,7 @@ class RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(Convergence
         last = self.last
         current = self.current
         if last is not None and current is not None:
-            absolute_difference = abs(current+last)
+            absolute_difference = abs(current-last)
             relative_difference = abs(current-last)/abs(current+last)*2
             log.debug("Expectations: last = {};  current = {};  absolute difference = {};  relative difference = {}".format(last,current,absolute_difference,relative_difference))
             return (absolute_difference < 1e-15 or relative_difference < self.threshold)
