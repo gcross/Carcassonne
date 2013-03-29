@@ -85,7 +85,6 @@ class BaseSystem: # {{{
             self.number_of_iterations += 1
             log.info("Iteration #{} of sweep #{}".format(self.iteration_number_for_sweep,sweep_number))
             self._applyPolicy("contraction")
-            self._applyPolicy("post-contraction hook",optional=True)
             self._applyPolicy("state compression",optional=True)
             self._applyPolicy("operator compression",optional=True)
             try:
