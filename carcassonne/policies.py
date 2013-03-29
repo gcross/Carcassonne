@@ -60,6 +60,7 @@ class AllDirectionsIncrementBandwidthIncreasePolicy(BandwidthIncreasePolicy): # 
     def __init__(self,increment=1):
         self.increment = increment
     def apply(self):
+        log.info("Increasing bandwidth in all directions by " + str(self.increment))
         for direction in (0,1):
             self.system.increaseBandwidth(direction,by=self.increment,do_as_much_as_possible=True)
 # }}}
@@ -80,6 +81,7 @@ class ConstantStateCompressionPolicy(CompressionPolicy): # {{{
     def __init__(self,new_dimension):
         self.new_dimension = new_dimension
     def apply(self):
+        log.debug("Compressing to " + str(self.new_dimension))
         for corner_id in range(4):
             for direction in range(2):
                 self.system.compressCornerStateTowards(corner_id,direction,self.new_dimension)
