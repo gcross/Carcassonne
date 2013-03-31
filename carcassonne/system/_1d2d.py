@@ -12,8 +12,8 @@ from ..utils import Pauli, buildProductTensor, buildTensor
 
 # Classes {{{
 class System(BaseSystem): # {{{
-    @classmethod
-    def new(cls,rotation,O=None,OO=None): # {{{
+    @classmethod # new {{{
+    def new(cls,rotation,O=None,OO=None):
         if OO is None and O is None:
             raise ValueError("either O or OO must not be None")
         if OO is None:
