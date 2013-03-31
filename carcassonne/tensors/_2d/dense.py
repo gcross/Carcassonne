@@ -68,15 +68,15 @@ def absorbDenseCenterSSIntoSide(contractors,direction,side,center,center_conj=No
         [(2,O(i))],
     ]
 ) for i in range(4)])
-def absorbDenseCenterSOSIntoSide(contractors,direction,side,center_state,center_operator,center_state_conj=None):
-    if center_state_conj is None:
-        center_state_conj = center_state.conj()
+def absorbDenseCenterSOSIntoSide(contractors,direction,side,state_center_data,operator_center_data,state_center_data_conj=None):
+    if state_center_data_conj is None:
+        state_center_data_conj = state_center_data.conj()
     return \
         contractors[direction](
             side,
-            center_state,
-            center_state_conj,
-            center_operator,
+            state_center_data,
+            state_center_data_conj,
+            operator_center_data,
         )
 # }}}
 def formNormalizationMultiplier(corners,sides,center_identity): # {{{

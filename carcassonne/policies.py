@@ -201,7 +201,7 @@ class RelativeStateDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{
         self.current = None
     def update(self):
         self.last = self.current
-        self.current = self.system.getCenterStateAsArray()
+        self.current = self.system.state_center_data.toArray()
 # }}}
 # }}}
 

@@ -468,9 +468,6 @@ class System(BaseSystem): # {{{
     def formNormalizationSubmatrix(self): # {{{
         return formNormalizationSubmatrix(tuple(corner[Identity()] for corner in self.corners),tuple(side[Identity()] for side in self.sides))
     # }}}
-    def getCenterStateAsArray(self): # {{{
-        return self.state_center_data.toArray()
-    # }}}
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction not in (0,1):
             raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))

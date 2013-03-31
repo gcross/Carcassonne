@@ -12,11 +12,11 @@ class TestFormExpectationMultiplier(TestCase): # {{{
     ):
         left_environment = NDArrayData.newRandom(lo,ls,ls)
         right_environment = NDArrayData.newRandom(ro,rs,rs)
-        center_operator = NDArrayData.newRandom(lo,ro,p,p)
-        center_state = NDArrayData.newRandom(ls,rs,p)
-        multiply = formExpectationMultiplier(left_environment,right_environment,center_operator)
-        multiply(center_state)
+        operator_center_data = NDArrayData.newRandom(lo,ro,p,p)
+        state_center_data = NDArrayData.newRandom(ls,rs,p)
+        multiply = formExpectationMultiplier(left_environment,right_environment,operator_center_data)
+        multiply(state_center_data)
         matrix = multiply.formMatrix()
-        self.assertDataAlmostEqual(multiply(center_state),matrix.contractWith(center_state.ravel(),1,0).split(ls,rs,p))
+        self.assertDataAlmostEqual(multiply(state_center_data),matrix.contractWith(state_center_data.ravel(),1,0).split(ls,rs,p))
     # }}}
 # }}}

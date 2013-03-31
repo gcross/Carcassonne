@@ -33,13 +33,13 @@ def absorbSparseSideIntoCornerFromRight(corner,side): # {{{
     })
     return contractSparseTensors(terms,corner,side)
 # }}}
-def absorbSparseCenterSOSIntoSide(direction,side,center_state,center_operator,center_state_conj=None): # {{{
-    if center_state_conj is None:
-        center_state_conj = center_state.conj()
+def absorbSparseCenterSOSIntoSide(direction,side,state_center_data,operator_center_data,state_center_data_conj=None): # {{{
+    if state_center_data_conj is None:
+        state_center_data_conj = state_center_data.conj()
     def contractSS(side_data,_):
-        return absorbDenseCenterSSIntoSide(direction,side_data,center_state,center_state_conj)
-    def contractSOS(side_data,center_operator_data):
-        return absorbDenseCenterSOSIntoSide(direction,side_data,center_state,center_operator_data,center_state_conj)
+        return absorbDenseCenterSSIntoSide(direction,side_data,state_center_data,state_center_data_conj)
+    def contractSOS(side_data,operator_center_data_data):
+        return absorbDenseCenterSOSIntoSide(direction,side_data,state_center_data,operator_center_data_data,state_center_data_conj)
     terms = {
         # Complete/Identity terms
         (Identity,Identity): lambda s,c: (Identity(),contractSS),
@@ -54,9 +54,9 @@ def absorbSparseCenterSOSIntoSide(direction,side,center_state,center_operator,ce
         (TwoSiteOperator,TwoSiteOperator): lambda s,c: (s.matchesCenter(direction,c),contractSOS),
         (TwoSiteOperatorCompressed,Identity): lambda s,c: (s,contractSS)
     }
-    return contractSparseTensors(terms,side,center_operator)
+    return contractSparseTensors(terms,side,operator_center_data)
 # }}}
-def formExpectationAndNormalizationMultipliers(corners,sides,center_operator): # {{{
+def formExpectationAndNormalizationMultipliers(corners,sides,operator_center_data): # {{{
     return formExpectationStage3(
         formExpectationStage2(
             formExpectationStage1(corners[0],sides[0]),
@@ -66,7 +66,7 @@ def formExpectationAndNormalizationMultipliers(corners,sides,center_operator): #
             formExpectationStage1(corners[2],sides[2]),
             formExpectationStage1(corners[3],sides[3]),
         ),
-        center_operator
+        operator_center_data
     )
 # }}}
 def formExpectationStage1(corner,side): # {{{

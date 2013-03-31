@@ -64,7 +64,7 @@ class System(BaseSystem): # {{{
         self.checkExpectationMatrix(prefix)
     # }}}
     def checkEnvironments(self,prefix): # {{{
-        bandwidth = self._1d.center_state.shape[0]
+        bandwidth = self._1d.state_center_data.shape[0]
         _1d_left_environment = self._1d.left_environment.toArray()
         _2d_left_environment = self.convert2DLeftEnvironment().toArray()
 
@@ -93,8 +93,8 @@ class System(BaseSystem): # {{{
             raise Exception(prefix + ": the 2D normalization is {} != 1".format(self._2d.computeNormalization()))
     # }}}
     def checkStates(self,prefix): # {{{
-        _1d = copy(self._1d.getCenterStateAsArray()).real
-        _2d = copy(self._2d.getCenterStateAsArray().reshape(_1d.shape)).real
+        _1d = copy(self._1d.state_center_data.toArray()).real
+        _2d = copy(self._2d.state_center_data.toArray()).reshape(_1d.shape).real
         if norm(_1d-_2d) > 1e-5:
             raise Exception(prefix + ": for the center state, norm(_1d-_2d)={} > 1e-5".format(norm(_1d-_2d)))
     # }}}
@@ -146,10 +146,6 @@ class System(BaseSystem): # {{{
         self._1d.setCenterState(self._2d.state_center_data.join((0,1),(2,3),4))
         self._1d.left_environment = self.convert2DLeftEnvironment()
         self._1d.right_environment = self.convert2DRightEnvironment()
-    # }}}
-    def getCenterStateAsArray(self): # {{{
-        self.check("while getting center state as array")
-        return self._1d.getCenterStateAsArray()
     # }}}
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         self.check("before increasing bandwidth")
