@@ -109,6 +109,11 @@ class System(BaseSystem): # {{{
             self.operator_center_tensor
         )
     # }}}
+    def __iadd__(self,other): # {{{
+        self.corners = directSumListsOfSparse(self.corners,other.corners)
+        self.sides = directSumListsOfSparse(self.sides,other.sides)
+        self.state_center_data.directSumWith(other.state_center_data,4)
+    # }}}
     def __copy__(self): # {{{
         return \
             System(
