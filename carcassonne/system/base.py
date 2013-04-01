@@ -1,5 +1,6 @@
 # Imports {{{
-from ..utils import RelaxFailed
+from ..data import NDArrayData
+from ..utils import O, RelaxFailed, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt
 # }}}
 
 # Logging {{{
@@ -94,6 +95,56 @@ class BaseSystem: # {{{
                 self._updatePolicy("sweep convergence")
             except RelaxFailed:
                 pass
+    # }}}
+  # }}}
+  # Protected instance methods {{{
+    def _increaseBandwidth(self,axes,by=None,to=None,do_as_much_as_possible=False): # {{{
+        state_center_data = self.state_center_data
+        ndim = state_center_data.ndim
+        old_dimension = state_center_data.shape[axes[0]]
+        new_dimension = \
+            computeNewDimension(
+                old_dimension,
+                by=by,
+                to=to,
+            )
+        if new_dimension == old_dimension:
+            return
+        if new_dimension > 2*old_dimension:
+            if do_as_much_as_possible:
+                new_dimension = 2*old_dimension
+            else:
+                raise ValueError("New dimension must be less than twice the old dimension ({} > 2*{}).".format(new_dimension,old_dimension))
+        increment = new_dimension-old_dimension
+        extra_state_center_data = state_center_data.reverseLastAxis()
+        self.setStateCenter(
+            state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
+        )
+        if increment == old_dimension:
+            for axis in axes:
+                self.contractTowards(
+                    O(axis) if ndim == 5 else 1-axis,
+                    state_center_data.directSumWith(
+                        extra_state_center_data,
+                        *dropAt(range(ndim),axis)
+                    ),
+                )
+        else:
+            for axis in axes:
+                compressor, _ = \
+                    computeCompressorForMatrixTimesItsDagger(
+                        old_dimension,
+                        increment,
+                        extra_state_center_data.fold(axis).transpose().toArray()
+                    )
+                self.contractTowards(
+                    O(axis) if ndim == 5 else 1-axis,
+                    state_center_data.directSumWith(
+                        extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
+                        *dropAt(range(ndim),axis)
+                    ),
+                )
+        self.just_increased_bandwidth = True
     # }}}
   # }}}
 # }}}

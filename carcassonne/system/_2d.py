@@ -471,52 +471,7 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction not in (0,1):
             raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))
-        state_center_data = self.state_center_data
-        old_dimension = state_center_data.shape[direction]
-        new_dimension = \
-            computeNewDimension(
-                old_dimension,
-                by=by,
-                to=to,
-            )
-        if new_dimension == old_dimension:
-            return
-        if new_dimension > 2*old_dimension:
-            if do_as_much_as_possible:
-                new_dimension = 2*old_dimension
-            else:
-                raise ValueError("New dimension must be less than twice the old dimension ({} > 2*{}).".format(new_dimension,old_dimension))
-        increment = new_dimension-old_dimension
-        extra_state_center_data = state_center_data.reverseLastAxis()
-        axes = (direction,direction+2)
-        self.setStateCenter(
-            state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
-        )
-        if increment == old_dimension:
-            for axis in axes:
-                self.contractTowards(
-                    O(axis),
-                    state_center_data.directSumWith(
-                        extra_state_center_data,
-                        *dropAt(range(5),axis)
-                    ),
-                )
-        else:
-            for axis in axes:
-                compressor, _ = \
-                    computeCompressorForMatrixTimesItsDagger(
-                        old_dimension,
-                        increment,
-                        extra_state_center_data.fold(axis).transpose().toArray()
-                    )
-                self.contractTowards(
-                    O(axis),
-                    state_center_data.directSumWith(
-                        extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
-                        *dropAt(range(5),axis)
-                    ),
-                )
-        self.just_increased_bandwidth = True
+        return self._increaseBandwidth((direction,direction+2),by,to,do_as_much_as_possible)
     # }}}
     def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
         self.increaseBandwidth(direction,by,to)

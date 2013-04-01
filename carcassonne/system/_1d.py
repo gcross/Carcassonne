@@ -171,54 +171,7 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction=0,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction != 0:
             raise ValueError("Direction for bandwidth increase must be 0, not {}.".format(direction))
-        state_center_data = self.state_center_data
-        old_dimension = state_center_data.shape[0]
-        new_dimension = \
-            computeNewDimension(
-                old_dimension,
-                by=by,
-                to=to,
-            )
-        if new_dimension == old_dimension:
-            return
-        if new_dimension > 2*old_dimension:
-            if do_as_much_as_possible:
-                new_dimension = 2*old_dimension
-            else:
-                raise ValueError("New dimension must be less than twice the old dimension ({} > 2*{} = {})".format(new_dimension,old_dimension,2*old_dimension))
-        increment = new_dimension-old_dimension
-        extra_state_center_data = state_center_data.reverseLastAxis()
-        self.setStateCenter(
-            state_center_data.increaseDimensionsAndFillWithZeros((0,new_dimension),(1,new_dimension))
-        )
-        if increment == old_dimension:
-            for axis in (0,1):
-                self.contractTowards(
-                    1-axis,
-                    state_center_data.directSumWith(
-                        extra_state_center_data,
-                        *dropAt(range(3),axis)
-                    ),
-                    False,
-                )
-                #print("1D({}):{}".format(axis,self.state_center_data))
-        else:
-            for axis in (0,1):
-                compressor, _ = \
-                    computeCompressorForMatrixTimesItsDagger(
-                        old_dimension,
-                        increment,
-                        extra_state_center_data.fold(axis).transpose().toArray()
-                    )
-                self.contractTowards(
-                    1-axis,
-                    state_center_data.directSumWith(
-                        extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
-                        *dropAt(range(3),axis)
-                    ),
-                    False,
-                )
-        self.just_increased_bandwidth = True
+        return self._increaseBandwidth((0,1),by,to,do_as_much_as_possible)
     # }}}
     def minimizeExpectation(self): # {{{
         self.setStateCenter(relaxOver(
