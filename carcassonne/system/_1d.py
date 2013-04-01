@@ -149,11 +149,11 @@ class System(BaseSystem): # {{{
         else:
             raise ValueError("Direction must be 0 for right or 1 for left, not {}.".format(direction))
     # }}}
-    def contractUnnormalizedTowards(self,direction,state_center_data=None,normalize_center=True): # {{{
+    def contractUnnormalizedTowards(self,direction,state_center_data=None): # {{{
         if direction == 0:
-            self.contractRightUnnormalized(state_center_data,normalize_center)
+            self.contractRightUnnormalized(state_center_data)
         elif direction == 1:
-            self.contractLeftUnnormalized(state_center_data,normalize_center)
+            self.contractLeftUnnormalized(state_center_data)
         else:
             raise ValueError("Direction must be 0 for right or 1 for left, not {}.".format(direction))
     # }}}
