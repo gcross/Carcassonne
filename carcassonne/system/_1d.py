@@ -37,9 +37,9 @@ class System(BaseSystem): # {{{
             self.left_environment = NDArrayData(buildProductTensor(left_operator_boundary,left_state_boundary,list(map(conj,left_state_boundary))))
         self.operator_center_data = NDArrayData(operator_center_data)
         if state_center_data is None:
-            self.setCenterState(NDArrayData.newTrivial(1,1,operator_center_data.shape[2]))
+            self.setStateCenter(NDArrayData.newTrivial(1,1,operator_center_data.shape[2]))
         else:
-            self.setCenterState(NDArrayData(state_center_data))
+            self.setStateCenter(NDArrayData(state_center_data))
         assert self.left_operator_boundary.ndim == 1
         assert self.right_operator_boundary.ndim == 1
         assert self.left_environment.ndim == 3
@@ -100,7 +100,7 @@ class System(BaseSystem): # {{{
             if renormalize_center:
                 denormalized_state_center_data = denormalized_state_center_data.normalized()
             self.contractLeftUnnormalized(normalized_state_center_data)
-            self.setCenterState(denormalized_state_center_data)
+            self.setStateCenter(denormalized_state_center_data)
         else:
             self.contractLeftUnnormalized(state_center_data.normalizeAxis(0)[0])
     # }}}
@@ -126,7 +126,7 @@ class System(BaseSystem): # {{{
             if renormalize_center:
                 denormalized_state_center_data = denormalized_state_center_data.normalized()
             self.contractRightUnnormalized(normalized_state_center_data)
-            self.setCenterState(denormalized_state_center_data)
+            self.setStateCenter(denormalized_state_center_data)
         else:
             self.contractRightUnnormalized(state_center_data.normalizeAxis(1)[0])
     # }}}
@@ -188,7 +188,7 @@ class System(BaseSystem): # {{{
                 raise ValueError("New dimension must be less than twice the old dimension ({} > 2*{} = {})".format(new_dimension,old_dimension,2*old_dimension))
         increment = new_dimension-old_dimension
         extra_state_center_data = state_center_data.reverseLastAxis()
-        self.setCenterState(
+        self.setStateCenter(
             state_center_data.increaseDimensionsAndFillWithZeros((0,new_dimension),(1,new_dimension))
         )
         if increment == old_dimension:
@@ -221,13 +221,13 @@ class System(BaseSystem): # {{{
         self.just_increased_bandwidth = True
     # }}}
     def minimizeExpectation(self): # {{{
-        self.setCenterState(relaxOver(
+        self.setStateCenter(relaxOver(
             initial=self.state_center_data,
             expectation_multiplier=self.formExpectationMultiplier(),
             maximum_number_of_multiplications=100
         ))
     # }}}
-    def setCenterState(self,state_center_data,state_center_data_conj=None): # {{{
+    def setStateCenter(self,state_center_data,state_center_data_conj=None): # {{{
         self.state_center_data = state_center_data
         if state_center_data_conj is None:
             state_center_data_conj = state_center_data.conj()
