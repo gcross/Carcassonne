@@ -14,6 +14,11 @@ from ..tensors._2d.sparse import absorbSparseSideIntoCornerFromLeft, absorbSpars
 from ..utils import InvariantViolatedError, Multiplier, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt, relaxOver, L, O, R
 # }}}
 
+# Logging {{{
+import logging
+log = logging.getLogger(__name__)
+# }}}
+
 # Classes {{{
 class System(BaseSystem): # {{{
   # Class methods {{{

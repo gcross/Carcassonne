@@ -9,7 +9,7 @@ from ..utils import *
 # }}}
 
 class TestSystem(TestCase): # {{{
-    def test___add___trivial(self): # test___add___trivial {{{
+    def dont_test___add___trivial(self): # test___add___trivial {{{
         O = NDArrayData.newIdentity(1)
         system1 = System.newTrivialWithSparseOperator(O=O)
         system2 = system1 + system1
@@ -17,7 +17,7 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(system2.computeExpectation(),1)
     # }}}
     @with_checker(number_of_calls=10) # test___add__ {{{
-    def test___add___self(self,moves=(irange(0,1),)*4):
+    def dont_test___add___self(self,moves=(irange(0,1),)*4):
         system1 = System.newRandom()
         for direction in sum(([i]*moves[i] for i in range(4)),[]):
             system1.contractUnnormalizedTowards(direction)
@@ -38,7 +38,7 @@ class TestSystem(TestCase): # {{{
             self.assertAlmostEqual(system2.computeExpectation()/system1.computeExpectation(),1)
     # }}}
     @with_checker(number_of_calls=10) # test_compressCornerStateTowards_down_by_half {{{
-    def test_compressCornerStateTowards_down_by_half(self,corner_id=irange(0,3),direction=irange(0,1)):
+    def dont_test_compressCornerStateTowards_down_by_half(self,corner_id=irange(0,3),direction=irange(0,1)):
         system = System.newRandom()
         for i in range(4):
             system.contractTowards(i)
@@ -68,7 +68,7 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(expectation3/expectation1,1)
     # }}}
     @with_checker(number_of_calls=10) # test_compressCornerStateTowards_new_same_as_old {{{
-    def test_compressCornerStateTowards_new_same_as_old(self,corner_id=irange(0,3),direction=irange(0,1)):
+    def dont_test_compressCornerStateTowards_new_same_as_old(self,corner_id=irange(0,3),direction=irange(0,1)):
         system = System.newRandom(maximum_dimension=4)
         expectation1, normalization1 = system.computeExpectationAndNormalization()
         dimension = system.corners[corner_id][Identity()].shape[3*direction]
@@ -80,7 +80,7 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(expectation2/expectation1,1)
     # }}}
     @with_checker(number_of_calls=10) # test_compressCornerTwoSiteOperatorTowards_down_by_half {{{
-    def test_compressCornerTwoSiteOperatorTowards_down_by_half(self,
+    def dont_test_compressCornerTwoSiteOperatorTowards_down_by_half(self,
         corner_id=irange(0,3),
         direction=irange(0,1),
         physical_dimension=irange(1,4),
@@ -115,7 +115,7 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(expectation2,expectation1)
     # }}}
     @with_checker(number_of_calls=10) # test_compressCornerTwoSiteOperatorTowards_new_same_as_old {{{
-    def test_compressCornerTwoSiteOperatorTowards_new_same_as_old(self,
+    def dont_test_compressCornerTwoSiteOperatorTowards_new_same_as_old(self,
         corner_id=irange(0,3),
         direction=irange(0,1),
         physical_dimension=irange(1,4),
@@ -164,7 +164,7 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(expectation2,expectation1)
     # }}}
     @with_checker # test_compressCornerTwoSiteOperatorTowards_trivial {{{
-    def test_compressCornerTwoSiteOperatorTowards_trivial(self,
+    def dont_test_compressCornerTwoSiteOperatorTowards_trivial(self,
         corner_id=irange(0,3),
         direction=irange(0,1),
         new_dimension=irange(1,10),
@@ -177,7 +177,7 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(expectation2,expectation1)
     # }}}
     @with_checker # test_computeCenterSiteExpectation {{{
-    def test_computeCenterSiteExpectation(self,physical_dimension=irange(1,4),moves=(irange(0,1),)*4):
+    def dont_test_computeCenterSiteExpectation(self,physical_dimension=irange(1,4),moves=(irange(0,1),)*4):
         O = NDArrayData.newRandomHermitian(physical_dimension,physical_dimension)
         system = System.newRandom(O=O)
 
@@ -196,7 +196,7 @@ class TestSystem(TestCase): # {{{
         )
     # }}}
     @with_checker(number_of_calls=10) # test_contractTowardsAndNormalize {{{
-    def test_contractTowardsAndNormalize(self,direction=irange(0,3),moves=(irange(0,2),)*4):
+    def dont_test_contractTowardsAndNormalize(self,direction=irange(0,3),moves=(irange(0,2),)*4):
         system1 = System.newRandom()
         directions = sum(([i]*moves[i] for i in range(4)),[])
         shuffle(directions)
@@ -214,11 +214,11 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(expectation2/expectation1,1.0)
     # }}}
     @with_checker # test_expectation_of_identity_after_no_steps # {{{
-    def test_expectation_of_sum_of_identities_after_no_steps(self):
+    def dont_test_expectation_of_sum_of_identities_after_no_steps(self):
         self.assertAlmostEqual(System.newRandom(makeOperator=lambda N: NDArrayData.newIdentity(N)).computeExpectation(),1)
     # }}}
     @with_checker(number_of_calls=10) # test_expectation_of_identity_after_some_steps # {{{
-    def test_expectation_of_sum_of_identities_after_some_steps(self,moves=(irange(0,1),)*4):
+    def dont_test_expectation_of_sum_of_identities_after_some_steps(self,moves=(irange(0,1),)*4):
         system = System.newRandom(makeOperator=lambda N: NDArrayData.newIdentity(N))
         directions = sum(([i]*moves[i] for i in range(4)),[])
         width = 1
@@ -238,7 +238,7 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(system.computeExpectation(),width*height)
     # }}}
     @with_checker(number_of_calls=10) # test_formExpectationMatrix {{{
-    def test_formExpectationMatrix(self,moves=(irange(0,2),)*4):
+    def dont_test_formExpectationMatrix(self,moves=(irange(0,2),)*4):
         system = System.newRandom()
         directions = sum(([i]*moves[i] for i in range(4)),[])
         shuffle(directions)
@@ -255,7 +255,7 @@ class TestSystem(TestCase): # {{{
         self.assertDataAlmostEqual(result1,result2)
     # }}}
     @with_checker(number_of_calls=10) # test_formExpectationMultiplier {{{
-    def test_formExpectationAndNormalizationMultipliers_have_correct_shape(self,moves=(irange(0,2),)*4):
+    def dont_test_formExpectationAndNormalizationMultipliers_have_correct_shape(self,moves=(irange(0,2),)*4):
         system = System.newRandom()
 
         expectation_mutiplier, normalization_multiplier = system.formExpectationAndNormalizationMultipliers()
@@ -264,7 +264,7 @@ class TestSystem(TestCase): # {{{
         self.assertEqual(normalization_multiplier.shape,(system.state_center_data.size(),)*2)
     # }}}
     @with_checker # test_formNormalizationMatrix {{{
-    def test_formNormalizationMatrix(self):
+    def dont_test_formNormalizationMatrix(self):
         system = System.newRandom()
         multiply = system.formNormalizationMultiplier()
         matrix = system.formNormalizationMatrix()
@@ -276,7 +276,7 @@ class TestSystem(TestCase): # {{{
         self.assertDataAlmostEqual(result1,result2)
     # }}}
     @with_checker # test_formNormalizationMultiplier_same_both_ways {{{
-    def test_formNormalizationMultiplier_same_both_ways(self):
+    def dont_test_formNormalizationMultiplier_same_both_ways(self):
         system = System.newRandom()
         random_data = NDArrayData.newRandom(*system.state_center_data.shape)
         m1 = system.formNormalizationMultiplier()(random_data)
@@ -284,7 +284,7 @@ class TestSystem(TestCase): # {{{
         self.assertDataAlmostEqual(m1,m2)
     # }}}
     @with_checker # test_formNormalizationMultiplier_same_asformNormalizationSubmatrix {{{
-    def test_formNormalizationMultiplier_same_asformNormalizationSubmatrix(self):
+    def dont_test_formNormalizationMultiplier_same_asformNormalizationSubmatrix(self):
         system = System.newRandom()
         random_data = NDArrayData.newRandom(*system.state_center_data.shape)
         m1 = system.formNormalizationMultiplier()(random_data)
@@ -323,7 +323,7 @@ class TestSystem(TestCase): # {{{
             system1.contractTowards(d)
     # }}}
     @with_checker # test_normalizeCenterAndDenormalizeSide {{{
-    def test_normalizeCenterAndDenormalizeSide(self,direction=irange(0,3)):
+    def dont_test_normalizeCenterAndDenormalizeSide(self,direction=irange(0,3)):
         system = System.newRandom()
         expectation1, normalization1 = system.computeExpectationAndNormalization()
         system.normalizeCenterAndDenormalizeSide(direction)
@@ -333,7 +333,7 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(expectation1,expectation2)
     # }}}
     @with_checker(number_of_calls=10) # test_normalizeCornerAndDenormalizeSide {{{
-    def test_normalizeCornerAndDenormalizeSide(self,corner_id=irange(0,3),direction=irange(0,1)):
+    def dont_test_normalizeCornerAndDenormalizeSide(self,corner_id=irange(0,3),direction=irange(0,1)):
         system = System.newRandom()
         expectation1, normalization1 = system.computeExpectationAndNormalization()
         system.normalizeCornerAndDenormalizeSide(corner_id,direction)
@@ -343,7 +343,7 @@ class TestSystem(TestCase): # {{{
         self.assertAlmostEqual(expectation1,expectation2)
     # }}}
     @with_checker # test_normalizeSideAndDenormalizeCenter {{{
-    def test_normalizeSideAndDenormalizeCenter(self,side_id=irange(0,3)):
+    def dont_test_normalizeSideAndDenormalizeCenter(self,side_id=irange(0,3)):
         system = System.newRandom()
         expectation1, normalization1 = system.computeExpectationAndNormalization()
         system.normalizeSideAndDenormalizeCenter(side_id)
@@ -361,19 +361,19 @@ class TestSystemSillyFieldWalk(TestCase): # {{{
         system.assertDimensionsAreConsistent()
         return system
     # }}}
-    def test_silly_field_no_steps(self): # {{{
+    def dont_test_silly_field_no_steps(self): # {{{
         system = self.makeSillySystem()
         self.assertEqual(system.computeExpectation(),1)
     # }}}
     @with_checker(number_of_calls=10) # test_silly_field_single_step {{{
-    def test_silly_field_single_step(self,direction=irange(0,3)):
+    def dont_test_silly_field_single_step(self,direction=irange(0,3)):
         system = self.makeSillySystem()
         system.contractTowards(direction)
         self.assertEqual(system.computeExpectation(),2)
         self.assertEqual(system.computeNormalization(),1)
     # }}}
     @with_checker(number_of_calls=40) # test_silly_field_double_step {{{
-    def test_silly_field_double_step(self,direction1=irange(0,3),direction2=irange(0,3)):
+    def dont_test_silly_field_double_step(self,direction1=irange(0,3),direction2=irange(0,3)):
         system = self.makeSillySystem()
         width = 1
         height = 1
@@ -391,7 +391,7 @@ class TestSystemSillyFieldWalk(TestCase): # {{{
         self.assertEqual(system.computeNormalization(),1)
     # }}}
     @with_checker(number_of_calls=10) # test_silly_field_random_walk {{{
-    def test_silly_field_random_walk(self,directions=[irange(0,3)]):
+    def dont_test_silly_field_random_walk(self,directions=[irange(0,3)]):
         system = self.makeSillySystem()
         width = 1
         height = 1
@@ -416,7 +416,7 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
         return system, (state_up, state_down), (1,-1)
     # }}}
     @with_checker(number_of_calls=10) # test_magnetic_field_no_steps {{{
-    def test_magnetic_field_no_steps(self,s1=irange(0,1),s2=irange(0,1)):
+    def dont_test_magnetic_field_no_steps(self,s1=irange(0,1),s2=irange(0,1)):
         system, states, spins = self.makeMagneticField()
         system.setStateCenter(states[s1])
         self.assertEqual(system.computeExpectation(),spins[s1])
@@ -426,7 +426,7 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
         self.assertEqual(system.computeNormalization(),1)
     # }}}
     @with_checker(number_of_calls=10) # test_magnetic_field_single_step {{{
-    def test_magnetic_field_single_step(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1)):
+    def dont_test_magnetic_field_single_step(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1)):
         system, states, spins = self.makeMagneticField()
         system.setStateCenter(states[s1])
         system.contractTowards(direction)
@@ -435,7 +435,7 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
         self.assertEqual(system.computeNormalization(),1)
     # }}}
     @with_checker(number_of_calls=10) # test_magnetic_field_double_step_same_direction {{{
-    def test_magnetic_field_double_step_same_direction(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1),s3=irange(0,1)):
+    def dont_test_magnetic_field_double_step_same_direction(self,direction=irange(0,3),s1=irange(0,1),s2=irange(0,1),s3=irange(0,1)):
         system, states, spins = self.makeMagneticField()
         system.setStateCenter(states[s1])
         system.contractTowards(direction)
@@ -446,7 +446,7 @@ class TestSystemMagneticFieldWalk(TestCase): # {{{
         self.assertEqual(system.computeNormalization(),1)
     # }}}
     @with_checker(number_of_calls=10) # test_magnetic_field_random_walk {{{
-    def test_magnetic_field_random_walk(self,
+    def dont_test_magnetic_field_random_walk(self,
         directions_and_spins=[(irange(0,3),irange(0,1))],
         final_spin=irange(0,1)
     ):

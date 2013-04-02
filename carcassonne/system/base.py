@@ -59,7 +59,9 @@ class BaseSystem: # {{{
         self.sweepUntilConverged()
         self._updatePolicy("run convergence")
         while not self._hasConverged("run convergence"):
+            log.debug("pre-bandwidth one-site expectation = " + str(self.computeOneSiteExpectation()))
             self._applyPolicy("bandwidth increase")
+            log.debug("post-bandwidth one-site expectation = " + str(self.computeOneSiteExpectation()))
             self.sweepUntilConverged()
             self._updatePolicy("run convergence")
         log.info("Finished run with {} total sweeps and {} total iterations.".format(self.number_of_sweeps,self.number_of_iterations))
@@ -83,6 +85,7 @@ class BaseSystem: # {{{
         self.minimizeExpectation()
         self._updatePolicy("sweep convergence")
         while not self._hasConverged("sweep convergence"):
+            log.debug("one-site expectation = " + str(self.computeOneSiteExpectation()))
             self._applyPolicy("contraction")
             self._applyPolicy("state compression",optional=True)
             self._applyPolicy("operator compression",optional=True)
