@@ -2,7 +2,6 @@
 from functools import partial
 from math import pi, sqrt
 from paycheck import *
-from scipy.special import ellipeinc
 
 from . import *
 from ..data import NDArrayData
@@ -50,10 +49,4 @@ class TestSimulator2Din15D(TestCase): # {{{
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),-1.0000250001562545,places=6)
     # }}}
-# }}}
-
-def computeTransverseIsingGroundStateEnergy(Gamma,J): # {{{
-    lam = J/(2*Gamma)
-    theta = 4*lam/(1+lam)**2
-    return -Gamma*2/pi*(1+lam)*ellipeinc(pi/2,theta)
 # }}}

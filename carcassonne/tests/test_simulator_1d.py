@@ -3,7 +3,6 @@ from functools import partial
 from math import pi, sqrt
 from numpy import ones
 from paycheck import *
-from scipy.special import ellipeinc
 
 from . import *
 from ..policies import *
@@ -74,8 +73,3 @@ class TestSimulator1D(TestCase): # {{{
         self.assertAlmostEqual(system.computeOneSiteExpectation(),1.0000250001562545,places=6)
     # }}}
 # }}}
-
-def computeTransverseIsingGroundStateEnergy(Gamma,J):
-    lam = J/(2*Gamma)
-    theta = 4*lam/(1+lam)**2
-    return -Gamma*2/pi*(1+lam)*ellipeinc(pi/2,theta)
