@@ -1,5 +1,6 @@
 # Imports {{{
 from copy import copy
+import logging
 import numpy
 from numpy import all, allclose, array, dot, identity, product, set_printoptions, tensordot
 from numpy.linalg import norm
@@ -24,6 +25,9 @@ class prependContractor: # {{{
 # }}}
 
 # Functions {{{
+def displayLog(): # {{{
+    logging.basicConfig(level=logging.DEBUG)
+# }}}
 def ensurePhysicalDimensionSufficientlyLarge(tensor,index,dimension): # {{{
     if dimension > product(withoutIndex(tensor.dimensions(),index)):
         new_shape = list(tensor.dimensions())
