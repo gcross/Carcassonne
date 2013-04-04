@@ -120,30 +120,24 @@ class BaseSystem: # {{{
         self.setStateCenter(
             state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
         )
-        if increment == old_dimension:
-            for axis in axes:
-                self.contractTowards(
-                    O(axis) if ndim == 5 else 1-axis,
-                    state_center_data.directSumWith(
-                        extra_state_center_data,
-                        *dropAt(range(ndim),axis)
-                    ),
-                )
-        else:
-            for axis in axes:
+        for axis in axes:
+            if increment == old_dimension:
+                state_center_data_to_absorb = extra_state_center_data
+            else:
                 compressor, _ = \
                     computeCompressorForMatrixTimesItsDagger(
                         old_dimension,
                         increment,
                         extra_state_center_data.fold(axis).transpose().toArray()
                     )
-                self.contractTowards(
-                    O(axis) if ndim == 5 else 1-axis,
-                    state_center_data.directSumWith(
-                        extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
-                        *dropAt(range(ndim),axis)
-                    ),
-                )
+                state_center_data_to_absorb = extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor))
+            self.contractTowards(
+                O(axis) if ndim == 5 else 1-axis,
+                state_center_data.directSumWith(
+                    state_center_data_to_absorb,
+                    *dropAt(range(ndim),axis)
+                ),
+            )
         self.just_increased_bandwidth = True
     # }}}
   # }}}
