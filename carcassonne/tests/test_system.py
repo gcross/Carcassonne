@@ -291,37 +291,6 @@ class TestSystem(TestCase): # {{{
         m2 = system.formNormalizationSubmatrix().contractWith(random_data.join(range(4),4),(1,),(0,)).split(*random_data.shape)
         self.assertDataAlmostEqual(m1,m2)
     # }}}
-    @with_checker(number_of_calls=10) # test_increaseBandwidth {{{
-    def test_increaseBandwidth(self,direction=irange(0,1)):
-        system1 = System.newRandom()
-        increment = randint(0,system1.state_center_data.shape[direction]-1)
-        increment = 1
-        for d in range(4):
-            system1.contractTowards(d)
-        system2 = copy(system1)
-
-        old_shape = tuple(system1.state_center_data.shape)
-        new_shape = list(old_shape)
-        new_shape[0+direction] += increment
-        new_shape[2+direction] += increment
-        new_shape = tuple(new_shape)
-
-        system1.increaseBandwidth(direction,by=increment)
-        self.assertEqual(tuple(system1.state_center_data.shape),new_shape)
-
-        system2.contractTowards(direction+2)
-        system2.contractTowards(direction)
-
-        expectation1, normalization1 = system1.computeExpectationAndNormalization()
-        expectation2, normalization2 = system2.computeExpectationAndNormalization()
-        self.assertAlmostEqual(normalization2/normalization1,1)
-        self.assertAlmostEqual(expectation2/expectation1,1)
-
-        # check that the dimensions are consistent
-        system1.minimizeExpectation()
-        for d in range(4):
-            system1.contractTowards(d)
-    # }}}
     @with_checker # test_normalizeCenterAndDenormalizeSide {{{
     def test_normalizeCenterAndDenormalizeSide(self,direction=irange(0,3)):
         system = System.newRandom()

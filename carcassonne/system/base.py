@@ -108,8 +108,8 @@ class BaseSystem: # {{{
                 by=by,
                 to=to,
             )
-        #if new_dimension == old_dimension:
-        #    return
+        if new_dimension == old_dimension:
+            return
         if new_dimension > 2*old_dimension:
             if do_as_much_as_possible:
                 new_dimension = 2*old_dimension
@@ -122,9 +122,9 @@ class BaseSystem: # {{{
         )
         if increment == old_dimension:
             for axis in axes:
-                self.contractUnnormalizedTowards(
+                self.contractTowards(
                     O(axis) if ndim == 5 else 1-axis,
-                    state_center_data.normalizeAxis(axis)[0].directSumWith(
+                    state_center_data.directSumWith(
                         extra_state_center_data,
                         *dropAt(range(ndim),axis)
                     ),
@@ -137,9 +137,9 @@ class BaseSystem: # {{{
                         increment,
                         extra_state_center_data.fold(axis).transpose().toArray()
                     )
-                self.contractUnnormalizedTowards(
+                self.contractTowards(
                     O(axis) if ndim == 5 else 1-axis,
-                    state_center_data.normalizeAxis(axis)[0].directSumWith(
+                    state_center_data.directSumWith(
                         extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor)),
                         *dropAt(range(ndim),axis)
                     ),
