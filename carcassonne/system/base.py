@@ -131,7 +131,7 @@ class BaseSystem: # {{{
                         extra_state_center_data.fold(axis).transpose().toArray()
                     )
                 state_center_data_to_absorb = extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor))
-            self.contractTowards(
+            self.contractNormalizedTowards(
                 O(axis) if ndim == 5 else 1-axis,
                 state_center_data.directSumWith(
                     state_center_data_to_absorb,
