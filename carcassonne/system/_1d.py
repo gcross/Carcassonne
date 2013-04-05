@@ -89,11 +89,6 @@ class System(BaseSystem): # {{{
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.state_center_data_conj.ravel().contractWith(multiply(self.state_center_data).ravel(),(0,),(0,)).extractScalar()
     # }}}
-    def contractLeft(self): # {{{
-        tensor_to_contract, _, matrix_to_absorb = self.state_center_data.normalizeAxis(0)
-        self.contractLeftUnnormalized(tensor_to_contract)
-        self.setStateCenter(self.state_center_data.normalizeAxis(1)[0].absorbMatrixAt(1,matrix_to_absorb.transpose()))
-    # }}}
     def contractLeftNormalized(self,state_center_data): # {{{
         if state_center_data.shape[1] != self.left_environment.shape[1]:
             raise ValueError("state dimension of the left environment ({}) does not match the left dimension of the center state ({})".format(self.left_environment.shape[1],state_center_data.shape[1]))
@@ -107,11 +102,6 @@ class System(BaseSystem): # {{{
                 state_center_data,
                 state_center_data.conj(),
             )
-    # }}}
-    def contractRight(self): # {{{
-        tensor_to_contract, _, matrix_to_absorb = self.state_center_data.normalizeAxis(1)
-        self.contractRightUnnormalized(tensor_to_contract)
-        self.setStateCenter(self.state_center_data.normalizeAxis(0)[0].absorbMatrixAt(0,matrix_to_absorb.transpose()))
     # }}}
     def contractRightNormalized(self,state_center_data): # {{{
         if state_center_data.shape[0] != self.right_environment.shape[1]:
@@ -130,12 +120,9 @@ class System(BaseSystem): # {{{
             )
     # }}}
     def contractTowards(self,direction): # {{{
-        if direction == 0:
-            self.contractRight()
-        elif direction == 1:
-            self.contractLeft()
-        else:
-            raise ValueError("Direction must be 0 for right or 1 for left, not {}.".format(direction))
+        tensor_to_contract, _, matrix_to_absorb = self.state_center_data.normalizeAxis(1-direction)
+        self.contractUnnormalizedTowards(direction,tensor_to_contract)
+        self.setStateCenter(self.state_center_data.normalizeAxis(direction)[0].absorbMatrixAt(direction,matrix_to_absorb.transpose()))
     # }}}
     def contractNormalizedTowards(self,direction,state_center_data): # {{{
         if direction == 0:
