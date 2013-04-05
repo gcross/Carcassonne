@@ -98,10 +98,13 @@ class BaseSystem: # {{{
     # }}}
   # }}}
   # Protected instance methods {{{
-    def _increaseBandwidth(self,axes,by=None,to=None,do_as_much_as_possible=False): # {{{
+    def _increaseBandwidth(self,axis,by=None,to=None,do_as_much_as_possible=False): # {{{
+        # Cache some values {{{
         state_center_data = self.state_center_data
         ndim = state_center_data.ndim
-        old_dimension = state_center_data.shape[axes[0]]
+        # }}}
+        # Compute old and new dimensions {{{
+        old_dimension = state_center_data.shape[axis]
         new_dimension = \
             computeNewDimension(
                 old_dimension,
@@ -116,29 +119,32 @@ class BaseSystem: # {{{
             else:
                 raise ValueError("New dimension must be less than twice the old dimension ({} > 2*{}).".format(new_dimension,old_dimension))
         increment = new_dimension-old_dimension
+        # }}}
+        # Compute extra data to be added to the state {{{
         extra_state_center_data = state_center_data.reverseLastAxis()
+        if increment != old_dimension:
+            compressor, _ = \
+                computeCompressorForMatrixTimesItsDagger(
+                    old_dimension,
+                    increment,
+                    extra_state_center_data.fold(axis).transpose().toArray()
+                )
+            extra_state_center_data = extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor))
+        # }}}
+        # Perform the contraction in a gauge-preserving fashion {{{
+        O_axis = O(axis) if ndim == 5 else 1-axis
+        tensor_to_contract, _, matrix_to_absorb = state_center_data.directSumWith(extra_state_center_data,*dropAt(range(ndim),axis)).normalizeAxis(axis)
+        nemesis = state_center_data.normalizeAxis(O_axis)[0].increaseDimensionsAndFillWithZeros((O_axis,new_dimension))
+        print(axis,O_axis,matrix_to_absorb.shape,nemesis.shape,nemesis.shape)
+        print(" ",nemesis._arr.shape,nemesis._arr.shape[O_axis],matrix_to_absorb._arr.shape,matrix_to_absorb._arr.shape[1])
+        assert nemesis.shape[O_axis] == matrix_to_absorb.shape[1]
+        nemesis.contractWith(matrix_to_absorb,(O_axis,),(1,))
+        nemesis.absorbMatrixAt(O_axis,matrix_to_absorb)
+        self.contractUnnormalizedTowards(O_axis,tensor_to_contract)
         self.setStateCenter(
-            state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
+            state_center_data.normalizeAxis(O_axis)[0].increaseDimensionsAndFillWithZeros((O_axis,new_dimension)).absorbMatrixAt(O_axis,matrix_to_absorb)
         )
-        for axis in axes:
-            if increment == old_dimension:
-                state_center_data_to_absorb = extra_state_center_data
-            else:
-                compressor, _ = \
-                    computeCompressorForMatrixTimesItsDagger(
-                        old_dimension,
-                        increment,
-                        extra_state_center_data.fold(axis).transpose().toArray()
-                    )
-                state_center_data_to_absorb = extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor))
-            self.contractNormalizedTowards(
-                O(axis) if ndim == 5 else 1-axis,
-                state_center_data.directSumWith(
-                    state_center_data_to_absorb,
-                    *dropAt(range(ndim),axis)
-                ),
-            )
-        self.just_increased_bandwidth = True
+        # }}}
     # }}}
   # }}}
 # }}}

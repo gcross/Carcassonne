@@ -154,7 +154,10 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction=0,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction != 0:
             raise ValueError("Direction for bandwidth increase must be 0, not {}.".format(direction))
-        return self._increaseBandwidth((0,1),by,to,do_as_much_as_possible)
+        self._increaseBandwidth(0,by,to,do_as_much_as_possible)
+        self.minimizeExpectation()
+        self._increaseBandwidth(1,by,to,do_as_much_as_possible)
+        self.minimizeExpectation()
     # }}}
     def minimizeExpectation(self): # {{{
         self.setStateCenter(relaxOver(

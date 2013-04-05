@@ -99,7 +99,6 @@ class System(BaseSystem): # {{{
             self.state_center_data_conj = self.state_center_data.conj()
         else:
             self.state_center_data_conj = state_center_data_conj
-        self.just_increased_bandwidth = False
     # }}}
     def __add__(self,other): # {{{
         return System(
@@ -437,8 +436,6 @@ class System(BaseSystem): # {{{
         self.corners[direction] = absorbSparseSideIntoCornerFromLeft(self.corners[direction],self.sides[L(direction)])
         self.sides[direction] = absorbSparseCenterSOSIntoSide(direction,self.sides[direction],state_center_data,self.operator_center_tensor,state_center_data_conj)
         self.corners[R(direction)] = absorbSparseSideIntoCornerFromRight(self.corners[R(direction)],self.sides[R(direction)])
-        if self.just_increased_bandwidth:
-            raise InvariantViolatedError("Contracting the current center would blow up the condition number of the normalization matrix;  optimize it or replace it first.")
     # }}}
     def formExpectationAndNormalizationMultipliers(self,operator_center_tensor=None): # {{{
         if operator_center_tensor is None:
@@ -468,11 +465,10 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction not in (0,1):
             raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))
-        return self._increaseBandwidth((direction,direction+2),by,to,do_as_much_as_possible)
-    # }}}
-    def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
-        self.increaseBandwidth(direction,by,to)
-        self.normalize()
+        self._increaseBandwidth(direction,by,to,do_as_much_as_possible)
+        self.minimizeExpectation()
+        self._increaseBandwidth(direction+2,by,to,do_as_much_as_possible)
+        self.minimizeExpectation()
     # }}}
     def minimizeExpectation(self): # {{{
         state_center_data = self.state_center_data
