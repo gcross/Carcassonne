@@ -419,7 +419,10 @@ class System(BaseSystem): # {{{
         return self.computeScalarUsingMultiplier(self.formExpectationMultipliers())
     # }}}
     def contractTowards(self,direction): # {{{
-        self.contractNormalizedTowards(direction,self.state_center_data)
+        tensor_to_contract, _, matrix_to_absorb = self.state_center_data.normalizeAxis(O(direction))
+        tensor_to_receive_gauge = self.state_center_data.normalizeAxis(direction)[0]
+        self.contractUnnormalizedTowards(direction,tensor_to_contract)
+        self.setStateCenter(tensor_to_receive_gauge.absorbMatrixAt(direction,matrix_to_absorb.transpose()))
     # }}}
     def contractNormalizedTowards(self,direction,state_center_data): # {{{
         self.contractUnnormalizedTowards(direction,state_center_data.normalizeAxis(O(direction))[0])
