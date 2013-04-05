@@ -556,6 +556,7 @@ class System(BaseSystem): # {{{
     # }}}
   # }}}
 # }}}
+# }}}
 
 # Functions {{{
 def sideFromCorner(corner_id,direction): # {{{
