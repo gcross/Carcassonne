@@ -113,7 +113,7 @@ class TestNDArrayData(TestCase): # {{{
         data = NDArrayData.newRandom(*shape)
         data_normalized, normalizer, denormalizer = data.normalizeAxis(axis)
         self.assertDataAlmostEqual(
-            data_normalized.absorbMatrixAt(axis,denormalizer.join(1,0)),
+            data_normalized.absorbMatrixAt(axis,denormalizer.transpose()),
             data
         )
         indices = list(range(5))
