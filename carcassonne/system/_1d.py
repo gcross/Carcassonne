@@ -90,10 +90,9 @@ class System(BaseSystem): # {{{
         return self.state_center_data_conj.ravel().contractWith(multiply(self.state_center_data).ravel(),(0,),(0,)).extractScalar()
     # }}}
     def contractLeft(self): # {{{
-        L, _, rest_L = self.state_center_data.normalizeAxis(0)
-        R = self.state_center_data.normalizeAxis(1)[0]
-        self.contractLeftUnnormalized(L)
-        self.setStateCenter(R.absorbMatrixAt(1,rest_L.transpose()))
+        tensor_to_contract, _, matrix_to_absorb = self.state_center_data.normalizeAxis(0)
+        self.contractLeftUnnormalized(tensor_to_contract)
+        self.setStateCenter(self.state_center_data.normalizeAxis(1)[0].absorbMatrixAt(1,matrix_to_absorb.transpose()))
     # }}}
     def contractLeftNormalized(self,state_center_data): # {{{
         if state_center_data.shape[1] != self.left_environment.shape[1]:
@@ -110,10 +109,9 @@ class System(BaseSystem): # {{{
             )
     # }}}
     def contractRight(self): # {{{
-        R, _, rest_R = self.state_center_data.normalizeAxis(1)
-        L = self.state_center_data.normalizeAxis(0)[0]
-        self.contractRightUnnormalized(R)
-        self.setStateCenter(L.absorbMatrixAt(0,rest_R.transpose()))
+        tensor_to_contract, _, matrix_to_absorb = self.state_center_data.normalizeAxis(1)
+        self.contractRightUnnormalized(tensor_to_contract)
+        self.setStateCenter(self.state_center_data.normalizeAxis(0)[0].absorbMatrixAt(0,matrix_to_absorb.transpose()))
     # }}}
     def contractRightNormalized(self,state_center_data): # {{{
         if state_center_data.shape[0] != self.right_environment.shape[1]:
