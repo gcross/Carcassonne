@@ -418,18 +418,10 @@ class System(BaseSystem): # {{{
     def computeUnnormalizedExpectation(self): # {{{
         return self.computeScalarUsingMultiplier(self.formExpectationMultipliers())
     # }}}
-    def contractTowards(self,direction,state_center_data=None,denormalize_center=False,renormalize_center=True): # {{{
+    def contractTowards(self,direction,state_center_data=None): # {{{
         if state_center_data is None:
             state_center_data = self.state_center_data
-        if denormalize_center:
-            normalized_state_center_data, denormalized_state_center_data = \
-                state_center_data.normalizeAxisAndDenormalize(O(direction),direction,self.state_center_data)
-            if renormalize_center:
-                denormalized_state_center_data = denormalized_state_center_data.normalized()
-            self.contractUnnormalizedTowards(direction,normalized_state_center_data)
-            self.setStateCenter(denormalized_state_center_data)
-        else:
-            self.contractUnnormalizedTowards(direction,state_center_data.normalizeAxis(O(direction))[0])
+        self.contractUnnormalizedTowards(direction,state_center_data.normalizeAxis(O(direction))[0])
     # }}}
     def contractUnnormalizedTowards(self,direction,state_center_data=None,state_center_data_conj=None): # {{{
         if state_center_data is None:

@@ -195,24 +195,6 @@ class TestSystem(TestCase): # {{{
             state_center_data_conj.ravel().contractWith(state_center_data.absorbMatrixAt(4,O).ravel(),(0,),(0,)).extractScalar()/state_center_data_conj.ravel().contractWith(state_center_data.ravel(),(0,),(0,)).extractScalar()
         )
     # }}}
-    @with_checker(number_of_calls=10) # test_contractTowardsAndNormalize {{{
-    def test_contractTowardsAndNormalize(self,direction=irange(0,3),moves=(irange(0,2),)*4):
-        system1 = System.newRandom()
-        directions = sum(([i]*moves[i] for i in range(4)),[])
-        shuffle(directions)
-        for direction in directions:
-            system1.contractTowards(direction)
-        system2 = copy(system1)
-
-        system1.contractUnnormalizedTowards(direction)
-        system2.contractTowards(direction,denormalize_center=True,renormalize_center=False)
-
-        expectation1, normalization1 = system1.computeExpectationAndNormalization()
-        expectation2, normalization2 = system2.computeExpectationAndNormalization()
-
-        self.assertAlmostEqual(normalization2/normalization1,1.0)
-        self.assertAlmostEqual(expectation2/expectation1,1.0)
-    # }}}
     @with_checker # test_expectation_of_identity_after_no_steps # {{{
     def test_expectation_of_sum_of_identities_after_no_steps(self):
         self.assertAlmostEqual(System.newRandom(makeOperator=lambda N: NDArrayData.newIdentity(N)).computeExpectation(),1)

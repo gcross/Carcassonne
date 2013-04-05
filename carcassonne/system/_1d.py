@@ -89,20 +89,12 @@ class System(BaseSystem): # {{{
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.state_center_data_conj.ravel().contractWith(multiply(self.state_center_data).ravel(),(0,),(0,)).extractScalar()
     # }}}
-    def contractLeft(self,state_center_data=None,denormalize_center=False,renormalize_center=True): # {{{
+    def contractLeft(self,state_center_data=None): # {{{
         if state_center_data is None:
             state_center_data = self.state_center_data
         if state_center_data.shape[1] != self.left_environment.shape[1]:
             raise ValueError("state dimension of the left environment ({}) does not match the left dimension of the center state ({})".format(self.left_environment.shape[1],state_center_data.shape[1]))
-        if denormalize_center:
-            normalized_state_center_data, denormalized_state_center_data = \
-                state_center_data.normalizeAxisAndDenormalize(0,1,self.state_center_data)
-            if renormalize_center:
-                denormalized_state_center_data = denormalized_state_center_data.normalized()
-            self.contractLeftUnnormalized(normalized_state_center_data)
-            self.setStateCenter(denormalized_state_center_data)
-        else:
-            self.contractLeftUnnormalized(state_center_data.normalizeAxis(0)[0])
+        self.contractLeftUnnormalized(state_center_data.normalizeAxis(0)[0])
     # }}}
     def contractLeftUnnormalized(self,state_center_data=None): # {{{
         if state_center_data is None:
@@ -115,20 +107,12 @@ class System(BaseSystem): # {{{
                 state_center_data.conj(),
             )
     # }}}
-    def contractRight(self,state_center_data=None,denormalize_center=False,renormalize_center=True): # {{{
+    def contractRight(self,state_center_data=None): # {{{
         if state_center_data is None:
             state_center_data = self.state_center_data
         if state_center_data.shape[0] != self.right_environment.shape[1]:
             raise ValueError("state dimension of the right environment ({}) does not match the right dimension of the center state ({})".format(self.right_environment.shape[1],state_center_data.shape[0]))
-        if denormalize_center:
-            normalized_state_center_data, denormalized_state_center_data = \
-                state_center_data.normalizeAxisAndDenormalize(1,0,self.state_center_data)
-            if renormalize_center:
-                denormalized_state_center_data = denormalized_state_center_data.normalized()
-            self.contractRightUnnormalized(normalized_state_center_data)
-            self.setStateCenter(denormalized_state_center_data)
-        else:
-            self.contractRightUnnormalized(state_center_data.normalizeAxis(1)[0])
+        self.contractRightUnnormalized(state_center_data.normalizeAxis(1)[0])
     # }}}
     def contractRightUnnormalized(self,state_center_data=None): # {{{
         if state_center_data is None:
@@ -141,11 +125,11 @@ class System(BaseSystem): # {{{
                 state_center_data.conj(),
             )
     # }}}
-    def contractTowards(self,direction,state_center_data=None,denormalize_center=False,renormalize_center=True): # {{{
+    def contractTowards(self,direction,state_center_data=None): # {{{
         if direction == 0:
-            self.contractRight(state_center_data,denormalize_center,renormalize_center)
+            self.contractRight(state_center_data)
         elif direction == 1:
-            self.contractLeft(state_center_data,denormalize_center,renormalize_center)
+            self.contractLeft(state_center_data)
         else:
             raise ValueError("Direction must be 0 for right or 1 for left, not {}.".format(direction))
     # }}}
