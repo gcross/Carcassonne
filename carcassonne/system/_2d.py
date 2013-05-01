@@ -388,27 +388,32 @@ class System(BaseSystem): # {{{
         expectation = 0
         stripped_self = self.stripExpectationEnvironment()
 
-        if OneSiteOperator() in self.operator_center_tensor:
-            system = copy(stripped_self)
-            system.operator_center_tensor[OneSiteOperator()] = self.operator_center_tensor[OneSiteOperator()]
-            expectation += system.computeExpectation()
-            del system
+        for tag, value in self.operator_center_tensor.items():
+            if isinstance(tag,OneSiteOperator):
+                system = copy(stripped_self)
+                system.operator_center_tensor[tag] = value
+                expectation += system.computeExpectation()
+                del system
 
-        if TwoSiteOperator(0,0) in self.operator_center_tensor:
-            system = copy(stripped_self)
-            system.operator_center_tensor[TwoSiteOperator(0,0)] = self.operator_center_tensor[TwoSiteOperator(0,0)]
-            system.operator_center_tensor[TwoSiteOperator(2,0)] = self.operator_center_tensor[TwoSiteOperator(2,0)]
-            system.contractTowards(0)
-            expectation += system.computeExpectation()
-            del system
-
-        if TwoSiteOperator(1,0) in self.operator_center_tensor:
-            system = copy(stripped_self)
-            system.operator_center_tensor[TwoSiteOperator(1,0)] = self.operator_center_tensor[TwoSiteOperator(1,0)]
-            system.operator_center_tensor[TwoSiteOperator(3,0)] = self.operator_center_tensor[TwoSiteOperator(3,0)]
-            system.contractTowards(1)
-            expectation += system.computeExpectation()
-            del system
+            if isinstance(tag,TwoSiteOperator):
+                if tag.position != 0:
+                    continue
+                if tag.direction == 0:
+                    other_tag = tag.withNewDirectionAndPosition(2,0)
+                    system = copy(stripped_self)
+                    system.operator_center_tensor[tag] = value
+                    system.operator_center_tensor[other_tag] = self.operator_center_tensor[other_tag]
+                    system.contractTowards(0)
+                    expectation += system.computeExpectation()
+                    del system
+                if tag.direction == 1:
+                    other_tag = tag.withNewDirectionAndPosition(3,0)
+                    system = copy(stripped_self)
+                    system.operator_center_tensor[tag] = value
+                    system.operator_center_tensor[other_tag] = self.operator_center_tensor[other_tag]
+                    system.contractTowards(1)
+                    expectation += system.computeExpectation()
+                    del system
 
         return expectation
     # }}}
