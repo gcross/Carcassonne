@@ -87,6 +87,10 @@ class System(BaseSystem): # {{{
     def newTrivialWithSimpleSparseOperator(cls,O=None,OO_UD=None,OO_LR=None):
         return cls.newTrivial(makeSimpleSparseOperator(O=O,OO_UD=OO_UD,OO_LR=OO_LR))
     # }}}
+    @classmethod # newTrivialWithSparseOperator {{{
+    def newTrivialWithSparseOperator(cls,Os=[],OO_UDs=[],OO_LRs=[]):
+        return cls.newTrivial(makeSparseOperator(Os=Os,OO_UDs=OO_UDs,OO_LRs=OO_LRs))
+    # }}}
   # }}}
   # Instance methods {{{
     def __init__(self,corners,sides,state_center_data,operator_center_tensor,state_center_data_conj=None): # {{{

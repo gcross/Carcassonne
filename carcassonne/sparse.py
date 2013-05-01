@@ -262,21 +262,52 @@ def getInformationFromOperatorCenter(operator_center): # {{{
         raise ValueError("operator tensor has no term from which to extract the physical dimension")
 # }}}
 def makeSimpleSparseOperator(O=None,OO_UD=None,OO_LR=None): # {{{
+    return makeSparseOperator(
+        [O] if O is not None else [],
+        [OO_UD] if OO_UD is not None else [],
+        [OO_LR] if OO_LR is not None else [],
+    )
+# }}}
+def makeSparseOperator(Os=[],OO_UDs=[],OO_LRs=[]): # {{{
     operator = {}
     identity = None
-    if O is not None:
-        operator[OneSiteOperator(None)] = O
-        identity = O.newIdentity(O.shape[0])
-    if OO_UD is not None:
-        O_U, O_D = OO_UD
-        operator[TwoSiteOperator(None,3,0)] = O_U
-        operator[TwoSiteOperator(None,1,0)] = O_D
-        identity = O_U.newIdentity(O_U.shape[0])
-    if OO_LR is not None:
-        O_L, O_R = OO_LR
-        operator[TwoSiteOperator(None,0,0)] = O_L
-        operator[TwoSiteOperator(None,2,0)] = O_R
-        identity = O_L.newIdentity(O_L.shape[0])
+
+    def checkAgainstIdentityShape(shape):
+        nonlocal identity_shape
+        if identity_shape != shape:
+            raise ValueError("incompatible site matrix shapes: {} and {}".format(identity_shape,shape))
+
+    for id, O in enumerate(Os): # {{{
+        operator[OneSiteOperator(id)] = O
+        if identity is None:
+            identity = O.newIdentity(O.shape[0])
+            identity_shape = O.shape
+        else:
+            checkAgainstIdentityShape(O.shape)
+    # }}}
+
+    for id, (O_U, O_D) in enumerate(OO_UDs): # {{{
+        operator[TwoSiteOperator(id,3,0)] = O_U
+        operator[TwoSiteOperator(id,1,0)] = O_D
+        if identity is None:
+            identity = O_U.newIdentity(O_U.shape[0])
+            identity_shape = O_U.shape
+        else:
+            checkAgainstIdentityShape(O_U.shape)
+        checkAgainstIdentityShape(O_D.shape)
+    # }}}
+
+    for id, (O_L, O_R) in enumerate(OO_LRs): # {{{
+        operator[TwoSiteOperator(id,0,0)] = O_L
+        operator[TwoSiteOperator(id,2,0)] = O_R
+        if identity is None:
+            identity = O_L.newIdentity(O_L.shape[0])
+            identity_shape = O_L.shape
+        else:
+            checkAgainstIdentityShape(O_L.shape)
+        checkAgainstIdentityShape(O_R.shape)
+    # }}}
+
     if identity is None:
         raise ValueError("No terms have been specified.")
     operator[Identity()] = identity
