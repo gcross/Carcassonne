@@ -43,20 +43,35 @@ class TwoSiteOperator: # {{{
         self.position = position
     # }}}
     def __eq__(self,other): # {{{
-        return isinstance(other,TwoSiteOperator) and other.direction == self.direction and other.position == self.position
+        return (
+            isinstance(other,TwoSiteOperator) and
+            other.direction == self.direction and
+            other.position == self.position
+        )
     # }}}
     def __hash__(self): # {{{
-        return hash(TwoSiteOperator) ^ hash(self.direction) ^ hash(self.position)
+        return (
+            hash(TwoSiteOperator) ^
+            hash(self.direction) ^
+            hash(self.position)
+        )
     # }}}
     def __repr__(self): # {{{
         return "TwoSiteOperator({},{})".format(self.direction,self.position)
     # }}}
     def matches(left,right): # {{{
-        if left.direction == 1 and right.direction == 0 and left.position == right.position:
+        if(
+            left.direction == 1 and
+            right.direction == 0 and
+            left.position == right.position
+        ):
             return Complete()
     # }}}
     def matchesCenter(self,side_direction,center): # {{{
-        if self.direction == 2 and side_direction == center.direction:
+        if(
+            self.direction == 2 and
+            side_direction == center.direction
+        ):
             return Complete()
     # }}}
     def matchesCenterIdentity(self): # {{{
@@ -64,7 +79,10 @@ class TwoSiteOperator: # {{{
             return self.moveOut()
     # }}}
     def matchesCenterForStage3(self,direction,other): # {{{
-        return self.direction == 2 and self.position + 2*direction == other.direction
+        return (
+            self.direction == 2 and
+            self.position + 2*direction == other.direction
+        )
     # }}}
     def matchesCornerIdentityOnLeft(self): # {{{
         if self.direction == 1:
@@ -115,7 +133,10 @@ class TwoSiteOperator: # {{{
             return TwoSiteOperator(2,1)
     # }}}
     def matchesForStage3(x,y): # {{{
-        return (x.direction,y.direction) in ((0,1),(1,0)) and x.position == y.position
+        return (
+            (x.direction,y.direction) in ((0,1),(1,0)) and
+            x.position == y.position
+        )
     # }}}
     def moveOut(self): # {{{
         return TwoSiteOperator(self.direction,self.position+1)
