@@ -33,7 +33,7 @@ class Complete(Singleton): # {{{
 # }}}
 class OneSiteOperator: # {{{
     __slots__ = ["id"]
-    def __init__(self): # {{{
+    def __init__(self,id): # {{{
         self.id = None
     # }}}
     def __eq__(self,other): # {{{
@@ -54,8 +54,8 @@ class OneSiteOperator: # {{{
 # }}}
 class TwoSiteOperator: # {{{
     __slots__ = ["id","direction","position"]
-    def __init__(self,direction,position=None): # {{{
-        self.id = None
+    def __init__(self,id,direction,position=None): # {{{
+        self.id = id
         self.direction = direction
         self.position = position
     # }}}
@@ -164,7 +164,7 @@ class TwoSiteOperator: # {{{
         return self.withNewDirectionAndPosition(self.direction,self.position+1)
     # }}}
     def withNewDirectionAndPosition(self,direction,position=None): # {{{
-        return TwoSiteOperator(direction,position)
+        return TwoSiteOperator(self.id,direction,position)
     # }}}
 # }}}
 class TwoSiteOperatorCompressed: # {{{
@@ -265,17 +265,17 @@ def makeSparseOperator(O=None,OO_UD=None,OO_LR=None): # {{{
     operator = {}
     identity = None
     if O is not None:
-        operator[OneSiteOperator()] = O
+        operator[OneSiteOperator(None)] = O
         identity = O.newIdentity(O.shape[0])
     if OO_UD is not None:
         O_U, O_D = OO_UD
-        operator[TwoSiteOperator(3,0)] = O_U
-        operator[TwoSiteOperator(1,0)] = O_D
+        operator[TwoSiteOperator(None,3,0)] = O_U
+        operator[TwoSiteOperator(None,1,0)] = O_D
         identity = O_U.newIdentity(O_U.shape[0])
     if OO_LR is not None:
         O_L, O_R = OO_LR
-        operator[TwoSiteOperator(0,0)] = O_L
-        operator[TwoSiteOperator(2,0)] = O_R
+        operator[TwoSiteOperator(None,0,0)] = O_L
+        operator[TwoSiteOperator(None,2,0)] = O_R
         identity = O_L.newIdentity(O_L.shape[0])
     if identity is None:
         raise ValueError("No terms have been specified.")
