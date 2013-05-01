@@ -79,6 +79,7 @@ class TwoSiteOperator: # {{{
     # }}}
     def matches(left,right): # {{{
         if(
+            left.id == right.id and
             left.direction == RIGHT and
             right.direction == LEFT and
             left.position == right.position
@@ -87,6 +88,7 @@ class TwoSiteOperator: # {{{
     # }}}
     def matchesCenter(self,side_direction,center): # {{{
         if(
+            self.id == center.id and
             self.direction == CENTER and
             side_direction == center.direction
         ):
@@ -98,6 +100,7 @@ class TwoSiteOperator: # {{{
     # }}}
     def matchesCenterForStage3(self,direction,other): # {{{
         return (
+            self.id == other.id and
             self.direction == CENTER and
             self.position + 2*direction == other.direction
         )
@@ -152,6 +155,7 @@ class TwoSiteOperator: # {{{
     # }}}
     def matchesForStage3(x,y): # {{{
         return (
+            x.id == y.id and
             (x.direction,y.direction) in ((LEFT,RIGHT),(RIGHT,LEFT)) and
             x.position == y.position
         )
