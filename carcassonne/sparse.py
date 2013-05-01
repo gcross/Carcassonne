@@ -106,7 +106,7 @@ class TwoSiteOperator: # {{{
         if self.direction == RIGHT:
             return self
         if self.direction == CENTER:
-            return TwoSiteOperator(LEFT,0)
+            return self.withNewDirectionAndPosition(LEFT,0)
     # }}}
     def matchesCornerIdentityOnLeftForStage1(self): # {{{
         if self.direction in (RIGHT,CENTER):
@@ -116,7 +116,7 @@ class TwoSiteOperator: # {{{
         if self.direction == LEFT:
             return self
         if self.direction == CENTER:
-            return TwoSiteOperator(RIGHT,0)
+            return self.withNewDirectionAndPosition(RIGHT,0)
     # }}}
     def matchesSideIdentityOnLeft(self): # {{{
         if self.direction == RIGHT:
@@ -132,23 +132,23 @@ class TwoSiteOperator: # {{{
     # }}}
     def matchesSideIdentityOutward(self,direction): # {{{
         if self.direction == L(direction):
-            return TwoSiteOperator(LEFT,0)
+            return self.withNewDirectionAndPosition(LEFT,0)
         if self.direction == R(direction):
-            return TwoSiteOperator(RIGHT,0)
+            return self.withNewDirectionAndPosition(RIGHT,0)
         if self.direction == O(direction):
-            return TwoSiteOperator(CENTER)
+            return self.withNewDirectionAndPosition(CENTER)
     # }}}
     def matchesStage1IdentityOnLeft(self): # {{{
         if self.direction == RIGHT:
             return self
         if self.direction == CENTER:
-            return TwoSiteOperator(CENTER,LEFT)
+            return self.withNewDirectionAndPosition(CENTER,LEFT)
     # }}}
     def matchesStage1IdentityOnRight(self): # {{{
         if self.direction == LEFT:
             return self
         if self.direction == CENTER:
-            return TwoSiteOperator(CENTER,RIGHT)
+            return self.withNewDirectionAndPosition(CENTER,RIGHT)
     # }}}
     def matchesForStage3(x,y): # {{{
         return (
@@ -157,7 +157,10 @@ class TwoSiteOperator: # {{{
         )
     # }}}
     def moveOut(self): # {{{
-        return TwoSiteOperator(self.direction,self.position+1)
+        return self.withNewDirectionAndPosition(self.direction,self.position+1)
+    # }}}
+    def withNewDirectionAndPosition(self,direction,position=None): # {{{
+        return TwoSiteOperator(direction,position)
     # }}}
 # }}}
 class TwoSiteOperatorCompressed: # {{{
