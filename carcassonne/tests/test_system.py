@@ -11,7 +11,7 @@ from ..utils import *
 class TestSystem(TestCase): # {{{
     def test___add___trivial(self): # test___add___trivial {{{
         O = NDArrayData.newIdentity(1)
-        system1 = System.newTrivialWithSparseOperator(O=O)
+        system1 = System.newTrivialWithSimpleSparseOperator(O=O)
         system2 = system1 + system1
         self.assertAlmostEqual(system2.computeNormalization(),2)
         self.assertAlmostEqual(system2.computeExpectation(),1)
@@ -94,7 +94,7 @@ class TestSystem(TestCase): # {{{
             operator_direction = "OO_LR"
         else:
             operator_direction = "OO_UD"
-        system = System.newTrivialWithSparseOperator(**{operator_direction:operator_data})
+        system = System.newTrivialWithSimpleSparseOperator(**{operator_direction:operator_data})
 
         if direction == 0:
             system.contractTowards(R(side_id))
@@ -129,7 +129,7 @@ class TestSystem(TestCase): # {{{
             operator_direction = "OO_LR"
         else:
             operator_direction = "OO_UD"
-        system = System.newTrivialWithSparseOperator(**{operator_direction:operator_data})
+        system = System.newTrivialWithSimpleSparseOperator(**{operator_direction:operator_data})
 
         if direction == 0:
             system.contractTowards(R(side_id))
@@ -169,7 +169,7 @@ class TestSystem(TestCase): # {{{
         direction=irange(0,1),
         new_dimension=irange(1,10),
     ):
-        system = System.newTrivialWithSparseOperator(O=NDArrayData.newIdentity(1))
+        system = System.newTrivialWithSimpleSparseOperator(O=NDArrayData.newIdentity(1))
         expectation1, normalization1 = system.computeExpectationAndNormalization()
         system.compressCornerTwoSiteOperatorTowards(corner_id,direction,new_dimension)
         expectation2, normalization2 = system.computeExpectationAndNormalization()
@@ -308,7 +308,7 @@ class TestSystem(TestCase): # {{{
 class TestSystemSillyFieldWalk(TestCase): # {{{
     @staticmethod # def makeSillySystem # {{{
     def makeSillySystem():
-        system = System.newTrivialWithSparseOperator(O=NDArrayData.newIdentity(1))
+        system = System.newTrivialWithSimpleSparseOperator(O=NDArrayData.newIdentity(1))
         system.assertDimensionsAreConsistent()
         return system
     # }}}
@@ -360,7 +360,7 @@ class TestSystemSillyFieldWalk(TestCase): # {{{
 class TestSystemMagneticFieldWalk(TestCase): # {{{
     @staticmethod # def makeMagneticField # {{{
     def makeMagneticField():
-        system = System.newTrivialWithSparseOperator(O=NDArrayData.Z)
+        system = System.newTrivialWithSimpleSparseOperator(O=NDArrayData.Z)
         system.assertDimensionsAreConsistent()
         state_up = NDArrayData(array([[[[[1,0]]]]],dtype=complex128))
         state_down = NDArrayData(array([[[[[0,1]]]]],dtype=complex128))

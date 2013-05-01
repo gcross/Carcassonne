@@ -8,7 +8,7 @@ from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 from .base import BaseSystem
 from ..compression import computeProductCompressor
 from ..data import NDArrayData
-from ..sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSparseOperator, mapOverSparseData, stripAllButIdentityFrom
+from ..sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSimpleSparseOperator, mapOverSparseData, stripAllButIdentityFrom
 from ..tensors._2d.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from ..tensors._2d.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
 from ..utils import InvariantViolatedError, Multiplier, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt, relaxOver, L, O, R
@@ -83,9 +83,9 @@ class System(BaseSystem): # {{{
             operator_center_tensor,
         )
     # }}}
-    @classmethod # newTrivialWithSparseOperator {{{
-    def newTrivialWithSparseOperator(cls,O=None,OO_UD=None,OO_LR=None):
-        return cls.newTrivial(makeSparseOperator(O=O,OO_UD=OO_UD,OO_LR=OO_LR))
+    @classmethod # newTrivialWithSimpleSparseOperator {{{
+    def newTrivialWithSimpleSparseOperator(cls,O=None,OO_UD=None,OO_LR=None):
+        return cls.newTrivial(makeSimpleSparseOperator(O=O,OO_UD=OO_UD,OO_LR=OO_LR))
     # }}}
   # }}}
   # Instance methods {{{

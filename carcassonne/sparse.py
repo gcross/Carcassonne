@@ -261,7 +261,7 @@ def getInformationFromOperatorCenter(operator_center): # {{{
     else:
         raise ValueError("operator tensor has no term from which to extract the physical dimension")
 # }}}
-def makeSparseOperator(O=None,OO_UD=None,OO_LR=None): # {{{
+def makeSimpleSparseOperator(O=None,OO_UD=None,OO_LR=None): # {{{
     operator = {}
     identity = None
     if O is not None:
@@ -304,7 +304,7 @@ __all__ = [
     "directSumSparse",
     "formSparseContractor",
     "getInformationFromOperatorCenter",
-    "makeSparseOperator",
+    "makeSimpleSparseOperator",
     "mapOverSparseData",
     "stripAllButIdentityFrom",
 ]

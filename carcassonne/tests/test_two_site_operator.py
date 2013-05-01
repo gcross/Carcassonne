@@ -9,27 +9,27 @@ class TestTwoSiteOperator(TestCase):
     @with_checker # def test_no_steps {{{
     def test_no_steps(self,physical_dimension=irange(1,5)):
         Os = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(4)]
-        system = System.newTrivialWithSparseOperator(OO_UD=(Os[0],Os[1]),OO_LR=(Os[2],Os[3]))
+        system = System.newTrivialWithSimpleSparseOperator(OO_UD=(Os[0],Os[1]),OO_LR=(Os[2],Os[3]))
         self.assertAlmostEqual(system.computeExpectation(),0)
     # }}}
     @with_checker # def test_UD_one_step_right {{{
     def test_UD_one_step_right(self,physical_dimension=irange(1,5)):
         OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
-        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        system = System.newTrivialWithSimpleSparseOperator(OO_UD=OO_UD)
         system.contractTowards(0)
         self.assertAlmostEqual(system.computeExpectation(),0)
     # }}}
     @with_checker # def test_UD_one_step_left {{{
     def test_UD_one_step_left(self,physical_dimension=irange(1,5)):
         OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
-        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        system = System.newTrivialWithSimpleSparseOperator(OO_UD=OO_UD)
         system.contractTowards(2)
         self.assertAlmostEqual(system.computeExpectation(),0)
     # }}}
     @with_checker(number_of_calls=10) # def test_UD_horizontal_steps {{{
     def test_UD_horizontal_steps(self,physical_dimension=irange(1,5),directions=[choiceof((0,2))]):
         OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
-        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        system = System.newTrivialWithSimpleSparseOperator(OO_UD=OO_UD)
         for direction in directions:
             system.contractTowards(direction)
         self.assertAlmostEqual(system.computeExpectation(),0)
@@ -37,21 +37,21 @@ class TestTwoSiteOperator(TestCase):
     @with_checker # def test_LR_one_step_up {{{
     def test_LR_one_step_up(self,physical_dimension=irange(1,5)):
         OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
-        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        system = System.newTrivialWithSimpleSparseOperator(OO_LR=OO_LR)
         system.contractTowards(1)
         self.assertAlmostEqual(system.computeExpectation(),0)
     # }}}
     @with_checker # def test_LR_one_step_down {{{
     def test_LR_one_step_down(self,physical_dimension=irange(1,5)):
         OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
-        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        system = System.newTrivialWithSimpleSparseOperator(OO_LR=OO_LR)
         system.contractTowards(3)
         self.assertAlmostEqual(system.computeExpectation(),0)
     # }}}
     @with_checker(number_of_calls=10) # def test_LR_vertical_steps {{{
     def test_LR_vertical_steps(self,physical_dimension=irange(1,5),directions=[choiceof((1,3))]):
         OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
-        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        system = System.newTrivialWithSimpleSparseOperator(OO_LR=OO_LR)
         for direction in directions:
             system.contractTowards(direction)
         self.assertAlmostEqual(system.computeExpectation(),0)
@@ -60,7 +60,7 @@ class TestTwoSiteOperator(TestCase):
     def test_LR_one_step_right(self,physical_dimension=irange(1,5)):
         OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_L, OO_R = OO_LR
-        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        system = System.newTrivialWithSimpleSparseOperator(OO_LR=OO_LR)
         state_center_data_L = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         state_center_data_R = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         system.setStateCenter(state_center_data_R)
@@ -79,7 +79,7 @@ class TestTwoSiteOperator(TestCase):
     def test_LR_one_step_left(self,physical_dimension=irange(1,5)):
         OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_L, OO_R = OO_LR
-        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        system = System.newTrivialWithSimpleSparseOperator(OO_LR=OO_LR)
         state_center_data_L = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         state_center_data_R = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         system.setStateCenter(state_center_data_L)
@@ -98,7 +98,7 @@ class TestTwoSiteOperator(TestCase):
     def test_UD_one_step_up(self,physical_dimension=irange(1,5)):
         OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_U, OO_D = OO_UD
-        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        system = System.newTrivialWithSimpleSparseOperator(OO_UD=OO_UD)
         state_center_data_U = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         state_center_data_D = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         system.setStateCenter(state_center_data_U)
@@ -117,7 +117,7 @@ class TestTwoSiteOperator(TestCase):
     def test_UD_one_step_down(self,physical_dimension=irange(1,5)):
         OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_U, OO_D = OO_UD
-        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        system = System.newTrivialWithSimpleSparseOperator(OO_UD=OO_UD)
         state_center_data_U = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         state_center_data_D = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         system.setStateCenter(state_center_data_D)
@@ -136,7 +136,7 @@ class TestTwoSiteOperator(TestCase):
     def test_LR_two_steps_right(self,physical_dimension=irange(1,5)):
         OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_L, OO_R = OO_LR
-        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        system = System.newTrivialWithSimpleSparseOperator(OO_LR=OO_LR)
         Ss = [NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension) for _ in range(3)]
         SL, SM, SR = Ss
         system.setStateCenter(SR)
@@ -162,7 +162,7 @@ class TestTwoSiteOperator(TestCase):
     def test_LR_two_steps_left(self,physical_dimension=irange(1,5)):
         OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_L, OO_R = OO_LR
-        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        system = System.newTrivialWithSimpleSparseOperator(OO_LR=OO_LR)
         Ss = [NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension) for _ in range(3)]
         SL, SM, SR = Ss
         system.setStateCenter(SL)
@@ -188,7 +188,7 @@ class TestTwoSiteOperator(TestCase):
     def test_UD_two_steps_up(self,physical_dimension=irange(1,5)):
         OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_U, OO_D = OO_UD
-        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        system = System.newTrivialWithSimpleSparseOperator(OO_UD=OO_UD)
         Ss = [NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension) for _ in range(3)]
         SU, SM, SD = Ss
         system.setStateCenter(SU)
@@ -214,7 +214,7 @@ class TestTwoSiteOperator(TestCase):
     def test_UD_two_steps_down(self,physical_dimension=irange(1,5)):
         OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_U, OO_D = OO_UD
-        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        system = System.newTrivialWithSimpleSparseOperator(OO_UD=OO_UD)
         Ss = [NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension) for _ in range(3)]
         SU, SM, SD = Ss
         system.setStateCenter(SD)
@@ -244,7 +244,7 @@ class TestTwoSiteOperator(TestCase):
     ):
         OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_L, OO_R = OO_LR
-        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        system = System.newTrivialWithSimpleSparseOperator(OO_LR=OO_LR)
         SL = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         SR = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
 
@@ -275,7 +275,7 @@ class TestTwoSiteOperator(TestCase):
     ):
         OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_L, OO_R = OO_LR
-        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        system = System.newTrivialWithSimpleSparseOperator(OO_LR=OO_LR)
         S1 = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         S2 = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
 
@@ -303,7 +303,7 @@ class TestTwoSiteOperator(TestCase):
     ):
         OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_U, OO_D = OO_UD
-        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        system = System.newTrivialWithSimpleSparseOperator(OO_UD=OO_UD)
         SU = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         SD = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
 
@@ -334,7 +334,7 @@ class TestTwoSiteOperator(TestCase):
     ):
         OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_U, OO_D = OO_UD
-        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        system = System.newTrivialWithSimpleSparseOperator(OO_UD=OO_UD)
         S1 = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         S2 = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
 
@@ -361,7 +361,7 @@ class TestTwoSiteOperator(TestCase):
     ):
         OO_LR = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_L, OO_R = OO_LR
-        system = System.newTrivialWithSparseOperator(OO_LR=OO_LR)
+        system = System.newTrivialWithSimpleSparseOperator(OO_LR=OO_LR)
         S = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         system.setStateCenter(S)
 
@@ -386,7 +386,7 @@ class TestTwoSiteOperator(TestCase):
     ):
         OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_U, OO_D = OO_UD
-        system = System.newTrivialWithSparseOperator(OO_UD=OO_UD)
+        system = System.newTrivialWithSimpleSparseOperator(OO_UD=OO_UD)
         S = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         system.setStateCenter(S)
 
@@ -414,7 +414,7 @@ class TestTwoSiteOperator(TestCase):
         OO_UD = [NDArrayData.newRandomHermitian(physical_dimension,physical_dimension) for _ in range(2)]
         OO_U, OO_D = OO_UD
         O = NDArrayData.newRandomHermitian(physical_dimension,physical_dimension)
-        system = System.newTrivialWithSparseOperator(O=O,OO_LR=OO_LR,OO_UD=OO_UD)
+        system = System.newTrivialWithSimpleSparseOperator(O=O,OO_LR=OO_LR,OO_UD=OO_UD)
         S = NDArrayData.newNormalizedRandom(1,1,1,1,physical_dimension)
         system.setStateCenter(S)
 
