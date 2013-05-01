@@ -31,14 +31,31 @@ class Complete(Singleton): # {{{
     def __repr__(self):
         return "Complete()"
 # }}}
-class OneSiteOperator(Singleton): # {{{
-    __slots__ = []
-    def __repr__(self):
-        return "OneSiteOperator()"
+class OneSiteOperator: # {{{
+    __slots__ = ["id"]
+    def __init__(self): # {{{
+        self.id = None
+    # }}}
+    def __eq__(self,other): # {{{
+        return (
+            isinstance(other,OneSiteOperator) and
+            other.id == self.id
+        )
+    # }}}
+    def __hash__(self): # {{{
+        return (
+            hash(OneSiteOperator) ^
+            hash(self.id)
+        )
+    # }}}
+    def __repr__(self): # {{{
+        return "OneSiteOperator({})".format(self.id)
+    # }}}
 # }}}
 class TwoSiteOperator: # {{{
-    __slots__ = ["direction","position"]
+    __slots__ = ["id","direction","position"]
     def __init__(self,direction,position=None): # {{{
+        self.id = None
         self.direction = direction
         self.position = position
     # }}}
@@ -52,12 +69,13 @@ class TwoSiteOperator: # {{{
     def __hash__(self): # {{{
         return (
             hash(TwoSiteOperator) ^
+            hash(self.id) ^
             hash(self.direction) ^
             hash(self.position)
         )
     # }}}
     def __repr__(self): # {{{
-        return "TwoSiteOperator({},{})".format(self.direction,self.position)
+        return "TwoSiteOperator({},{},{})".format(self.id,self.direction,self.position)
     # }}}
     def matches(left,right): # {{{
         if(
