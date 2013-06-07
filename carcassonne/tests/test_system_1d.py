@@ -59,6 +59,24 @@ class TestSystem1D(TestCase): # {{{
             )
         self.assertAlmostEqual(system.computeOneSiteExpectation(),abs(field_strength))
     # }}}
+    @with_checker # testincreaseBandwidth {{{
+    def test_increaseBandwidth(self,
+        operator_dimension=irange(1,5),
+        state_dimension=irange(1,5),
+        physical_dimension=irange(2,5),
+    ):
+        new_dimension = randint(state_dimension+1,physical_dimension*state_dimension)
+
+        system1 = System.newRandom(operator_dimension,state_dimension,physical_dimension)
+        system2 = copy(system1)
+
+        system1.increaseBandwidth(0,to=new_dimension)
+
+        system2.contractNormalizedTowards(0)
+        system2.contractNormalizedTowards(1)
+
+        self.assertAlmostEqual(system1.computeExpectation(),system2.computeExpectation())
+    # }}}
 # }}}
 
 # }}}

@@ -124,7 +124,9 @@ class System(BaseSystem): # {{{
         self.contractUnnormalizedTowards(direction,tensor_to_contract)
         self.setStateCenter(self.state_center_data.normalizeAxis(direction)[0].absorbMatrixAt(direction,matrix_to_absorb.transpose()))
     # }}}
-    def contractNormalizedTowards(self,direction,state_center_data): # {{{
+    def contractNormalizedTowards(self,direction,state_center_data=None): # {{{
+        if state_center_data is None:
+            state_center_data = self.state_center_data
         if direction == 0:
             self.contractRightNormalized(state_center_data)
         elif direction == 1:
@@ -132,7 +134,9 @@ class System(BaseSystem): # {{{
         else:
             raise ValueError("Direction must be 0 for right or 1 for left, not {}.".format(direction))
     # }}}
-    def contractUnnormalizedTowards(self,direction,state_center_data): # {{{
+    def contractUnnormalizedTowards(self,direction,state_center_data=None): # {{{
+        if state_center_data is None:
+            state_center_data = self.state_center_data
         if direction == 0:
             self.contractRightUnnormalized(state_center_data)
         elif direction == 1:
@@ -154,7 +158,7 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction=0,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction != 0:
             raise ValueError("Direction for bandwidth increase must be 0, not {}.".format(direction))
-        return self._increaseBandwidth((0,1),by,to,do_as_much_as_possible)
+        return self._increaseBandwidth(0,by,to,do_as_much_as_possible)
     # }}}
     def minimizeExpectation(self): # {{{
         self.setStateCenter(relaxOver(

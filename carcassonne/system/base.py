@@ -98,46 +98,48 @@ class BaseSystem: # {{{
     # }}}
   # }}}
   # Protected instance methods {{{
-    def _increaseBandwidth(self,axes,by=None,to=None,do_as_much_as_possible=False): # {{{
+    def _increaseBandwidth(self,axis,by=None,to=None,do_as_much_as_possible=False): # {{{
         state_center_data = self.state_center_data
         ndim = state_center_data.ndim
-        old_dimension = state_center_data.shape[axes[0]]
+        if ndim == 5:
+            O_axis = O(axis)
+        else:
+            O_axis = 1-axis
+
+        physical_dimension = state_center_data.shape[-1]
+        old_dimension = state_center_data.shape[axis]
         new_dimension = \
             computeNewDimension(
                 old_dimension,
                 by=by,
                 to=to,
             )
+
         if new_dimension == old_dimension:
             return
-        if new_dimension > 2*old_dimension:
+        if new_dimension > physical_dimension*old_dimension:
             if do_as_much_as_possible:
-                new_dimension = 2*old_dimension
+                new_dimension = physical_dimension*old_dimension
             else:
-                raise ValueError("New dimension must be less than twice the old dimension ({} > 2*{}).".format(new_dimension,old_dimension))
-        increment = new_dimension-old_dimension
-        extra_state_center_data = state_center_data.reverseLastAxis()
-        self.setStateCenter(
-            state_center_data.increaseDimensionsAndFillWithZeros(*((axis,new_dimension) for axis in axes))
-        )
-        for axis in axes:
-            if increment == old_dimension:
-                state_center_data_to_absorb = extra_state_center_data
-            else:
-                compressor, _ = \
-                    computeCompressorForMatrixTimesItsDagger(
-                        old_dimension,
-                        increment,
-                        extra_state_center_data.fold(axis).transpose().toArray()
-                    )
-                state_center_data_to_absorb = extra_state_center_data.absorbMatrixAt(axis,NDArrayData(compressor))
-            self.contractNormalizedTowards(
-                O(axis) if ndim == 5 else 1-axis,
-                state_center_data.directSumWith(
-                    state_center_data_to_absorb,
-                    *dropAt(range(ndim),axis)
-                ),
-            )
+                raise ValueError("New dimension must be less than the physical dimension times the old dimension ({} > {}*{}).".format(new_dimension,physical_dimension,old_dimension))
+
+        neighbor_0 = state_center_data.normalizeAxis(O_axis)[0]
+        neighbor_1 = state_center_data.normalizeAxis(axis)[0]
+
+        enlargener_A, enlargener_B = state_center_data.newEnlargener(old_dimension,new_dimension)
+
+        state_center_data = state_center_data.absorbMatrixAt(axis,enlargener_A)
+        neighbor_0 = neighbor_0.absorbMatrixAt(O_axis,enlargener_B)
+        neighbor_0, state_center_data = neighbor_0.normalizeAxisAndDenormalize(O_axis,axis,state_center_data)
+
+        neighbor_1 = neighbor_1.absorbMatrixAt(axis,enlargener_A)
+        state_center_data = state_center_data.absorbMatrixAt(O_axis,enlargener_B)
+        neighbor_1, state_center_data = neighbor_1.normalizeAxisAndDenormalize(axis,O_axis,state_center_data)
+
+        self.setStateCenter(state_center_data)
+        self.contractUnnormalizedTowards(axis,neighbor_0)
+        self.contractUnnormalizedTowards(O_axis,neighbor_1)
+
         self.just_increased_bandwidth = True
     # }}}
   # }}}

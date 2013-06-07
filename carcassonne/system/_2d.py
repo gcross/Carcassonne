@@ -481,7 +481,7 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         if direction not in (0,1):
             raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))
-        return self._increaseBandwidth((direction,direction+2),by,to,do_as_much_as_possible)
+        return self._increaseBandwidth(direction,by,to,do_as_much_as_possible)
     # }}}
     def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
         self.increaseBandwidth(direction,by,to)
