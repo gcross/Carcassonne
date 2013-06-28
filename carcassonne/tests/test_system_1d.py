@@ -59,7 +59,7 @@ class TestSystem1D(TestCase): # {{{
             )
         self.assertAlmostEqual(system.computeOneSiteExpectation(),abs(field_strength))
     # }}}
-    @with_checker # testincreaseBandwidth {{{
+    @with_checker # test_increaseBandwidth {{{
     def test_increaseBandwidth(self,
         operator_dimension=irange(1,5),
         state_dimension=irange(1,5),

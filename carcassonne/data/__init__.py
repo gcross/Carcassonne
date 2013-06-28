@@ -271,6 +271,7 @@ class NDArrayData(Data): # {{{
         svd_axes_to_merge = list(range(self.ndim))
         del svd_axes_to_merge[axis]
         U, S, V = self.join(svd_axes_to_merge,axis).svd(full_matrices=False)
+        print("S =",S)
 
         U = U.contractWith(V,(1,),(0,))
 

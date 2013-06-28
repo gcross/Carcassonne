@@ -147,6 +147,7 @@ class RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(Co
     def converged(self):
         last = self.last
         current = self.current
+        print("est =",current)
         return last is not None and current is not None and (abs(current+last) < 1e-15 or abs(current-last)/abs(current+last)*2 < self.threshold)
     def reset(self):
         self.last = None
@@ -169,6 +170,7 @@ class RelativeExpectationDifferenceDifferenceThresholdConvergencePolicy(Converge
     def converged(self):
         last = self.last_difference
         current = self.current_difference
+        print("diff =",current)
         if last is not None and current is not None:
             absolute_difference = abs(current-last)
             relative_difference = absolute_difference/abs(current+last)*2
@@ -216,6 +218,7 @@ class RelativeStateDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{
     def converged(self):
         last = self.last
         current = self.current
+        print("state =",current)
         if last is not None and current is not None:
             magnitude = norm(current+last)
             relative_difference = norm(current-last)/magnitude*2

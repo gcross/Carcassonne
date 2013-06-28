@@ -6,6 +6,7 @@ from .base import *
 from ..tensors._1d import *
 from ..utils import buildProductTensor, computeCompressorForMatrixTimesItsDagger, computeLimitingLinearCoefficient, computeNewDimension, crand, dropAt, relaxOver, normalize, normalizeAndDenormalize
 # }}}
+from scipy.linalg import eigh
 
 # Classes {{{
 class System(BaseSystem): # {{{
@@ -122,7 +123,7 @@ class System(BaseSystem): # {{{
     def contractTowards(self,direction): # {{{
         tensor_to_contract, _, matrix_to_absorb = self.state_center_data.normalizeAxis(1-direction)
         self.contractUnnormalizedTowards(direction,tensor_to_contract)
-        self.setStateCenter(self.state_center_data.normalizeAxis(direction)[0].absorbMatrixAt(direction,matrix_to_absorb))
+        #self.setStateCenter(self.state_center_data.normalizeAxis(direction)[0].absorbMatrixAt(direction,matrix_to_absorb))
     # }}}
     def contractNormalizedTowards(self,direction,state_center_data=None): # {{{
         if state_center_data is None:
@@ -159,8 +160,18 @@ class System(BaseSystem): # {{{
         if direction != 0:
             raise ValueError("Direction for bandwidth increase must be 0, not {}.".format(direction))
         return self._increaseBandwidth(0,by,to,do_as_much_as_possible)
+        #x = self._increaseBandwidth(0,by,to,do_as_much_as_possible)
+        #print("post L=",self.left_environment)
+        #print("post R=",self.right_environment)
+        #return x
     # }}}
     def minimizeExpectation(self): # {{{
+        matrix = self.formExpectationMultiplier().formMatrix().toArray()
+        print("matrix =",matrix)
+        evals, evecs = eigh(matrix)
+        print("evals =",evals)
+        self.setStateCenter(NDArrayData(evecs[:,0].reshape(self.state_center_data.shape)))
+        return
         self.setStateCenter(relaxOver(
             initial=self.state_center_data,
             expectation_multiplier=self.formExpectationMultiplier(),

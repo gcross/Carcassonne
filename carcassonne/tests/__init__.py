@@ -143,4 +143,4 @@ class TestCase(unittest.TestCase): # {{{
 
 set_printoptions(linewidth=132)
 
-#displayLog()
+displayLog()

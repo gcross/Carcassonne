@@ -10,8 +10,8 @@ from ..system._1d import System
 # }}}
 
 class TestSimulator1D(TestCase): # {{{
-    @ with_checker(number_of_calls=10) # test_on_magnetic_field {{{
-    def test_on_magnetic_field(self):
+    @ with_checker(number_of_calls=10) # dont_test_on_magnetic_field {{{
+    def dont_test_on_magnetic_field(self):
         system = \
             System(
                 buildProductTensor([1,0]),
@@ -30,8 +30,8 @@ class TestSimulator1D(TestCase): # {{{
         system.runUntilConverged()
         self.assertAlmostEqual(abs(system.computeOneSiteExpectation()),1,places=5)
     # }}}
-    @ with_checker(number_of_calls=10) # test_on_ferromagnetic_coupling {{{
-    def test_on_ferromagnetic_coupling(self):
+    @ with_checker(number_of_calls=10) # dont_test_on_ferromagnetic_coupling {{{
+    def dont_test_on_ferromagnetic_coupling(self):
         system = \
             System(
                 [1,0,0],
@@ -51,7 +51,7 @@ class TestSimulator1D(TestCase): # {{{
         system.runUntilConverged()
         self.assertAlmostEqual(abs(system.computeOneSiteExpectation()),1,places=5)
     # }}}
-    def test_on_transverse_Ising(self): # {{{
+    def dont_test_on_transverse_Ising(self): # {{{
         system = \
             System(
                 [1,0,0],
@@ -72,7 +72,7 @@ class TestSimulator1D(TestCase): # {{{
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),1.0000250001562545,places=6)
     # }}}
-    def test_on_Haldane_Shastry(self): # {{{
+    def dont_test_on_Haldane_Shastry(self): # {{{
         # n = 6, cutoff = 1000
         # a = array([ 4.82625404e-01, 3.63171856e-01, 2.56789132e-02, 1.92857348e-04, 1.25118032e-01, 3.21293315e-03])
         # b = array([ 0.05930634, 0.3228463, 0.84625552, 0.99028958, 0.63260458, 0.9513444 ])
@@ -93,9 +93,9 @@ class TestSimulator1D(TestCase): # {{{
         matrix[l,l] = Pauli.I
         matrix[r,r] = Pauli.I
         for i in range(n):
-            matrix[l,0*n+i] = a[i]*Pauli.X
-            matrix[l,1*n+i] = a[i]*Pauli.Y
-            matrix[l,2*n+i] = a[i]*Pauli.Z
+            matrix[l,0*n+i] = -a[i]*Pauli.X
+            matrix[l,1*n+i] = -a[i]*Pauli.Y
+            matrix[l,2*n+i] = -a[i]*Pauli.Z
             matrix[0*n+i,0*n+i] = b[i]*Pauli.I
             matrix[1*n+i,1*n+i] = b[i]*Pauli.I
             matrix[2*n+i,2*n+i] = b[i]*Pauli.I
@@ -108,16 +108,19 @@ class TestSimulator1D(TestCase): # {{{
                 [0]*(3*n)+[1,0],
                 [0]*(3*n)+[0,1],
                 buildTensor((3*n+2,3*n+2,2,2),matrix),
-                ones((1,1,2)),
+                crand(1,1,2),
             )
-        system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
-        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
+        system.setPolicy("sweep convergence",RelativeExpectationDifferenceDifferenceThresholdConvergencePolicy(1e-4))
+        #system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
+        #system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-2))
+        system.setPolicy("run convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(0,1e-3))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0,1))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
         system.runUntilConverged()
-        self.assertAlmostEqual(system.computeOneSiteExpectation(),pi*pi/6,places=2)
+        print("final exp=",system.computeOneSiteExpectation(),pi*pi/6)
+        self.assertAlmostEqual(system.computeOneSiteExpectation(),pi*pi/6,places=3)
     # }}}
-    def test_on_XY(self): # {{{
+    def dont_test_on_XY(self): # {{{
         system = \
             System(
                 [1,0,0,0],
@@ -132,11 +135,35 @@ class TestSimulator1D(TestCase): # {{{
                 }),
                 ones((1,1,2)),
             )
-        system.setPolicy("sweep convergence",RelativeExpectationDifferenceDifferenceThresholdConvergencePolicy(1e-5))
+        system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
         system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-2))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0,2))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),1.27,places=2)
+    # }}}
+    def test_on_XYZ(self): # {{{
+        system = \
+            System(
+                [1,0,0,0,0],
+                [0,0,0,0,1],
+                buildTensor((5,5,2,2),{
+                    (0,0): Pauli.I,
+                    (0,1): Pauli.X,
+                    (0,2): Pauli.Y,
+                    (0,3): Pauli.Z,
+                    (1,4): -Pauli.X,
+                    (2,4): -Pauli.Y,
+                    (3,4): -Pauli.Z,
+                    (4,4): Pauli.I,
+                }),
+                ones((1,1,2)),
+            )
+        system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
+        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-2))
+        system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0,2))
+        system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
+        system.runUntilConverged()
+        self.assertAlmostEqual(system.computeOneSiteExpectation(),2.12,places=2)
     # }}}
 # }}}
