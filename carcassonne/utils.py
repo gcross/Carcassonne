@@ -330,7 +330,7 @@ def computeLengthAndCheckForGaps(indices,error_message): # {{{
         raise ValueError(error_message + ": " + str(unobserved_indices))
     return length
 # }}}
-def computeLimitingLinearCoefficient(n,multiplyO,multiplyN,multiplyL,multiplyR): # {{{
+def computeAbsoluteLimitingLinearCoefficient(n,multiplyO,multiplyN,multiplyL,multiplyR): # {{{
     if True: # n <= 3:
         matrix = []
         for i in range(n):
@@ -915,7 +915,7 @@ __all__ = [
     "computeAndCheckNewDimension",
     "computeCompressor",
     "computeCompressorForMatrixTimesItsDagger",
-    "computeLimitingLinearCoefficient",
+    "computeAbsoluteLimitingLinearCoefficient",
     "computeNewDimension",
     "computeNormalizerAndInverse",
     "crand",

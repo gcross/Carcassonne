@@ -4,7 +4,7 @@ from scipy.linalg import svd
 
 from .base import *
 from ..tensors._1d import *
-from ..utils import buildProductTensor, computeCompressorForMatrixTimesItsDagger, computeLimitingLinearCoefficient, computeNewDimension, crand, dropAt, relaxOver, normalize, normalizeAndDenormalize
+from ..utils import buildProductTensor, computeCompressorForMatrixTimesItsDagger, computeAbsoluteLimitingLinearCoefficient, computeNewDimension, crand, dropAt, relaxOver, normalize, normalizeAndDenormalize
 # }}}
 
 # Classes {{{
@@ -59,7 +59,7 @@ class System(BaseSystem): # {{{
         normalized_state_center_data = self.state_center_data.normalizeAxis(1)[0]
         normalized_state_center_data_conj = normalized_state_center_data.conj()
         return \
-            computeLimitingLinearCoefficient(
+            computeAbsoluteLimitingLinearCoefficient(
                 prod(right_O_environment_shape),
                 lambda v: \
                     absorbCenterOSSIntoRightEnvironment(
