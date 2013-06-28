@@ -122,7 +122,7 @@ class System(BaseSystem): # {{{
     def contractTowards(self,direction): # {{{
         tensor_to_contract, _, matrix_to_absorb = self.state_center_data.normalizeAxis(1-direction)
         self.contractUnnormalizedTowards(direction,tensor_to_contract)
-        self.setStateCenter(self.state_center_data.normalizeAxis(direction)[0].absorbMatrixAt(direction,matrix_to_absorb.transpose()))
+        self.setStateCenter(self.state_center_data.normalizeAxis(direction)[0].absorbMatrixAt(direction,matrix_to_absorb))
     # }}}
     def contractNormalizedTowards(self,direction,state_center_data=None): # {{{
         if state_center_data is None:
