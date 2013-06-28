@@ -112,7 +112,7 @@ class TestSimulator1D(TestCase): # {{{
             )
         system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
         system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
-        system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0,10))
+        system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0,1))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),pi*pi/6,places=2)
