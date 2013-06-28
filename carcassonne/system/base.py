@@ -47,6 +47,7 @@ class BaseSystem: # {{{
             "operator compression",
             "run convergence",
             "post-contraction hook",
+            "pre-optimization hook",
             "post-optimization hook",
             "state compression",
             "sweep convergence",
@@ -80,7 +81,9 @@ class BaseSystem: # {{{
         self._resetPolicy("sweep convergence")
         self.iteration_number_for_sweep = 1
         log.info("Iteration #{} of sweep #{}".format(self.iteration_number_for_sweep,sweep_number))
+        self._applyPolicy("pre-optimization hook",optional=True)
         self.minimizeExpectation()
+        self._applyPolicy("post-optimization hook",optional=True)
         self._updatePolicy("sweep convergence")
         while not self._hasConverged("sweep convergence"):
             self._applyPolicy("contraction")
@@ -90,6 +93,7 @@ class BaseSystem: # {{{
             self.number_of_iterations += 1
             log.info("Iteration #{} of sweep #{}".format(self.iteration_number_for_sweep,sweep_number))
             try:
+                self._applyPolicy("pre-optimization hook",optional=True)
                 self.minimizeExpectation()
                 self._applyPolicy("post-optimization hook",optional=True)
                 self._updatePolicy("sweep convergence")
