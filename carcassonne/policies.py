@@ -159,6 +159,32 @@ class RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(Co
         exp2 = self.system.computeExpectation()
         self.current = exp2-exp1
 # }}}
+class RelativeExpectationDifferenceDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{{
+    def __init__(self,threshold):
+        self.threshold = threshold
+        self.last_value = None
+        self.last_difference = None
+        self.current_value = None
+        self.current_difference = None
+    def converged(self):
+        last = self.last_difference
+        current = self.current_difference
+        if last is not None and current is not None:
+            absolute_difference = abs(current-last)
+            relative_difference = absolute_difference/abs(current+last)*2
+            return absolute_difference < 1e-15 or relative_difference < self.threshold
+    def reset(self):
+        self.last_value = None
+        self.last_difference = None
+        self.current_value = None
+        self.current_difference = None
+    def update(self):
+        self.last_value = self.current_value
+        self.last_difference = self.current_difference
+        self.current_value = self.system.computeExpectation()
+        if self.last_value is not None:
+            self.current_difference = self.current_value-self.last_value
+# }}}
 class RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{{
     def __init__(self,threshold):
         self.threshold = threshold
@@ -240,6 +266,7 @@ __all__ = [
     "ConvergencePolicy",
     "PeriodicyThresholdConvergencePolicy",
     "RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy",
+    "RelativeExpectationDifferenceDifferenceThresholdConvergencePolicy",
     "RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy",
     "RelativeStateDifferenceThresholdConvergencePolicy",
 
