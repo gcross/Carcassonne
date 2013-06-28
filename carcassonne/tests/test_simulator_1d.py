@@ -38,14 +38,14 @@ class TestSimulator1D(TestCase): # {{{
                 [0,0,1],
                 buildTensor((3,3,2,2),{
                     (0,0): Pauli.I,
-                    (0,1): Pauli.Z,
+                    (0,1): -Pauli.Z,
                     (1,2): Pauli.Z,
                     (2,2): Pauli.I,
                 }),
                 ones((1,1,2)),
             )
-        system.setPolicy("sweep convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
-        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
+        system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
+        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-5))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
         system.runUntilConverged()
