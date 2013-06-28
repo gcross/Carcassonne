@@ -272,22 +272,7 @@ class NDArrayData(Data): # {{{
         del svd_axes_to_merge[axis]
         U, S, V = self.join(svd_axes_to_merge,axis).svd(full_matrices=False)
 
-        # Generate noise --- for testing purposes
-        #for i in range(U.shape[1]):
-        #    phase = crand(1)[0]
-        #    phase /= abs(phase)
-        #    U._arr[:,i] *= phase
-        #    V._arr[i,:] /= phase
-
-        for i in range(U.shape[1]):
-            j = 0
-            while abs(V._arr[i,j]) < 1e-13:
-                j += 1
-            assert abs(V._arr[i,j]) > 1e-13
-            phase = V._arr[i,j]
-            phase /= abs(phase)
-            U._arr[:,i] *= phase
-            V._arr[i,:] /= phase
+        U = U.contractWith(V,(1,),(0,))
 
         U_split = list(self.shape)
         del U_split[axis]
@@ -309,7 +294,7 @@ class NDArrayData(Data): # {{{
             SI = SI.sqrt()
             return (V*SI).conj(), V*S
         else:
-            return U.split(*U_split).join(*U_join), (V*SI).conj(), V*S
+            return U.split(*U_split).join(*U_join), V.transpose().contractWith((V*SI).conj(),(1,),(0,)), V.transpose().conj().contractWith(V*S,(1,),(0,))
     # }}}
     def normalizeAxisAndDenormalize(self,axis_to_norm,axis_to_denorm,data_to_denormalize=None,sqrt_svals=False,dont_recip_under=1e-14): # {{{
         if data_to_denormalize is None:
