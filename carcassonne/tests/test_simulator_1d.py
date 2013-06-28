@@ -117,4 +117,26 @@ class TestSimulator1D(TestCase): # {{{
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),pi*pi/6,places=2)
     # }}}
+    def test_on_XY(self): # {{{
+        system = \
+            System(
+                [1,0,0,0],
+                [0,0,0,1],
+                buildTensor((4,4,2,2),{
+                    (0,0): Pauli.I,
+                    (0,1): Pauli.X,
+                    (0,2): Pauli.Z,
+                    (1,3): -Pauli.X,
+                    (2,3): -Pauli.Z,
+                    (3,3): Pauli.I,
+                }),
+                ones((1,1,2)),
+            )
+        system.setPolicy("sweep convergence",RelativeExpectationDifferenceDifferenceThresholdConvergencePolicy(1e-5))
+        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-2))
+        system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0,2))
+        system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
+        system.runUntilConverged()
+        self.assertAlmostEqual(system.computeOneSiteExpectation(),1.27,places=2)
+    # }}}
 # }}}
