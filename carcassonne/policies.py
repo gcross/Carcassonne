@@ -25,7 +25,7 @@ class Proxy: # {{{
 # }}}
 # }}}
 
-# Simply proxies # {{{{
+# Simple proxies {{{
 class ApplyProxy(Proxy): # {{{
     def apply(self):
         return type(self.forward).apply(self)
