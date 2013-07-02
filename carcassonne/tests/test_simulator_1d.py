@@ -19,16 +19,16 @@ class TestSimulator1D(TestCase): # {{{
                 buildTensor((2,2,2,2),{
                    (0,0): Pauli.I,
                    (1,1): Pauli.I,
-                   (0,1): Pauli.Z,
+                   (0,1): -Pauli.Z,
                 }),
                 ones((1,1,2)),
             )
         system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
-        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
+        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-2))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
         system.runUntilConverged()
-        self.assertAlmostEqual(abs(system.computeOneSiteExpectation()),1,places=5)
+        self.assertAlmostEqual(abs(system.computeOneSiteExpectation()),1,places=2)
     # }}}
     @ with_checker(number_of_calls=10) # test_on_ferromagnetic_coupling {{{
     def test_on_ferromagnetic_coupling(self):
@@ -45,11 +45,11 @@ class TestSimulator1D(TestCase): # {{{
                 ones((1,1,2)),
             )
         system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
-        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-5))
+        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-2))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
         system.runUntilConverged()
-        self.assertAlmostEqual(abs(system.computeOneSiteExpectation()),1,places=5)
+        self.assertAlmostEqual(abs(system.computeOneSiteExpectation()),1,places=2)
     # }}}
     def test_on_transverse_Ising(self): # {{{
         system = \
@@ -136,7 +136,7 @@ class TestSimulator1D(TestCase): # {{{
                 }),
                 ones((1,1,2)),
             )
-        system.setPolicy("sweep convergence",RelativeExpectationDifferenceDifferenceThresholdConvergencePolicy(1e-5))
+        system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
         system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-2))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0,2))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
