@@ -112,14 +112,14 @@ class TestSimulator1D(TestCase): # {{{
                 [0]*(3*n)+[1,0],
                 [0]*(3*n)+[0,1],
                 buildTensor((3*n+2,3*n+2,2,2),matrix),
-                ones((1,1,2)),
+                crand(1,1,2),
             )
         system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
-        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
+        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-2))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0,1))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
         system.runUntilConverged()
-        self.assertAlmostEqual(system.computeOneSiteExpectation(),pi*pi/6,places=2)
+        self.assertAlmostEqual(system.computeOneSiteExpectation(),pi*pi/6,places=3)
     # }}}
     def test_on_XY(self): # {{{
         system = \
