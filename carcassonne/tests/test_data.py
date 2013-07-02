@@ -1,9 +1,11 @@
 # Imports {{{
+from numpy import prod
 from scipy.linalg import eigh, eigvalsh
 from scipy.sparse.linalg import eigs, eigsh
 
 from . import *
 from ..data import *
+from ..utils import dropAt, replaceAt
 # }}}
 
 class TestNDArrayData(TestCase): # {{{
@@ -98,6 +100,7 @@ class TestNDArrayData(TestCase): # {{{
         shape = (irange(1,5),)*5,
         axis = irange(0,4),
     ):
+        shape = replaceAt(shape,axis,min(shape[axis],prod(dropAt(shape,axis))))
         data = NDArrayData.newRandom(*shape)
         normalizer, denormalizer = data.normalizeAxis(axis,True)
         self.assertDataAlmostEqual(
@@ -110,6 +113,7 @@ class TestNDArrayData(TestCase): # {{{
         shape = (irange(1,5),)*5,
         axis = irange(0,4),
     ):
+        shape = replaceAt(shape,axis,min(shape[axis],prod(dropAt(shape,axis))))
         data = NDArrayData.newRandom(*shape)
         data_normalized, normalizer, denormalizer = data.normalizeAxis(axis)
         self.assertDataAlmostEqual(
