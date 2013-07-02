@@ -270,7 +270,10 @@ class NDArrayData(Data): # {{{
                 return NDArrayData(self._arr/n), NDArrayData(array([[1/n]])), NDArrayData(array([[n]]))
         svd_axes_to_merge = list(range(self.ndim))
         del svd_axes_to_merge[axis]
-        U, S, V = self.join(svd_axes_to_merge,axis).svd(full_matrices=False)
+        M = self.join(svd_axes_to_merge,axis)
+        if M.shape[0] < M.shape[1]:
+            raise ValueError("the total number of degrees of freedom in all other axes ({}) are not enough to normalize axis ({}) with dimension ({})".format(M.shape[0],axis,M.shape[1]))
+        U, S, V = M.svd(full_matrices=False)
 
         U = U.contractWith(V,(1,),(0,))
 
