@@ -36,6 +36,17 @@ absorbCenterOSSIntoRightEnvironment = formDataContractor(
         [(3,1)],
     ]
 ) # }}}
+# def absorbCenterSSIntoLeftEnvironment(L,S,S*) {{{
+absorbCenterSSIntoLeftEnvironment = formDataContractor(
+    [
+        Join(0,0,1,1),
+        Join(0,1,2,1),
+        Join(1,2,2,2),
+    ],[
+        [(1,0)],
+        [(2,0)],
+    ]
+) # }}}
 # def absorbCenterSSIntoRightEnvironment(R,S,S*) {{{
 absorbCenterSSIntoRightEnvironment = formDataContractor(
     [
