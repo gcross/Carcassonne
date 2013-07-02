@@ -1,7 +1,7 @@
 # Imports {{{
 from copy import copy
 from numpy import array, complex128, conj, dot, identity, multiply, sqrt, tensordot, zeros
-from scipy.linalg import svd
+from scipy.linalg import eigh, svd
 
 from .base import *
 from ..tensors._1d import *
@@ -174,6 +174,11 @@ class System(BaseSystem): # {{{
             expectation_multiplier=self.formExpectationMultiplier(),
             maximum_number_of_multiplications=100
         ))
+    # }}}
+    def minimizeExpectationUsingFullEigensolver(self): # {{{
+        matrix = self.formExpectationMultiplier().formMatrix().toArray()
+        evals, evecs = eigh(matrix)
+        self.setStateCenter(NDArrayData(evecs[:,0].reshape(self.state_center_data.shape)))
     # }}}
     def setStateCenter(self,state_center_data,state_center_data_conj=None): # {{{
         self.state_center_data = state_center_data
