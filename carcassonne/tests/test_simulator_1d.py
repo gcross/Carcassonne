@@ -31,7 +31,7 @@ class TestSimulator1D(TestCase): # {{{
         self.assertAlmostEqual(abs(system.computeEstimatedOneSiteExpectation(0)),1,places=2)
     # }}}
     @ with_checker(number_of_calls=10) # test_on_ferromagnetic_coupling {{{
-    def test_on_ferromagnetic_coupling(self):
+    def dont_test_on_ferromagnetic_coupling(self):
         system = \
             System(
                 [1,0,0],
