@@ -1,5 +1,4 @@
 # Imports {{{
-from copy import copy
 from numpy.linalg import norm
 from .utils import O
 # }}}
@@ -153,11 +152,7 @@ class RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(Co
         self.current = None
     def update(self):
         self.last = self.current
-        self.system = copy(self.system)
-        exp1 = self.system.computeExpectation()
-        self.system.contractTowards(self.direction)
-        exp2 = self.system.computeExpectation()
-        self.current = exp2-exp1
+        self.current = self.system.computeEstimatedOneSiteExpectation(self.direction)
 # }}}
 class RelativeExpectationDifferenceDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{{
     def __init__(self,threshold):

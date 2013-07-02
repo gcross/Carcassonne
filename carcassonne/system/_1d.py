@@ -1,4 +1,5 @@
 # Imports {{{
+from copy import copy
 from numpy import array, complex128, conj, dot, identity, multiply, sqrt, tensordot, zeros
 from scipy.linalg import svd
 
@@ -85,6 +86,13 @@ class System(BaseSystem): # {{{
                         NDArrayData(vs.reshape((vs.shape[0],) + right_O_environment_shape)), (0,), (1,)
                     ).join(0,(1,2)).toArray(),
             )
+    # }}}
+    def computeEstimatedOneSiteExpectation(self,direction=0): # {{{
+        system = copy(self)
+        exp1 = system.computeExpectation()
+        system.contractTowards(direction)
+        exp2 = system.computeExpectation()
+        return exp2-exp1
     # }}}
     def computeScalarUsingMultiplier(self,multiply): # {{{
         return self.state_center_data_conj.ravel().contractWith(multiply(self.state_center_data).ravel(),(0,),(0,)).extractScalar()

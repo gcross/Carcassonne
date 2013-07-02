@@ -1,4 +1,6 @@
 # Imports {{{
+from copy import copy
+
 from ..data import NDArrayData
 from ..utils import O, RelaxFailed, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt
 # }}}
@@ -52,6 +54,13 @@ class BaseSystem: # {{{
             "state compression",
             "sweep convergence",
         ]}
+    # }}}
+    def computeEstimatedOneSiteExpectation(self,direction=0): # {{{
+        system = copy(self)
+        exp1 = system.computeExpectation()
+        system.contractTowards(direction)
+        exp2 = system.computeExpectation()
+        return exp2-exp1
     # }}}
     def runUntilConverged(self): # {{{
         log.info("Beginning run.")
