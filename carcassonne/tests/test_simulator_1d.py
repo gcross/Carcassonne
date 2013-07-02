@@ -24,11 +24,11 @@ class TestSimulator1D(TestCase): # {{{
                 ones((1,1,2)),
             )
         system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
-        system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-2))
+        system.setPolicy("run convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(0,1e-2))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
         system.runUntilConverged()
-        self.assertAlmostEqual(abs(system.computeOneSiteExpectation()),1,places=2)
+        self.assertAlmostEqual(abs(system.computeEstimatedOneSiteExpectation(0)),1,places=2)
     # }}}
     @ with_checker(number_of_calls=10) # test_on_ferromagnetic_coupling {{{
     def test_on_ferromagnetic_coupling(self):
