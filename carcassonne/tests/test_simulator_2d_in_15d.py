@@ -19,7 +19,7 @@ class TestSimulator2Din15D(TestCase): # {{{
         system.setPolicy("bandwidth increase",AllDirectionsIncrementBandwidthIncreasePolicy())
         system.setPolicy("contraction",RepeatPatternContractionPolicy(range(4)))
         system.runUntilConverged()
-        self.assertAlmostEqual(system.computeOneSiteExpectation(),-1)
+        self.assertAlmostEqual(system.computeOneSiteExpectation(),-1,places=6)
     # }}}
     @ with_checker(number_of_calls=10) # test_on_ferromagnetic_coupling {{{
     def test_on_ferromagnetic_coupling(self,direction=choiceof((0,1))):
@@ -33,7 +33,7 @@ class TestSimulator2Din15D(TestCase): # {{{
         system.setPolicy("bandwidth increase",AllDirectionsIncrementBandwidthIncreasePolicy())
         system.setPolicy("contraction",RepeatPatternContractionPolicy(range(4)))
         system.runUntilConverged()
-        self.assertAlmostEqual(system.computeOneSiteExpectation(),-1)
+        self.assertAlmostEqual(system.computeOneSiteExpectation(),-1,places=6)
     # }}}
     @ with_checker(number_of_calls=5) # test_on_transverseIsing {{{
     def test_on_transverse_Ising(self,direction=choiceof((0,1))):
