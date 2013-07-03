@@ -14,7 +14,7 @@ class TestSimulator2Din15D(TestCase): # {{{
     def test_on_magnetic_field(self):
         system = System.newTrivialWithSimpleSparseOperator(O=NDArrayData.Z)
         system.setPolicy("state compression",ConstantStateCompressionPolicy(1))
-        system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
+        system.setPolicy("sweep convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
         system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
         system.setPolicy("bandwidth increase",AllDirectionsIncrementBandwidthIncreasePolicy())
         system.setPolicy("contraction",RepeatPatternContractionPolicy(range(4)))
