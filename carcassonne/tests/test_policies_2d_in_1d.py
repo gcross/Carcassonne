@@ -22,12 +22,12 @@ class TestConvergencePolicies1D(TestCase): # {{{
         self.assertAlmostEqual(system.computeOneSiteExpectation(),-1.0000250001562545)
     # }}}
     @ with_checker(number_of_calls=10) # test_estimated_one_site_expectation {{{
-    def test_estimated_one_site_expectation(self,direction=choiceof((0,1)),estimate_direction=choiceof((0,1,2,3))):
+    def test_estimated_one_site_expectation(self,direction=choiceof((0,1))):
         if direction == 0:
             system = System.newTrivialWithSimpleSparseOperator(O=-NDArrayData.Z,OO_LR=[NDArrayData.X,-0.01*NDArrayData.X])
         else:
             system = System.newTrivialWithSimpleSparseOperator(O=-NDArrayData.Z,OO_UD=[NDArrayData.X,-0.01*NDArrayData.X])
-        system.setPolicy("sweep convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(estimate_direction,1e-7))
+        system.setPolicy("sweep convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(direction,1e-7))
         system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(direction,2))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0+direction,2+direction]))
