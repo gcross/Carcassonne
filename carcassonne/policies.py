@@ -146,7 +146,12 @@ class RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(Co
     def converged(self):
         last = self.last
         current = self.current
-        return last is not None and current is not None and (abs(current+last) < 1e-15 or abs(current-last)/abs(current+last)*2 < self.threshold)
+        if last is not None and current is not None:
+            magnitude = abs(current+last)
+            absolute_difference = abs(current-last)
+            relative_difference = absolute_difference/abs(current+last)*2
+            log.debug("current estimated one site expectation = {}, absolute difference = {}, relative difference = {}, magnitude = {}".format(current,absolute_difference,relative_difference,magnitude))
+            return magnitude < 1e-15 or relative_difference < self.threshold
     def reset(self):
         self.last = None
         self.current = None
