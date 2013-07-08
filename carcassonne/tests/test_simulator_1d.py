@@ -97,9 +97,9 @@ class TestSimulator1D(TestCase): # {{{
         matrix[l,l] = Pauli.I
         matrix[r,r] = Pauli.I
         for i in range(n):
-            matrix[l,0*n+i] = -a[i]*Pauli.X
-            matrix[l,1*n+i] = -a[i]*Pauli.Y
-            matrix[l,2*n+i] = -a[i]*Pauli.Z
+            matrix[l,0*n+i] = a[i]*Pauli.X
+            matrix[l,1*n+i] = a[i]*Pauli.Y
+            matrix[l,2*n+i] = a[i]*Pauli.Z
             matrix[0*n+i,0*n+i] = b[i]*Pauli.I
             matrix[1*n+i,1*n+i] = b[i]*Pauli.I
             matrix[2*n+i,2*n+i] = b[i]*Pauli.I
