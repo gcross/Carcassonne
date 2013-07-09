@@ -138,7 +138,7 @@ class PeriodicyThresholdConvergencePolicy(ConvergencePolicy): # {{{
         pass
 # }}}
 class RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{{
-    def __init__(self,direction,threshold):
+    def __init__(self,threshold,direction=0):
         self.direction = direction
         self.threshold = threshold
         self.last = None

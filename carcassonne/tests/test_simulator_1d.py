@@ -24,7 +24,7 @@ class TestSimulator1D(TestCase): # {{{
                 ones((1,1,2)),
             )
         system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
-        system.setPolicy("run convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(0,1e-2))
+        system.setPolicy("run convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-2))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
         system.runUntilConverged()
