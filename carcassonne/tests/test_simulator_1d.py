@@ -143,7 +143,7 @@ class TestSimulator1D(TestCase): # {{{
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),1.27,places=2)
     # }}}
-    def test_on_XYZ(self): # {{{
+    def test_on_Heisenberg_ferromagnet(self): # {{{
         system = \
             System(
                 [1,0,0,0,0],
