@@ -167,4 +167,31 @@ class TestSimulator1D(TestCase): # {{{
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),1,places=2)
     # }}}
+    def test_on_Heisenberg_antiferromagnet(self): # {{{
+        MPO_1_site = \
+            buildTensor((5,5,2,2),{
+                (0,0): Pauli.I,
+                (0,1): -Pauli.X/sqrt(2),
+                (0,2): -Pauli.Y/sqrt(2),
+                (0,3): Pauli.Z/sqrt(2),
+                (1,4): Pauli.X/sqrt(2),
+                (2,4): Pauli.Y/sqrt(2),
+                (3,4): Pauli.Z/sqrt(2),
+                (4,4): Pauli.I,
+            })
+        MPO_2_sites = tensordot(MPO_1_site,MPO_1_site,(1,0)).transpose(0,3,1,4,2,5).reshape(5,5,4,4)
+        system = \
+            System(
+                [1,0,0,0,0],
+                [0,0,0,0,1],
+                MPO_2_sites,
+                crand(1,1,4),
+            )
+        system.setPolicy("sweep convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-5))
+        system.setPolicy("run convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-4))
+        system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0,2))
+        system.setPolicy("contraction",RepeatPatternContractionPolicy([0,1]))
+        system.runUntilConverged()
+        self.assertAlmostEqual(system.computeEstimatedOneSiteExpectation()/4,-0.4431471805599,places=3)
+    # }}}
 # }}}
