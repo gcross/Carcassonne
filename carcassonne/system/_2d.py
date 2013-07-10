@@ -487,16 +487,13 @@ class System(BaseSystem): # {{{
         self.normalize()
     # }}}
     def minimizeExpectation(self): # {{{
-        if prod(self.state_center_data.shape[:4]) == 1:
-            self.minimizeExpectationUsingFullEigensolver()
-        else:
-            self.setStateCenter(
-                relaxOver(
-                    self.state_center_data,
-                    *self.formExpectationAndNormalizationMultipliers(),
-                    maximum_number_of_multiplications=100
-                )
+        self.setStateCenter(
+            relaxOver(
+                self.state_center_data,
+                *self.formExpectationAndNormalizationMultipliers(),
+                maximum_number_of_multiplications=100
             )
+        )
     # }}}
     def minimizeExpectationUsingFullEigensolver(self): # {{{
         matrix = self.formExpectationMultiplier().formMatrix().toArray()
