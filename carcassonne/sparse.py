@@ -62,6 +62,7 @@ class TwoSiteOperator: # {{{
     def __eq__(self,other): # {{{
         return (
             isinstance(other,TwoSiteOperator) and
+            other.id == self.id and
             other.direction == self.direction and
             other.position == self.position
         )
