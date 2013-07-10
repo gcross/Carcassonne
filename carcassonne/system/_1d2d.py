@@ -188,12 +188,13 @@ class System(BaseSystem): # {{{
         diff = norm(original-multiplied)/(norm(original)+norm(multiplied))*2
 
         if self.adaptive_state_threshold:
-            self.state_threshold = 1e-5/diff
+            original_threshold = self.state_threshold
+            self.state_threshold /= diff
         self._1d.minimizeExpectation()
         self._2d.minimizeExpectation()
         self.check("after minimizing")
         if self.adaptive_state_threshold:
-            self.state_threshold = 1e-5
+            self.state_threshold = original_threshold
 
         self.copy2Dto1D()
     # }}}
