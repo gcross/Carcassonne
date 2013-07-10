@@ -111,7 +111,7 @@ class BaseSystem: # {{{
     # }}}
   # }}}
   # Protected instance methods {{{
-    def _increaseBandwidth(self,axis,by=None,to=None,do_as_much_as_possible=False): # {{{
+    def _increaseBandwidth(self,axis,by=None,to=None,do_as_much_as_possible=False,enlargeners=None): # {{{
         state_center_data = self.state_center_data
         ndim = state_center_data.ndim
         if ndim == 5:
@@ -139,8 +139,10 @@ class BaseSystem: # {{{
         neighbor_0 = state_center_data.normalizeAxis(O_axis)[0]
         neighbor_1 = state_center_data.normalizeAxis(axis)[0]
 
-        enlargener_A, enlargener_B = state_center_data.newEnlargener(old_dimension,new_dimension)
-
+        if enlargeners is None:
+            enlargener_A, enlargener_B = state_center_data.newEnlargener(old_dimension,new_dimension)
+        else:
+            enlargener_A, enlargener_B = enlargeners
         state_center_data = state_center_data.absorbMatrixAt(axis,enlargener_A)
         neighbor_0 = neighbor_0.absorbMatrixAt(O_axis,enlargener_B)
         neighbor_0, state_center_data = neighbor_0.normalizeAxisAndDenormalize(O_axis,axis,state_center_data)
@@ -154,6 +156,7 @@ class BaseSystem: # {{{
         self.contractUnnormalizedTowards(O_axis,neighbor_1)
 
         self.just_increased_bandwidth = True
+        return enlargener_A, enlargener_B
     # }}}
   # }}}
 # }}}
