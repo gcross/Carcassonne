@@ -149,6 +149,10 @@ class System(BaseSystem): # {{{
     # }}}
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         self.check("before increasing bandwidth")
+        # NOTE: At this time we do not directly compare the result of increaseBandwidth()
+        #       because it uses a random matrix to enlarge the bandwidth dimension;
+        #       fortunately both 1D and 2D use mostly the same code so this hopefully won't
+        #       be a problem.
         #self._1d.increaseBandwidth(direction,by,to,do_as_much_as_possible)
         self._2d.increaseBandwidth(direction,by,to,do_as_much_as_possible)
         self.copy2Dto1D()
