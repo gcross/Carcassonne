@@ -124,9 +124,8 @@ class System(BaseSystem): # {{{
     # }}}
     def contractTowards(self,direction): # {{{
         self.check("before contraction, ")
-        #self._1d.contractTowards(direction)
+        self._1d.contractTowards(direction)
         self._2d.contractTowards(2*direction+self.rotation)
-        self.copy2Dto1D()
         self.check("after contraction, ")
     # }}}
     def convert2DLeftEnvironment(self): # {{{
