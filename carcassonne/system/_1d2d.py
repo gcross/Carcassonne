@@ -174,7 +174,7 @@ class System(BaseSystem): # {{{
         self.check("after minimizing")
         self.state_threshold = 1e-5
 
-        self._2d.setStateCenter(NDArrayData(self._1d.state_center_data.toArray().reshape(self._2d.state_center_data.shape)))
+        self.copy2Dto1D()
     # }}}
     state_center_data = property(lambda self: self.checkStates("when fetching state"))
 # }}}
