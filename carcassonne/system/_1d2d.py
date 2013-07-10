@@ -130,6 +130,15 @@ class System(BaseSystem): # {{{
         self._2d.contractTowards(2*direction+self.rotation)
         self.check("after contraction, ")
     # }}}
+    def convert1DEnvironment(self,boundary,tags): # {{{
+        return {tag: boundary[index].split(*((1,)*6+boundary[index].shape)) for index, tag in enumerate(tags)}
+    # }}}
+    def convert1DLeftEnvironment(self): # {{{
+        return self.convert1DEnvironment(self._1d.left_environment,self.left_tags)
+    # }}}
+    def convert1DRightEnvironment(self): # {{{
+        return self.convert1DEnvironment(self._1d.right_environment,self.right_tags)
+    # }}}
     def convert2DLeftEnvironment(self): # {{{
         bandwidth = self._2d.state_center_data.shape[self.rotation]
         _1d_left_environment = zeros((len(self.left_tags),) + (bandwidth,)*2,dtype=complex128)
@@ -143,6 +152,15 @@ class System(BaseSystem): # {{{
         for tag, value in self._2d.sides[self.rotation].items():
             _1d_right_environment[self.right_tags.index(tag)] = value.toArray().reshape(bandwidth,bandwidth)
         return NDArrayData(_1d_right_environment)
+    # }}}
+    def copy1Dto2D(self): # {{{
+        b, d = self._1d.state_center_data.shape[-2:]
+        if self.rotation == 0:
+            self._2d.setStateCenter(NDArrayData(self._1d.state_center_data.toArray().reshape(b,1,b,1,d)))
+        else:
+            self._2d.setStateCenter(NDArrayData(self._1d.state_center_data.toArray().reshape(1,b,1,b,d)))
+        self._2d.sides[self.rotation+2] = self.convert1DLeftEnvironment()
+        self._2d.sides[self.rotation+0] = self.convert1DRightEnvironment()
     # }}}
     def copy2Dto1D(self): # {{{
         self._1d.setStateCenter(self._2d.state_center_data.join((0,1),(2,3),4))
