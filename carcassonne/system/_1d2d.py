@@ -39,9 +39,9 @@ class System(BaseSystem): # {{{
             OO = NDArrayData(OO)
 
         if rotation == 0:
-            _2d_system = _2d.System.newTrivialWithSparseOperator(O=O,OO_LR=OO)
+            _2d_system = _2d.System.newTrivialWithSimpleSparseOperator(O=O,OO_LR=OO)
         elif rotation == 1:
-            _2d_system = _2d.System.newTrivialWithSparseOperator(O=O,OO_UD=OO)
+            _2d_system = _2d.System.newTrivialWithSimpleSparseOperator(O=O,OO_UD=OO)
         else:
             raise ValueError("rotation must be 0 or 1, not {}".format(rotation))
 
@@ -52,11 +52,12 @@ class System(BaseSystem): # {{{
         self.rotation = rotation
         self._1d = _1d
         self._2d = _2d
+        self.state_threshold = 1e-5
     # }}}
     def __copy__(self): # {{{
         return System(self.rotation,copy(self._1d),copy(self._2d))
     # }}}
-    def check(self,prefix): # {{{
+    def check(self,prefix,threshold=1e-5): # {{{
         self.checkStates(prefix)
         self.checkEnvironments(prefix)
         self.checkNormalization(prefix)
@@ -94,9 +95,19 @@ class System(BaseSystem): # {{{
     # }}}
     def checkStates(self,prefix): # {{{
         _1d = copy(self._1d.state_center_data.toArray()).real
+        for x in _1d.ravel():
+            if abs(x) > 1e-12:
+                _1d /= x
+                break
         _2d = copy(self._2d.state_center_data.toArray()).reshape(_1d.shape).real
-        if norm(_1d-_2d) > 1e-5:
-            raise Exception(prefix + ": for the center state, norm(_1d-_2d)={} > 1e-5".format(norm(_1d-_2d)))
+        for x in _2d.ravel():
+            if abs(x) > 1e-12:
+                _2d /= x
+                break
+        relative_norm = norm(_1d-_2d)/norm(abs(_1d)+abs(_2d))*2
+        if relative_norm > self.state_threshold:
+            raise Exception(prefix + ": for the center state, norm(_1d-_2d)={} > {}".format(relative_norm,self.state_threshold))
+        return self._1d.state_center_data
     # }}}
     def computeExpectation(self): #{{{
         self.check("while computing expectation")
@@ -119,7 +130,7 @@ class System(BaseSystem): # {{{
     def convert2DLeftEnvironment(self): # {{{
         slot_of = { 
             Identity(): 2,
-            TwoSiteOperator(2): 1,
+            TwoSiteOperator(0,2): 1,
             Complete(): 0,
         }
 
@@ -132,7 +143,7 @@ class System(BaseSystem): # {{{
     def convert2DRightEnvironment(self): # {{{
         slot_of = { 
             Identity(): 0,
-            TwoSiteOperator(2): 1,
+            TwoSiteOperator(0,2): 1,
             Complete(): 2,
         }
 
@@ -143,7 +154,7 @@ class System(BaseSystem): # {{{
         return NDArrayData(_1d_right_environment)
     # }}}
     def copy2Dto1D(self): # {{{
-        self._1d.setCenterState(self._2d.state_center_data.join((0,1),(2,3),4))
+        self._1d.setStateCenter(self._2d.state_center_data.join((0,1),(2,3),4))
         self._1d.left_environment = self.convert2DLeftEnvironment()
         self._1d.right_environment = self.convert2DRightEnvironment()
     # }}}
@@ -155,10 +166,27 @@ class System(BaseSystem): # {{{
         self.check("after increasing bandwidth")
     # }}}
     def minimizeExpectation(self): # {{{
-        self.check("before minimizing, ")
+        self.check("before minimizing")
+        self._2d.setStateCenter(NDArrayData(self._1d.state_center_data.toArray().reshape(self._2d.state_center_data.shape)))
+
+        original = self._1d.state_center_data.toArray().ravel()
+        for x in original:
+            if abs(x) > 1e-12:
+                original /= x
+        multiplied = self._1d.formExpectationMultiplier()(self._1d.state_center_data).toArray().ravel()
+        for x in multiplied:
+            if abs(x) > 1e-12:
+                multiplied /= x
+        diff = norm(original-multiplied)/(norm(original)+norm(multiplied))*2
+
+        self.state_threshold = 1e-5/diff
         self._1d.minimizeExpectation()
         self._2d.minimizeExpectation()
-        self.check("after minimizing, ")
+        self.check("after minimizing")
+        self.state_threshold = 1e-5
+
+        self._2d.setStateCenter(NDArrayData(self._1d.state_center_data.toArray().reshape(self._2d.state_center_data.shape)))
     # }}}
+    state_center_data = property(lambda self: self.checkStates("when fetching state"))
 # }}}
 # }}}
