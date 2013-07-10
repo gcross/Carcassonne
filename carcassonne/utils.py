@@ -845,6 +845,10 @@ def relaxOver(initial,expectation_multiplier,normalization_multiplier=None,maxim
         for i in range(0,dimension_of_krylov_space):
             multiplied_krylov_basis[i] = multiply(krylov_basis[i])
             if i < dimension_of_krylov_space-1:
+                # Note:  Subtracting and then normalizing is numerically unstable
+                #        when the vector is close to being an eigenvector
+                #        due to the loss of precision when taking the difference
+                #        between the original vector and the multiplied vector
                 krylov_basis[i+1] = multiplied_krylov_basis[i] - dot(dot(krylov_basis[:i+1].conj(),multiplied_krylov_basis[i]),krylov_basis[:i+1])
                 normalization = norm(krylov_basis[i+1])
                 if normalization <= 1e-14:
