@@ -2,7 +2,7 @@
 from collections import namedtuple
 from functools import partial
 
-from .utils import L,R,O
+from .utils import L,R,O, buildTensor
 # }}}
 
 # Base classes {{{
@@ -261,6 +261,29 @@ def getInformationFromOperatorCenter(operator_center): # {{{
     else:
         raise ValueError("operator tensor has no term from which to extract the physical dimension")
 # }}}
+def makeMPO(I,Os=[],OOs=[]): # {{{
+    size = 2 + len(OOs)
+    last = size - 1
+    components = {
+        (0,0): I,
+        (last,last): I,
+    }
+    for O in Os:
+        if (0,last) in components:
+            components[0,last] += O
+        else:
+            components[0,last] = O
+    for id, OO in enumerate(OOs):
+        components[0,id+1] = OO[1]
+        components[id+1,last] = OO[0]
+    return (
+        buildTensor((size,size,len(I),len(I)),components),
+        [1] + [0]*(size-1),
+        [Identity()] + [TwoSiteOperator(id,2) for id in range(len(OOs))] + [Complete()],
+        [0]*(size-1) + [1],
+        [Complete()] + [TwoSiteOperator(id,2) for id in range(len(OOs))] + [Identity()],
+    )
+# }}}
 def makeSimpleSparseOperator(O=None,OO_UD=None,OO_LR=None): # {{{
     return makeSparseOperator(
         [O] if O is not None else [],
@@ -335,6 +358,7 @@ __all__ = [
     "directSumSparse",
     "formSparseContractor",
     "getInformationFromOperatorCenter",
+    "makeMPO",
     "makeSimpleSparseOperator",
     "mapOverSparseData",
     "stripAllButIdentityFrom",

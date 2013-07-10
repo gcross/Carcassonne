@@ -6,7 +6,7 @@ from ..system._1d2d import System
 
 class TestSimulator1D2D(TestCase): # {{{
     def test_on_magnetic_field(self): # {{{
-        system = System.new(0,Pauli.Z)
+        system = System.newSimple(0,Pauli.Z)
         system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
         system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(0,2))
@@ -15,7 +15,7 @@ class TestSimulator1D2D(TestCase): # {{{
         self.assertAlmostEqual(abs(system.computeOneSiteExpectation()),1,places=5)
     # }}}
     def test_on_transverse_Ising(self): # {{{
-        system = System.new(0,Pauli.Z,(-0.01*Pauli.X,Pauli.X))
+        system = System.newSimple(0,Pauli.Z,(-0.01*Pauli.X,Pauli.X))
         system.checkEnvironments("preliminary check")
         system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-7))
         system.setPolicy("run convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))

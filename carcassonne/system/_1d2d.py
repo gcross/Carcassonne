@@ -6,42 +6,24 @@ from numpy.linalg import norm
 from . import _1d, _2d
 from .base import BaseSystem
 from ..data import NDArrayData
-from ..sparse import Identity, Complete, TwoSiteOperator 
+from ..sparse import Identity, Complete, TwoSiteOperator, makeMPO
 from ..utils import Pauli, buildProductTensor, buildTensor
 # }}}
 
 # Classes {{{
 class System(BaseSystem): # {{{
     @classmethod # new {{{
-    def new(cls,rotation,O=None,OO=None):
-        if OO is None and O is None:
-            raise ValueError("either O or OO must not be None")
-        if OO is None:
-            OO = (0*O,)*2
-        if O is None:
-            O = 0*OO[0]
-        _1d_system = _1d.System(
-            [1,0,0],
-            [0,0,1],
-            buildTensor((3,3,2,2),{
-                (0,0): Pauli.I,
-                (0,2): O,
-                (0,1): OO[1],
-                (1,2): OO[0],
-                (2,2): Pauli.I,
-            }),
-            ones((1,1,2),dtype=complex128)/sqrt(2),
-        )
+    def new(cls,rotation,Os=[],OOs=[]):
+        operator, right_operator_boundary, right_tags, left_operator_boundary, left_tags = makeMPO(Pauli.I,Os,OOs)
+        _1d_system = _1d.System(right_operator_boundary,left_operator_boundary,operator,ones((1,1,2),dtype=complex128)/sqrt(2))
 
-        if O is not None:
-            O = NDArrayData(O)
-        if OO is not None:
-            OO = NDArrayData(OO)
+        Os = map(NDArrayData,Os)
+        OOs = map(NDArrayData,OOs)
 
         if rotation == 0:
-            _2d_system = _2d.System.newTrivialWithSimpleSparseOperator(O=O,OO_LR=OO)
+            _2d_system = _2d.System.newTrivialWithSparseOperator(Os=Os,OO_LRs=OOs)
         elif rotation == 1:
-            _2d_system = _2d.System.newTrivialWithSimpleSparseOperator(O=O,OO_UD=OO)
+            _2d_system = _2d.System.newTrivialWithSparseOperator(Os=Os,OO_UDs=OOs)
         else:
             raise ValueError("rotation must be 0 or 1, not {}".format(rotation))
 
@@ -49,21 +31,33 @@ class System(BaseSystem): # {{{
             rotation,
             _1d_system,
             _2d_system,
-            [Complete(),TwoSiteOperator(0,2),Identity()],
-            [Identity(),TwoSiteOperator(0,2),Complete()],
+            right_tags,
+            left_tags,
         )
     # }}}
-    def __init__(self,rotation,_1d,_2d,left_tags,right_tags): # {{{
+    @classmethod # newSimple {{{
+    def newSimple(cls,rotation,O=None,OO=None):
+        if O is None:
+            Os = []
+        else:
+            Os = [O]
+        if OO is None:
+            OOs = []
+        else:
+            OOs = [OO]
+        return cls.new(rotation,Os,OOs)
+    # }}}
+    def __init__(self,rotation,_1d,_2d,right_tags,left_tags): # {{{
         BaseSystem.__init__(self)
         self.rotation = rotation
         self._1d = _1d
         self._2d = _2d
-        self.left_tags = left_tags
         self.right_tags = right_tags
+        self.left_tags = left_tags
         self.state_threshold = 1e-5
     # }}}
     def __copy__(self): # {{{
-        return System(self.rotation,copy(self._1d),copy(self._2d),self.left_tags,self.right_tags)
+        return System(self.rotation,copy(self._1d),copy(self._2d),self.right_tags,self.left_tags)
     # }}}
     def check(self,prefix,threshold=1e-5): # {{{
         self.checkStates(prefix)
@@ -137,14 +131,14 @@ class System(BaseSystem): # {{{
     # }}}
     def convert2DLeftEnvironment(self): # {{{
         bandwidth = self._2d.state_center_data.shape[self.rotation]
-        _1d_left_environment = zeros((3,) + (bandwidth,)*2,dtype=complex128)
+        _1d_left_environment = zeros((len(self.left_tags),) + (bandwidth,)*2,dtype=complex128)
         for tag, value in self._2d.sides[self.rotation+2].items():
             _1d_left_environment[self.left_tags.index(tag)] = value.toArray().reshape(bandwidth,bandwidth)
         return NDArrayData(_1d_left_environment)
     # }}}
     def convert2DRightEnvironment(self): # {{{
         bandwidth = self._2d.state_center_data.shape[self.rotation]
-        _1d_right_environment = zeros((3,) + (bandwidth,)*2,dtype=complex128)
+        _1d_right_environment = zeros((len(self.right_tags),) + (bandwidth,)*2,dtype=complex128)
         for tag, value in self._2d.sides[self.rotation].items():
             _1d_right_environment[self.right_tags.index(tag)] = value.toArray().reshape(bandwidth,bandwidth)
         return NDArrayData(_1d_right_environment)
