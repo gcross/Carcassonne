@@ -13,7 +13,7 @@ from ..utils import Pauli, buildProductTensor, buildTensor
 # Classes {{{
 class System(BaseSystem): # {{{
     @classmethod # new {{{
-    def new(cls,rotation,Os=[],OOs=[]):
+    def new(cls,rotation,Os=[],OOs=[],adaptive_state_threshold=False):
         operator, right_operator_boundary, right_tags, left_operator_boundary, left_tags = makeMPO(Pauli.I,Os,OOs)
         _1d_system = _1d.System(right_operator_boundary,left_operator_boundary,operator,ones((1,1,2),dtype=complex128)/sqrt(2))
 
@@ -33,10 +33,11 @@ class System(BaseSystem): # {{{
             _2d_system,
             right_tags,
             left_tags,
+            adaptive_state_threshold,
         )
     # }}}
     @classmethod # newSimple {{{
-    def newSimple(cls,rotation,O=None,OO=None):
+    def newSimple(cls,rotation,O=None,OO=None,adaptive_state_threshold=False):
         if O is None:
             Os = []
         else:
@@ -45,19 +46,20 @@ class System(BaseSystem): # {{{
             OOs = []
         else:
             OOs = [OO]
-        return cls.new(rotation,Os,OOs)
+        return cls.new(rotation,Os,OOs,adaptive_state_threshold)
     # }}}
-    def __init__(self,rotation,_1d,_2d,right_tags,left_tags): # {{{
+    def __init__(self,rotation,_1d,_2d,right_tags,left_tags,adaptive_state_threshold): # {{{
         BaseSystem.__init__(self)
         self.rotation = rotation
         self._1d = _1d
         self._2d = _2d
         self.right_tags = right_tags
         self.left_tags = left_tags
+        self.adaptive_state_threshold = adaptive_state_threshold
         self.state_threshold = 1e-5
     # }}}
     def __copy__(self): # {{{
-        return System(self.rotation,copy(self._1d),copy(self._2d),self.right_tags,self.left_tags)
+        return System(self.rotation,copy(self._1d),copy(self._2d),self.right_tags,self.left_tags,self.adaptive_state_threshold)
     # }}}
     def check(self,prefix,threshold=1e-5): # {{{
         self.checkStates(prefix)
@@ -172,11 +174,13 @@ class System(BaseSystem): # {{{
                 multiplied /= x
         diff = norm(original-multiplied)/(norm(original)+norm(multiplied))*2
 
-        self.state_threshold = 1e-5/diff
+        if self.adaptive_state_threshold:
+            self.state_threshold = 1e-5/diff
         self._1d.minimizeExpectation()
         self._2d.minimizeExpectation()
         self.check("after minimizing")
-        self.state_threshold = 1e-5
+        if self.adaptive_state_threshold:
+            self.state_threshold = 1e-5
 
         self.copy2Dto1D()
     # }}}
