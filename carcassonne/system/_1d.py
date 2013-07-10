@@ -169,11 +169,14 @@ class System(BaseSystem): # {{{
         return self._increaseBandwidth(0,by,to,do_as_much_as_possible)
     # }}}
     def minimizeExpectation(self): # {{{
-        self.setStateCenter(relaxOver(
-            initial=self.state_center_data,
-            expectation_multiplier=self.formExpectationMultiplier(),
-            maximum_number_of_multiplications=100
-        ))
+        if prod(self.state_center_data.shape[:2]) == 1:
+            self.minimizeExpectationUsingFullEigensolver()
+        else:
+            self.setStateCenter(relaxOver(
+                initial=self.state_center_data,
+                expectation_multiplier=self.formExpectationMultiplier(),
+                maximum_number_of_multiplications=100
+            ))
     # }}}
     def minimizeExpectationUsingFullEigensolver(self): # {{{
         matrix = self.formExpectationMultiplier().formMatrix().toArray()

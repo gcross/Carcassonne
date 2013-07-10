@@ -1,7 +1,8 @@
 # Imports {{{
 from copy import copy
 from numpy import array, complex128, dot, prod, sqrt, zeros
-from numpy.linalg import cond, eigh
+from numpy.linalg import cond
+from scipy.linalg import eigh
 from random import randint
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 
@@ -486,24 +487,21 @@ class System(BaseSystem): # {{{
         self.normalize()
     # }}}
     def minimizeExpectation(self): # {{{
-        state_center_data = self.state_center_data
-        if prod(state_center_data.shape[:4]) == 1:
-            N = state_center_data.shape[4]
-            operator = state_center_data.newZeros(shape=(N,N),dtype=state_center_data.dtype)
-            for tag, data in self.operator_center_tensor.items():
-                if isinstance(tag,OneSiteOperator):
-                    operator += data
-            evals, evecs = eigh(operator.toArray())
-            solutions = evecs.transpose().reshape((N,) + state_center_data.shape)
-            self.setStateCenter(type(state_center_data)(solutions[0]))
+        if prod(self.state_center_data.shape[:4]) == 1:
+            self.minimizeExpectationUsingFullEigensolver()
         else:
             self.setStateCenter(
                 relaxOver(
-                    state_center_data,
+                    self.state_center_data,
                     *self.formExpectationAndNormalizationMultipliers(),
                     maximum_number_of_multiplications=100
                 )
             )
+    # }}}
+    def minimizeExpectationUsingFullEigensolver(self): # {{{
+        matrix = self.formExpectationMultiplier().formMatrix().toArray()
+        evals, evecs = eigh(matrix,self.formNormalizationMultiplier().formMatrix().toArray())
+        self.setStateCenter(NDArrayData(evecs[:,0].reshape(self.state_center_data.shape)))
     # }}}
     def normalize(self): # {{{
         for corner_id in range(4):
