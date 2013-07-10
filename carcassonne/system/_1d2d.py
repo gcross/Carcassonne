@@ -45,17 +45,25 @@ class System(BaseSystem): # {{{
         else:
             raise ValueError("rotation must be 0 or 1, not {}".format(rotation))
 
-        return cls(rotation,_1d_system,_2d_system)
+        return cls(
+            rotation,
+            _1d_system,
+            _2d_system,
+            [Complete(),TwoSiteOperator(0,2),Identity()],
+            [Identity(),TwoSiteOperator(0,2),Complete()],
+        )
     # }}}
-    def __init__(self,rotation,_1d,_2d): # {{{
+    def __init__(self,rotation,_1d,_2d,left_tags,right_tags): # {{{
         BaseSystem.__init__(self)
         self.rotation = rotation
         self._1d = _1d
         self._2d = _2d
+        self.left_tags = left_tags
+        self.right_tags = right_tags
         self.state_threshold = 1e-5
     # }}}
     def __copy__(self): # {{{
-        return System(self.rotation,copy(self._1d),copy(self._2d))
+        return System(self.rotation,copy(self._1d),copy(self._2d),self.left_tags,self.right_tags)
     # }}}
     def check(self,prefix,threshold=1e-5): # {{{
         self.checkStates(prefix)
@@ -128,29 +136,17 @@ class System(BaseSystem): # {{{
         self.check("after contraction, ")
     # }}}
     def convert2DLeftEnvironment(self): # {{{
-        slot_of = { 
-            Identity(): 2,
-            TwoSiteOperator(0,2): 1,
-            Complete(): 0,
-        }
-
         bandwidth = self._2d.state_center_data.shape[self.rotation]
         _1d_left_environment = zeros((3,) + (bandwidth,)*2,dtype=complex128)
         for tag, value in self._2d.sides[self.rotation+2].items():
-            _1d_left_environment[slot_of[tag]] = value.toArray().reshape(bandwidth,bandwidth)
+            _1d_left_environment[self.left_tags.index(tag)] = value.toArray().reshape(bandwidth,bandwidth)
         return NDArrayData(_1d_left_environment)
     # }}}
     def convert2DRightEnvironment(self): # {{{
-        slot_of = { 
-            Identity(): 0,
-            TwoSiteOperator(0,2): 1,
-            Complete(): 2,
-        }
-
         bandwidth = self._2d.state_center_data.shape[self.rotation]
         _1d_right_environment = zeros((3,) + (bandwidth,)*2,dtype=complex128)
         for tag, value in self._2d.sides[self.rotation].items():
-            _1d_right_environment[slot_of[tag]] = value.toArray().reshape(bandwidth,bandwidth)
+            _1d_right_environment[self.right_tags.index(tag)] = value.toArray().reshape(bandwidth,bandwidth)
         return NDArrayData(_1d_right_environment)
     # }}}
     def copy2Dto1D(self): # {{{
