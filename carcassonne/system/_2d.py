@@ -8,7 +8,7 @@ from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 from .base import BaseSystem
 from ..compression import computeProductCompressor
 from ..data import NDArrayData
-from ..sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSimpleSparseOperator, mapOverSparseData, stripAllButIdentityFrom
+from ..sparse import Identity, OneSiteOperator, TwoSiteOperator, TwoSiteOperatorCompressed, directSumListsOfSparse, directSumSparse, makeSimpleSparseOperator, makeSparseOperator, mapOverSparseData, stripAllButIdentityFrom
 from ..tensors._2d.dense import formNormalizationMultiplier, formNormalizationSubmatrix
 from ..tensors._2d.sparse import absorbSparseSideIntoCornerFromLeft, absorbSparseSideIntoCornerFromRight, absorbSparseCenterSOSIntoSide, formExpectationAndNormalizationMultipliers
 from ..utils import InvariantViolatedError, Multiplier, computeCompressor, computeCompressorForMatrixTimesItsDagger, computeNewDimension, dropAt, relaxOver, L, O, R
