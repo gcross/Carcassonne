@@ -177,17 +177,16 @@ class System(BaseSystem): # {{{
         self.check("before minimizing")
         self._2d.setStateCenter(NDArrayData(self._1d.state_center_data.toArray().reshape(self._2d.state_center_data.shape)))
 
-        original = self._1d.state_center_data.toArray().ravel()
-        for x in original:
-            if abs(x) > 1e-12:
-                original /= x
-        multiplied = self._1d.formExpectationMultiplier()(self._1d.state_center_data).toArray().ravel()
-        for x in multiplied:
-            if abs(x) > 1e-12:
-                multiplied /= x
-        diff = norm(original-multiplied)/(norm(original)+norm(multiplied))*2
-
         if self.adaptive_state_threshold:
+            original = self._1d.state_center_data.toArray().ravel()
+            for x in original:
+                if abs(x) > 1e-12:
+                    original /= x
+            multiplied = self._1d.formExpectationMultiplier()(self._1d.state_center_data).toArray().ravel()
+            for x in multiplied:
+                if abs(x) > 1e-12:
+                    multiplied /= x
+            diff = norm(original-multiplied)/(norm(original)+norm(multiplied))*2
             original_threshold = self.state_threshold
             self.state_threshold /= diff
         self._1d.minimizeExpectation()
