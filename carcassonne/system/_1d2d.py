@@ -17,13 +17,13 @@ class System(BaseSystem): # {{{
         operator, right_operator_boundary, right_tags, left_operator_boundary, left_tags = makeMPO(Pauli.I,Os,OOs)
         _1d_system = _1d.System(right_operator_boundary,left_operator_boundary,operator,ones((1,1,2),dtype=complex128)/sqrt(2))
 
-        Os = map(NDArrayData,Os)
-        OOs = map(NDArrayData,OOs)
+        Os = tuple(map(NDArrayData,Os))
+        OOs = tuple(map(lambda OO: tuple(map(NDArrayData,OO)),OOs))
 
         if rotation == 0:
             _2d_system = _2d.System.newTrivialWithSparseOperator(Os=Os,OO_LRs=OOs)
         elif rotation == 1:
-            _2d_system = _2d.System.newTrivialWithSparseOperator(Os=Os,OO_UDs=OOs)
+            _2d_system = _2d.System.newTrivialWithSparseOperator(Os=Os,OO_UDs=tuple(map(lambda x: (x[1],x[0]),OOs)))
         else:
             raise ValueError("rotation must be 0 or 1, not {}".format(rotation))
 
