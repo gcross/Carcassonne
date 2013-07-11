@@ -111,11 +111,11 @@ class System(BaseSystem): # {{{
         relative_norm = norm(_1d-_2d)/norm(abs(_1d)+abs(_2d))*2
         if relative_norm > self.state_threshold:
             raise Exception(prefix + ": for the center state, norm(_1d-_2d)={} > {}".format(relative_norm,self.state_threshold))
-        return self._1d.state_center_data
+        return self._2d.state_center_data
     # }}}
     def computeExpectation(self): #{{{
         self.check("while computing expectation")
-        return self._1d.computeExpectation()
+        return self._2d.computeExpectation()
     # }}}
     def computeOneSiteExpectation(self): #{{{
         _1d = self._1d.computeOneSiteExpectation()
@@ -170,13 +170,13 @@ class System(BaseSystem): # {{{
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         self.check("before increasing bandwidth")
         assert direction == 0
-        enlargeners = self._1d.increaseBandwidth(0,by,to,do_as_much_as_possible)
-        self._2d.increaseBandwidth(self.rotation,by,to,do_as_much_as_possible,enlargeners=enlargeners)
+        enlargeners = self._2d.increaseBandwidth(self.rotation,by,to,do_as_much_as_possible)
+        self._1d.increaseBandwidth(0,by,to,do_as_much_as_possible,enlargeners=enlargeners)
         self.check("after increasing bandwidth")
     # }}}
     def minimizeExpectation(self): # {{{
         self.check("before minimizing")
-        self._2d.setStateCenter(NDArrayData(self._1d.state_center_data.toArray().reshape(self._2d.state_center_data.shape)))
+        self.copy2Dto1D()
 
         if self.adaptive_state_threshold:
             original = self._1d.state_center_data.toArray().ravel()
