@@ -15,7 +15,7 @@ class TestSimulator1D2D(TestCase): # {{{
         self.assertAlmostEqual(abs(system.computeOneSiteExpectation()),1,places=5)
     # }}}
     def test_on_transverse_Ising(self): # {{{
-        system = System.newSimple(0,Pauli.Z,(-0.01*Pauli.X,Pauli.X))
+        system = System.newSimple(0,Pauli.Z,(-0.01*Pauli.X,Pauli.X),adaptive_state_threshold=True)
         system.checkEnvironments("preliminary check")
         system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-7))
         system.setPolicy("run convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
