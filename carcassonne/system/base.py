@@ -112,6 +112,7 @@ class BaseSystem: # {{{
   # }}}
   # Protected instance methods {{{
     def _increaseBandwidth(self,axis,by=None,to=None,do_as_much_as_possible=False,enlargeners=None): # {{{
+        print("increasing in direction",axis)
         state_center_data = self.state_center_data
         ndim = state_center_data.ndim
         if ndim == 5:
@@ -137,19 +138,29 @@ class BaseSystem: # {{{
                 raise ValueError("New dimension must be less than the physical dimension times the old dimension ({} > {}*{}).".format(new_dimension,physical_dimension,old_dimension))
 
         neighbor_0 = state_center_data.normalizeAxis(O_axis)[0]
+        print("neighbor 0 @ 1 =",neighbor_0)
         neighbor_1 = state_center_data.normalizeAxis(axis)[0]
+        print("neighbor 1 @ 1 =",neighbor_1)
 
         if enlargeners is None:
             enlargener_A, enlargener_B = state_center_data.newEnlargener(old_dimension,new_dimension)
         else:
             enlargener_A, enlargener_B = enlargeners
+        print("state @ 1 =",state_center_data)
         state_center_data = state_center_data.absorbMatrixAt(axis,enlargener_A)
         neighbor_0 = neighbor_0.absorbMatrixAt(O_axis,enlargener_B)
+        print("state @ 2 =",state_center_data)
+        print("neighbor 0 @ 2 =",neighbor_0)
         neighbor_0, state_center_data = neighbor_0.normalizeAxisAndDenormalize(O_axis,axis,state_center_data)
+        print("neighbor 0 @ 3 =",neighbor_0)
+        print("state @ 3 =",state_center_data)
 
         neighbor_1 = neighbor_1.absorbMatrixAt(axis,enlargener_A)
+        print("neighbor 1 @ 2 =",neighbor_1)
         state_center_data = state_center_data.absorbMatrixAt(O_axis,enlargener_B)
         neighbor_1, state_center_data = neighbor_1.normalizeAxisAndDenormalize(axis,O_axis,state_center_data)
+        print("neighbor 1 @ 3 =",neighbor_1)
+        print("state @ 3 =",state_center_data)
 
         self.setStateCenter(state_center_data)
         self.contractUnnormalizedTowards(axis,neighbor_0)

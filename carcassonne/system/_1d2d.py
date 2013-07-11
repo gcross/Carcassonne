@@ -24,8 +24,9 @@ class System(BaseSystem): # {{{
             _2d_system = _2d.System.newTrivialWithSparseOperator(Os=Os,OO_LRs=OOs)
         elif rotation == 1:
             _2d_system = _2d.System.newTrivialWithSparseOperator(Os=Os,OO_UDs=tuple(map(lambda x: (x[1],x[0]),OOs)))
-        else:
-            raise ValueError("rotation must be 0 or 1, not {}".format(rotation))
+        elif rotation == 2:
+            _2d_system = _2d.System.newTrivialWithSparseOperator(Os=Os,OO_LRs=tuple(map(lambda x: (x[1],x[0]),OOs)))
+        elif rotation == 3:
 
         return cls(
             rotation,
@@ -71,10 +72,16 @@ class System(BaseSystem): # {{{
     def checkEnvironments(self,prefix): # {{{
         bandwidth = self._1d.state_center_data.shape[0]
         _1d_left_environment = self._1d.left_environment.toArray()
+        print("left 1d environment =",_1d_left_environment)
         _2d_left_environment = self.convert2DLeftEnvironment().toArray()
+        print("left 2d environment =",_2d_left_environment)
+        print("left diff =",_1d_left_environment-_2d_left_environment)
 
         _1d_right_environment = self._1d.right_environment.toArray()
+        print("right 1d environment =",_1d_right_environment)
         _2d_right_environment = self.convert2DRightEnvironment().toArray()
+        print("right 2d environment =",_2d_right_environment)
+        print("right diff =",_1d_right_environment-_2d_right_environment)
         if norm(_1d_right_environment-_2d_right_environment) > 1e-7:
             raise Exception(prefix + ": for the right environment, norm(_1d-_2d)={} > 1e-7".format(norm(_1d_right_environment-_2d_right_environment)))
 
@@ -89,7 +96,10 @@ class System(BaseSystem): # {{{
     # }}}
     def checkExpectationMatrix(self,prefix): # {{{
         _1d = self._1d.formExpectationMatrix().toArray()
-        _2d = self._2d.formExpectationMatrix().toArray().reshape(_1d.shape)
+        if self.rotation < 2:
+            _2d = self._2d.formExpectationMatrix().toArray()
+        else:
+            _2d = self._2d.formExpectationMatrix().toArray().reshape(self._1d.state_center_data.shape*2).transpose(1,0,2,4,3,5).reshape(_1d.shape)
         if norm(_1d-_2d) > 1e-7:
             raise Exception(prefix + ": for the expectation matrix, norm(1D 2D)={} > 1e-7".format(norm(_1d-_2d)))
     # }}}
@@ -100,14 +110,18 @@ class System(BaseSystem): # {{{
     def checkStates(self,prefix): # {{{
         _1d = copy(self._1d.state_center_data.toArray()).real
         for x in _1d.ravel():
-            if abs(x) > 1e-12:
+            if abs(x) > 1e-7:
                 _1d /= x
                 break
         _2d = copy(self._2d.state_center_data.toArray()).reshape(_1d.shape).real
+        if self.rotation >= 2:
+            _2d = _2d.transpose(1,0,2)
         for x in _2d.ravel():
-            if abs(x) > 1e-12:
+            if abs(x) > 1e-7:
                 _2d /= x
                 break
+        print("1d state =",_1d)
+        print("2d state =",_2d)
         relative_norm = norm(_1d-_2d)/norm(abs(_1d)+abs(_2d))*2
         if relative_norm > self.state_threshold:
             raise Exception(prefix + ": for the center state, norm(_1d-_2d)={} > {}".format(relative_norm,self.state_threshold))
@@ -125,10 +139,10 @@ class System(BaseSystem): # {{{
         return _2d
     # }}}
     def contractTowards(self,direction): # {{{
-        self.check("before contraction, ")
+        self.check("before contraction")
         self._1d.contractTowards(direction)
-        self._2d.contractTowards(2*direction+self.rotation)
-        self.check("after contraction, ")
+        self._2d.contractTowards((self.rotation+2*direction)%4)
+        self.check("after contraction")
     # }}}
     def convert1DEnvironment(self,boundary,tags): # {{{
         return {tag: boundary[index].split(*((1,)*6+boundary[index].shape)) for index, tag in enumerate(tags)}
@@ -142,7 +156,7 @@ class System(BaseSystem): # {{{
     def convert2DLeftEnvironment(self): # {{{
         bandwidth = self._2d.state_center_data.shape[self.rotation]
         _1d_left_environment = zeros((len(self.left_tags),) + (bandwidth,)*2,dtype=complex128)
-        for tag, value in self._2d.sides[self.rotation+2].items():
+        for tag, value in self._2d.sides[(self.rotation+2)%4].items():
             _1d_left_environment[self.left_tags.index(tag)] = value.toArray().reshape(bandwidth,bandwidth)
         return NDArrayData(_1d_left_environment)
     # }}}
@@ -157,13 +171,20 @@ class System(BaseSystem): # {{{
         b, d = self._1d.state_center_data.shape[-2:]
         if self.rotation == 0:
             self._2d.setStateCenter(NDArrayData(self._1d.state_center_data.toArray().reshape(b,1,b,1,d)))
-        else:
+        elif self.rotation == 1:
             self._2d.setStateCenter(NDArrayData(self._1d.state_center_data.toArray().reshape(1,b,1,b,d)))
-        self._2d.sides[self.rotation+2] = self.convert1DLeftEnvironment()
+        elif self.rotation == 2:
+            self._2d.setStateCenter(NDArrayData(self._1d.state_center_data.toArray().transpose(1,0,2).reshape(b,1,b,1,d)))
+        elif self.rotation == 3:
+            self._2d.setStateCenter(NDArrayData(self._1d.state_center_data.toArray().transpose(1,0,2).reshape(1,b,1,b,d)))
+        self._2d.sides[(self.rotation+2)%4] = self.convert1DLeftEnvironment()
         self._2d.sides[self.rotation+0] = self.convert1DRightEnvironment()
     # }}}
     def copy2Dto1D(self): # {{{
-        self._1d.setStateCenter(self._2d.state_center_data.join((0,1),(2,3),4))
+        if self.rotation < 2:
+            self._1d.setStateCenter(self._2d.state_center_data.join((0,1),(2,3),4))
+        else:
+            self._1d.setStateCenter(self._2d.state_center_data.join((2,3),(0,1),4))
         self._1d.left_environment = self.convert2DLeftEnvironment()
         self._1d.right_environment = self.convert2DRightEnvironment()
     # }}}
@@ -197,6 +218,7 @@ class System(BaseSystem): # {{{
             self.state_threshold = original_threshold
 
         self.copy2Dto1D()
+        self.check("after copying")
     # }}}
     state_center_data = property(lambda self: self.checkStates("when fetching state"))
 # }}}

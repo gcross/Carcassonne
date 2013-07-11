@@ -10,8 +10,8 @@ from ..system import System
 # }}}
 
 class TestSimulator1D(TestCase): # {{{
-    @ with_checker(number_of_calls=10) # test_on_magnetic_field {{{
-    def test_on_magnetic_field(self,direction=choiceof((0,1))):
+    @ with_checker(number_of_calls=10) # dont_test_on_magnetic_field {{{
+    def dont_test_on_magnetic_field(self,direction=choiceof((0,1))):
         system = System.newTrivialWithSimpleSparseOperator(O=NDArrayData.Z)
         system.setPolicy("sweep convergence",RelativeStateDifferenceThresholdConvergencePolicy(1e-5))
         system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
@@ -20,8 +20,8 @@ class TestSimulator1D(TestCase): # {{{
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),-1)
     # }}}
-    @ with_checker(number_of_calls=10) # test_on_ferromagnetic_coupling {{{
-    def test_on_ferromagnetic_coupling(self,direction=choiceof((0,1))):
+    @ with_checker(number_of_calls=10) # dont_test_on_ferromagnetic_coupling {{{
+    def dont_test_on_ferromagnetic_coupling(self,direction=choiceof((0,1))):
         if direction == 0:
             system = System.newTrivialWithSimpleSparseOperator(OO_LR=[NDArrayData.Z,-NDArrayData.Z])
         else:
@@ -33,8 +33,8 @@ class TestSimulator1D(TestCase): # {{{
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),-1)
     # }}}
-    @ with_checker(number_of_calls=10) # test_on_transverseIsing {{{
-    def test_on_transverse_Ising(self,direction=choiceof((0,1))):
+    @ with_checker(number_of_calls=10) # dont_test_on_transverseIsing {{{
+    def dont_test_on_transverse_Ising(self,direction=choiceof((0,1))):
         if direction == 0:
             system = System.newTrivialWithSimpleSparseOperator(O=-NDArrayData.Z,OO_LR=[NDArrayData.X,-0.01*NDArrayData.X])
         else:

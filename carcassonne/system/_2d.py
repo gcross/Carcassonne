@@ -478,8 +478,8 @@ class System(BaseSystem): # {{{
         return formNormalizationSubmatrix(tuple(corner[Identity()] for corner in self.corners),tuple(side[Identity()] for side in self.sides))
     # }}}
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False,enlargeners=None): # {{{
-        if direction not in (0,1):
-            raise ValueError("Direction for bandwidth increase must be either 0 (for horizontal axes) or 1 (for vertical axes), not {}.".format(direction))
+        if direction not in range(4):
+            raise ValueError("Direction for bandwidth increase must be either 0 or 2 (for horizontal axes) or 1 or 3 (for vertical axes), not {}.".format(direction))
         return self._increaseBandwidth(direction,by,to,do_as_much_as_possible,enlargeners)
     # }}}
     def increaseBandwidthAndThenNormalize(self,direction,by=None,to=None): # {{{
