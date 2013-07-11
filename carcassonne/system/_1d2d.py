@@ -169,8 +169,9 @@ class System(BaseSystem): # {{{
     # }}}
     def increaseBandwidth(self,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
         self.check("before increasing bandwidth")
-        enlargeners = self._1d.increaseBandwidth(direction,by,to,do_as_much_as_possible)
-        self._2d.increaseBandwidth(direction,by,to,do_as_much_as_possible,enlargeners=enlargeners)
+        assert direction == 0
+        enlargeners = self._1d.increaseBandwidth(0,by,to,do_as_much_as_possible)
+        self._2d.increaseBandwidth(self.rotation,by,to,do_as_much_as_possible,enlargeners=enlargeners)
         self.check("after increasing bandwidth")
     # }}}
     def minimizeExpectation(self): # {{{
