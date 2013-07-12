@@ -46,4 +46,17 @@ class TestSimulator1D(TestCase): # {{{
         system.runUntilConverged()
         self.assertAlmostEqual(system.computeOneSiteExpectation(),-1.0000250001562545)
     # }}}
+    def test_on_Heisenberg(self): # {{{
+        for direction in range(2):
+            if direction == 0:
+                system = System.newTrivialWithSparseOperator(OO_LRs=[(NDArrayData.X,-NDArrayData.X),(NDArrayData.Y,-NDArrayData.Y),(NDArrayData.Z,NDArrayData.Z)])
+            else:
+                system = System.newTrivialWithSparseOperator(OO_UDs=[(NDArrayData.X,-NDArrayData.X),(NDArrayData.Y,-NDArrayData.Y),(NDArrayData.Z,NDArrayData.Z)])
+            system.setPolicy("sweep convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-5,direction))
+            system.setPolicy("run convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-3,direction))
+            system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(direction,2))
+            system.setPolicy("contraction",RepeatPatternContractionPolicy([direction+2,direction+0]))
+            system.runUntilConverged()
+            self.assertAlmostEqual(system.computeEstimatedOneSiteExpectation(direction)/4,-0.4431471805599,places=3)
+    # }}}
 # }}}
