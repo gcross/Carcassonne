@@ -27,7 +27,7 @@ class TestConvergencePolicies1D(TestCase): # {{{
             system = System.newTrivialWithSimpleSparseOperator(O=-NDArrayData.Z,OO_LR=[NDArrayData.X,-0.01*NDArrayData.X])
         else:
             system = System.newTrivialWithSimpleSparseOperator(O=-NDArrayData.Z,OO_UD=[NDArrayData.X,-0.01*NDArrayData.X])
-        system.setPolicy("sweep convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(direction,1e-7))
+        system.setPolicy("sweep convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7,direction))
         system.setPolicy("run convergence",RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-7))
         system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(direction,2))
         system.setPolicy("contraction",RepeatPatternContractionPolicy([0+direction,2+direction]))
