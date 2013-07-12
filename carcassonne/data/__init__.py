@@ -359,7 +359,7 @@ class NDArrayData(Data): # {{{
   # Constants {{{
 NDArrayData.I = NDArrayData(array([[1,0],[0,1]],dtype=complex128))
 NDArrayData.X = NDArrayData(array([[0,1],[1,0]],dtype=complex128))
-NDArrayData.Y = NDArrayData(array([[0,1j],[1j,0]],dtype=complex128))
+NDArrayData.Y = NDArrayData(array([[0,-1j],[1j,0]],dtype=complex128))
 NDArrayData.Z = NDArrayData(array([[1,0],[0,-1]],dtype=complex128))
   # }}}
 # }}}
