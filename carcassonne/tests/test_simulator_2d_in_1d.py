@@ -53,7 +53,7 @@ class TestSimulator1D(TestCase): # {{{
             else:
                 system = System.newTrivialWithSparseOperator(OO_UDs=[(NDArrayData.X,-NDArrayData.X),(NDArrayData.Y,-NDArrayData.Y),(NDArrayData.Z,NDArrayData.Z)])
             system.setPolicy("sweep convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-5,direction))
-            system.setPolicy("run convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-3,direction))
+            system.setPolicy("run convergence",RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(1e-4,direction))
             system.setPolicy("bandwidth increase",OneDirectionIncrementBandwidthIncreasePolicy(direction,2))
             system.setPolicy("contraction",RepeatPatternContractionPolicy([direction+2,direction+0]))
             system.runUntilConverged()
