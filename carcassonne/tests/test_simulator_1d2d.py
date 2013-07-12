@@ -4,7 +4,7 @@ from ..policies import *
 from ..system._1d2d import System
 # }}}
 
-class TestSimulator1D2D(TestCase): # {{{
+class TestSimulator1D2D(): # {{{
     def test_on_magnetic_field(self): # {{{
         for direction in range(2):
             system = System.newSimple(direction,Pauli.Z)
