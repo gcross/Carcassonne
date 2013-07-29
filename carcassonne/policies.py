@@ -81,10 +81,14 @@ class ConstantStateCompressionPolicy(CompressionPolicy): # {{{
     def __init__(self,new_dimension):
         self.new_dimension = new_dimension
     def apply(self):
+        print()
+        print("Pre N =",self.system.computeNormalization())
         log.debug("Compressing to " + str(self.new_dimension))
         for corner_id in range(4):
             for direction in range(2):
+                print("    after compressing {}, N = {}".format((corner_id,direction),self.system.computeNormalization()))
                 self.system.compressCornerStateTowards(corner_id,direction,self.new_dimension)
+        print("Post N =",self.system.computeNormalization())
 # }}}
 # }}}
 

@@ -394,6 +394,7 @@ class System(BaseSystem): # {{{
         return cond(self.formNormalizationMatrix().toArray())
     # }}}
     def computeOneSiteExpectation(self): # {{{
+        print("N =",self.computeNormalization())
         expectation = 0
         stripped_self = self.stripExpectationEnvironment()
 
