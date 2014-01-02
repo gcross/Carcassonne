@@ -7,3 +7,4 @@
 analyze-contractions-4
 .DS_Store
 *.npy
+apidoc/_build
