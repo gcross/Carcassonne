@@ -22,6 +22,83 @@ class TaggedNDArrayData(NDArrayData): # {{{
         return TaggedNDArrayData(NDArrayData.join(self,*groups).toArray(),self.tag)
 # }}}
 
+class FromLeft: # {{{
+    # Constants {{{
+    number_of_left_dimensions = 1
+    number_of_right_dimensions = 0
+    # }}}
+    # Properties {{{
+    left_dimensions = property(lambda self: (self.dimension,))
+    right_dimensions = property(lambda self: ())
+    # }}}
+    def __init__(self,dimension): # {{{
+        self.dimension = dimension
+    # }}}
+    def appendDimensionsToTransposition(self,transposition,left_transpose_offsets,right_transpose_offsets): # {{{
+        transposition.append(left_transpose_offsets[self.dimension])
+    # }}}
+    def getResultDimension(self,left_dimensions,right_dimensions): # {{{
+        return left_dimensions[self.dimension]
+    # }}}
+    def getResultIndex(self,right_dimensions,left_indices,right_indices): # {{{
+        return left_indices[self.dimension]
+    # }}}
+# }}}
+class FromRight: # {{{
+    # Constants {{{
+    number_of_left_dimensions = 0
+    number_of_right_dimensions = 1
+    # }}}
+    # Properties {{{
+    left_dimensions = property(lambda self: ())
+    right_dimensions = property(lambda self: (self.dimension,))
+    # }}}
+    def __init__(self,dimension): # {{{
+        self.dimension = dimension
+    # }}}
+    def appendDimensionsToTransposition(self,transposition,left_transpose_offsets,right_transpose_offsets): # {{{
+        transposition.append(right_transpose_offsets[self.dimension])
+    # }}}
+    def getResultDimension(self,left_dimensions,right_dimensions): # {{{
+        return right_dimensions[self.dimension]
+    # }}}
+    def getResultIndex(self,right_dimensions,left_indices,right_indices): # {{{
+        return right_indices[self.dimension]
+    # }}}
+# }}}
+class FromBoth: # {{{
+    # Constants {{{
+    number_of_left_dimensions = 1
+    number_of_right_dimensions = 1
+    # }}}
+    # Properties {{{
+    left_dimensions = property(lambda self: (self.left_dimension,))
+    right_dimensions = property(lambda self: (self.right_dimension,))
+    # }}}
+    def __init__(self,left_dimension,right_dimension,indices_to_ignore=frozenset(),indices_to_redirect=frozenset()): # {{{
+        self.left_dimension = left_dimension
+        self.right_dimension = right_dimension
+        self.indices_to_ignore = indices_to_ignore
+        self.indices_to_redirect = indices_to_redirect
+    # }}}
+    def appendDimensionsToTransposition(self,transposition,left_transpose_offsets,right_transpose_offsets): # {{{
+        transposition.append(left_transpose_offsets[self.left_dimension])
+        transposition.append(right_transpose_offsets[self.right_dimension])
+    # }}}
+    def getResultDimension(self,left_dimensions,right_dimensions): # {{{
+        return left_dimensions[self.left_dimension]*right_dimensions[self.right_dimension]
+    # }}}
+    def getResultIndex(self,right_dimensions,left_indices,right_indices): # {{{
+        left_index = left_indices[self.left_dimension]
+        right_index = right_indices[self.right_dimension]
+        indices = (left_index,right_index)
+        if indices in self.indices_to_ignore:
+            return None
+        if indices in self.indices_to_redirect:
+            return self.indices_to_redirect[indices]
+        return left_index * right_dimensions[self.right_dimension] + right_index
+    # }}}
+# }}}
 # }}}
 
 class TestFormAbsorber(TestCase): # {{{
