@@ -9,7 +9,6 @@ Subpackages
     carcassonne.data
     carcassonne.system
     carcassonne.tensors
-    carcassonne.tests
 
 Submodules
 ----------
