@@ -99,7 +99,6 @@ class Join: # {{{
             self.right_tensor_indices = applyIndexMapTo(index_map,self.right_tensor_indices)
             self.checkOrderAndSwap()
     # }}}
-# }}}
 class Multiplier: # {{{
     def __init__(self,shape,multiply,cost_of_multiply,formMatrix,cost_of_formMatrix): # {{{
         self.shape = shape
