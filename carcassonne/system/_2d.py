@@ -500,53 +500,6 @@ class System(BaseSystem): # {{{
         evals, evecs = eigh(matrix,self.formNormalizationMultiplier().formMatrix().toArray())
         self.setStateCenter(NDArrayData(evecs[:,0].reshape(self.state_center_data.shape)))
     # }}}
-    def normalize(self): # {{{
-        for corner_id in range(4):
-            for direction in range(2):
-                self.normalizeCornerAndDenormalizeSide(corner_id,direction)
-        for side_id in range(4):
-            self.normalizeSideAndDenormalizeCenter(side_id)
-    # }}}
-    def normalizeCenterAndDenormalizeSide(self,direction): # {{{
-        normalizer_for_center, denormalizer_for_side_axis1 = self.state_center_data.normalizeAxis(direction,True)
-        self.state_center_data = self.state_center_data.absorbMatrixAt(direction,normalizer_for_center)
-        self.state_center_data_conj = self.state_center_data.conj()
-        denormalizer_for_side_axis2 = denormalizer_for_side_axis1.conj()
-        self.sides[direction] = {
-            tag: side_data.absorbMatrixAt(6,denormalizer_for_side_axis1).absorbMatrixAt(7,denormalizer_for_side_axis2)
-            for tag, side_data in self.sides[direction].items()
-        }
-    # }}}
-    def normalizeCornerAndDenormalizeSide(self,corner_id,direction): # {{{
-        side_id = sideFromCorner(corner_id,direction)
-        corner_axis1 = direction*3+0
-        corner_axis2 = direction*3+1
-        side_axis1 = (1-direction)*3+0
-        side_axis2 = (1-direction)*3+1
-        corner_data = self.corners[corner_id][Identity()]
-        normalizer_for_corner_axis1, denormalizer_for_side_axis1 = corner_data.normalizeAxis(corner_axis1,True)
-        normalizer_for_corner_axis2 = normalizer_for_corner_axis1.conj()
-        denormalizer_for_side_axis2 = denormalizer_for_side_axis1.conj()
-        self.corners[corner_id] = {
-            tag: corner_data.absorbMatrixAt(corner_axis1,normalizer_for_corner_axis1).absorbMatrixAt(corner_axis2,normalizer_for_corner_axis2)
-            for tag, corner_data in self.corners[corner_id].items()
-        }
-        self.sides[side_id] = {
-            tag: side_data.absorbMatrixAt(side_axis1,denormalizer_for_side_axis1).absorbMatrixAt(side_axis2,denormalizer_for_side_axis2)
-            for tag, side_data in self.sides[side_id].items()
-        }
-    # }}}
-    def normalizeSideAndDenormalizeCenter(self,side_id): # {{{
-        side_data = self.sides[side_id][Identity()]
-        normalizer_for_side_axis1, denormalizer_for_center = side_data.normalizeAxis(6,True)
-        normalizer_for_side_axis2 = normalizer_for_side_axis1.conj()
-        self.sides[side_id] = {
-            tag: side_data.absorbMatrixAt(6,normalizer_for_side_axis1).absorbMatrixAt(7,normalizer_for_side_axis2)
-            for tag, side_data in self.sides[side_id].items()
-        }
-        self.state_center_data = self.state_center_data.absorbMatrixAt(side_id,denormalizer_for_center)
-        self.state_center_data_conj = self.state_center_data.conj()
-    # }}}
     def setStateCenter(self,state_center_data,state_center_data_conj=None): # {{{
         self.state_center_data = state_center_data
         if state_center_data_conj is None:

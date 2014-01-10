@@ -260,14 +260,10 @@ class NDArrayData(Data): # {{{
     def norm(self): # {{{
         return norm(self._arr)
     # }}}
-    def normalizeAxis(self,axis,sqrt_svals=False,dont_recip_under=1e-14): # {{{
+    def normalizeAxis(self,axis,dont_recip_under=1e-14): # {{{
         if self.shape[axis] == 1:
             n = (norm(self._arr))
-            if sqrt_svals:
-                n = sqrt(n)
-                return NDArrayData(array([[1/n]])), NDArrayData(array([[n]]))
-            else:
-                return NDArrayData(self._arr/n), NDArrayData(array([[1/n]])), NDArrayData(array([[n]]))
+            return NDArrayData(self._arr/n), NDArrayData(array([[1/n]])), NDArrayData(array([[n]]))
         svd_axes_to_merge = list(range(self.ndim))
         del svd_axes_to_merge[axis]
         M = self.join(svd_axes_to_merge,axis)
@@ -292,19 +288,14 @@ class NDArrayData(Data): # {{{
             SI = 1.0/SI
         SI = NDArrayData(SI)
 
-        if sqrt_svals:
-            S = S.sqrt()
-            SI = SI.sqrt()
-            return (V*SI).conj(), V*S
-        else:
-            return U.split(*U_split).join(*U_join), V.transpose().contractWith((V*SI).conj(),(1,),(0,)), V.transpose().conj().contractWith(V*S,(1,),(0,))
+        return U.split(*U_split).join(*U_join), V.transpose().contractWith((V*SI).conj(),(1,),(0,)), V.transpose().conj().contractWith(V*S,(1,),(0,))
     # }}}
-    def normalizeAxisAndDenormalize(self,axis_to_norm,axis_to_denorm,data_to_denormalize=None,sqrt_svals=False,dont_recip_under=1e-14): # {{{
+    def normalizeAxisAndDenormalize(self,axis_to_norm,axis_to_denorm,data_to_denormalize=None,dont_recip_under=1e-14): # {{{
         if data_to_denormalize is None:
             data_to_denormalize = self
         if self.shape[axis_to_norm] != data_to_denormalize.shape[axis_to_denorm]:
             raise ValueError("Normalized axis and denormalized axis have different sizes ({} != {}).".format(self.shape[axis_to_norm],data_to_denormalize.shape[axis_to_denorm]))
-        normalized_data, _, denormalizer = self.normalizeAxis(axis_to_norm,sqrt_svals,dont_recip_under)
+        normalized_data, _, denormalizer = self.normalizeAxis(axis_to_norm,dont_recip_under)
         denormalized_data = data_to_denormalize.absorbMatrixAt(axis_to_denorm,denormalizer)
         return normalized_data, denormalized_data
     # }}}

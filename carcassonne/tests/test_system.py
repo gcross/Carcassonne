@@ -273,36 +273,6 @@ class TestSystem(TestCase): # {{{
         m2 = system.formNormalizationSubmatrix().contractWith(random_data.join(range(4),4),(1,),(0,)).split(*random_data.shape)
         self.assertDataAlmostEqual(m1,m2)
     # }}}
-    @with_checker # test_normalizeCenterAndDenormalizeSide {{{
-    def test_normalizeCenterAndDenormalizeSide(self,direction=irange(0,3)):
-        system = System.newRandom()
-        expectation1, normalization1 = system.computeExpectationAndNormalization()
-        system.normalizeCenterAndDenormalizeSide(direction)
-        system.assertNormalizationIsHermitian()
-        expectation2, normalization2 = system.computeExpectationAndNormalization()
-        self.assertAlmostEqual(normalization1,normalization2)
-        self.assertAlmostEqual(expectation1,expectation2)
-    # }}}
-    @with_checker(number_of_calls=10) # test_normalizeCornerAndDenormalizeSide {{{
-    def test_normalizeCornerAndDenormalizeSide(self,corner_id=irange(0,3),direction=irange(0,1)):
-        system = System.newRandom()
-        expectation1, normalization1 = system.computeExpectationAndNormalization()
-        system.normalizeCornerAndDenormalizeSide(corner_id,direction)
-        system.assertNormalizationIsHermitian()
-        expectation2, normalization2 = system.computeExpectationAndNormalization()
-        self.assertAlmostEqual(normalization1,normalization2)
-        self.assertAlmostEqual(expectation1,expectation2)
-    # }}}
-    @with_checker # test_normalizeSideAndDenormalizeCenter {{{
-    def test_normalizeSideAndDenormalizeCenter(self,side_id=irange(0,3)):
-        system = System.newRandom()
-        expectation1, normalization1 = system.computeExpectationAndNormalization()
-        system.normalizeSideAndDenormalizeCenter(side_id)
-        system.assertNormalizationIsHermitian()
-        expectation2, normalization2 = system.computeExpectationAndNormalization()
-        self.assertAlmostEqual(normalization1,normalization2)
-        self.assertAlmostEqual(expectation1,expectation2)
-    # }}}
 # }}}
 
 class TestSystemSillyFieldWalk(TestCase): # {{{
