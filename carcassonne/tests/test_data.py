@@ -107,6 +107,10 @@ class TestNDArrayData(TestCase): # {{{
             data_normalized.absorbMatrixAt(axis,denormalizer.transpose()),
             data
         )
+        self.assertDataAlmostEqual(
+            data.absorbMatrixAt(axis,normalizer),
+            data_normalized
+        )
         indices = list(range(5))
         del indices[axis]
         self.assertDataAlmostEqual(
