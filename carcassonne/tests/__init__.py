@@ -13,17 +13,6 @@ from ..data import *
 from ..utils import *
 # }}}
 
-# Decorators {{{
-class prependContractor: # {{{
-    def __init__(self,*args,**keywords):
-        self.contractor = formContractor(*args,**keywords)
-    def __call__(self,f):
-        def new_f(*args,**keywords):
-            return f(self.contractor,*args,**keywords)
-        return new_f
-# }}}
-# }}}
-
 # Functions {{{
 def displayLog(): # {{{
     logging.basicConfig(level=logging.DEBUG)
