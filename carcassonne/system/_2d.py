@@ -226,7 +226,7 @@ class System(BaseSystem): # {{{
         ,self.sides[corner_id]
         )
     # }}}
-    def compressCornerTwoSiteOperatorTowards(self,corner_id,direction,new_dimension,normalize=False): # {{{
+    def compressCornerTwoSiteOperatorTowards(self,corner_id,direction,new_dimension): # {{{
         axis = 3*direction+2
         # Gather the terms {{{
         new_corner = {}
@@ -281,7 +281,7 @@ class System(BaseSystem): # {{{
             matrix[slice1,slice1] = matrix1
             matrix[slice2,slice2] = matrix2
             return matrix
-        corner_multiplier, side_multiplier_conj = \
+        compressor = NDArrayData( \
             computeCompressor(
                 old_dimension,
                 new_dimension,
@@ -293,26 +293,25 @@ class System(BaseSystem): # {{{
                     0,
                 ),
                 complex128,
-                normalize
             )
-        corner_multiplier = NDArrayData(corner_multiplier)
-        side_multiplier = NDArrayData(side_multiplier_conj.conj())
+        )
         del matrix1
         del matrix2
         del multiply
         del formMatrix
         # }}}
         # Compute the new corner {{{
+        decompressor = compressor.conj()
         collected_data_shape = list(self.corners[corner_id][Identity()].shape)
         del collected_data_shape[axis]
         collected_data_shape.insert(0,old_dimension)
         collected_data_transposition = list(range(1,6))
         collected_data_transposition.insert(axis,0)
         compressed_collected_data = \
-            NDArrayData(collected_data.reshape(collected_data_shape)).absorbMatrixAt(0,corner_multiplier[:,slice1]).transpose(collected_data_transposition)
+            NDArrayData(collected_data.reshape(collected_data_shape)).absorbMatrixAt(0,compressor[:,slice1]).transpose(collected_data_transposition)
 
         if old_compressed_data_exists:
-            new_compressed_data = old_compressed_data.absorbMatrixAt(axis,corner_multiplier[:,slice2])
+            new_compressed_data = old_compressed_data.absorbMatrixAt(axis,compressor[:,slice2])
             new_compressed_data += compressed_collected_data
         else:
             new_compressed_data = compressed_collected_data
@@ -351,9 +350,9 @@ class System(BaseSystem): # {{{
         collected_data_transposition = list(range(1,8))
         collected_data_transposition.insert(axis,0)
         compressed_collected_data = \
-            collected_data.absorbMatrixAt(0,side_multiplier[:,slice1]).transpose(collected_data_transposition)
+            collected_data.absorbMatrixAt(0,decompressor[:,slice1]).transpose(collected_data_transposition)
         if old_compressed_data_exists:
-            new_compressed_data = old_compressed_data.absorbMatrixAt(axis,side_multiplier[:,slice2])
+            new_compressed_data = old_compressed_data.absorbMatrixAt(axis,decompressor[:,slice2])
             new_compressed_data += compressed_collected_data
         else:
             new_compressed_data = compressed_collected_data

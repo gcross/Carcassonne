@@ -187,7 +187,7 @@ def computeAndCheckNewDimension(shape,direction,by=None,to=None,do_as_much_as_po
             raise ValueError("New dimension {} is greater than the current maximum dimension for direction {}, which is {} (shape = {}).".format(new_dimension,direction,shape,maximum_new_dimension,shape))
     return old_dimension, new_dimension, new_dimension-old_dimension
 # }}}
-def computeCompressor(old_dimension,new_dimension,multiplier,dtype,normalize=False): # {{{
+def computeCompressor(old_dimension,new_dimension,multiplier,dtype): # {{{
     if new_dimension < 0:
         raise ValueError("New dimension ({}) must be non-negative.".format(new_dimension))
     elif new_dimension > old_dimension:
@@ -214,16 +214,9 @@ def computeCompressor(old_dimension,new_dimension,multiplier,dtype,normalize=Fal
         new_dimension -= 1
     if new_dimension == 0:
         raise ValueError("Input is filled with near-zero elements.")
-    if normalize:
-        evals = sqrt(evals).reshape(new_dimension,1)
-        compressor = evecs * evals
-        inverse_compressor_conj = evecs / evals
-    else:
-        compressor = evecs
-        inverse_compressor_conj = evecs
-    return compressor, inverse_compressor_conj
+    return evecs
 # }}}
-def computeCompressorForMatrixTimesItsDagger(old_dimension,new_dimension,matrix,normalize=False): # {{{
+def computeCompressorForMatrixTimesItsDagger(old_dimension,new_dimension,matrix): # {{{
     other_dimension = matrix.shape[0]
     matrix_dagger = matrix.transpose().conj()
     return \
@@ -238,7 +231,6 @@ def computeCompressorForMatrixTimesItsDagger(old_dimension,new_dimension,matrix,
                 old_dimension**2 * other_dimension
             ),
             matrix.dtype,
-            normalize
         )
 # }}}
 def computeLengthAndCheckForGaps(indices,error_message): # {{{
