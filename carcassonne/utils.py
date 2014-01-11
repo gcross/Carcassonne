@@ -287,38 +287,6 @@ def computeNewDimension(old_dimension,by=None,to=None): # {{{
     assert new_dimension >= old_dimension
     return new_dimension
 # }}}
-def computeNormalizerAndInverse(matrix,index): # {{{
-    new_indices = list(range(matrix.ndim))
-    del new_indices[index]
-    new_indices.append(index)
-
-    size_of_normalization_dimension = matrix.shape[index]
-
-    old_shape = list(matrix.shape)
-    del old_shape[index]
-    new_shape = (prod(old_shape),size_of_normalization_dimension)
-    old_shape.append(size_of_normalization_dimension)
-
-    new_matrix = matrix.transpose(new_indices).reshape(new_shape)
-
-    old_indices = list(range(matrix.ndim-1))
-    old_indices.insert(index,matrix.ndim-1)
-
-    try:
-        u, s, v = svd(new_matrix,full_matrices=0)
-        return dot(v.transpose().conj()*(1/s),v), dot(v.transpose().conj()*s,v)
-    except LinAlgError:
-        M = dot(new_matrix.conj().transpose(),new_matrix)
-
-        vals, U = eigh(M)
-        vals[vals<0] = 0
-
-        dvals = sqrt(vals)
-        nonzero_dvals = dvals!=0
-        dvals[nonzero_dvals] = 1.0/dvals[nonzero_dvals]
-
-        return dot(U*dvals,U.conj().transpose()), dot(U*vals,U.conj().transpose())
-# }}}
 def computePostContractionIndexMap(rank,contracted_indices,offset=0): # {{{
     contracted_indices = set(contracted_indices)
     index_map = dict()
@@ -833,7 +801,6 @@ __all__ = [
     "computeCompressorForMatrixTimesItsDagger",
     "computeAbsoluteLimitingLinearCoefficient",
     "computeNewDimension",
-    "computeNormalizerAndInverse",
     "crand",
     "dropAt",
     "formAbsorber",

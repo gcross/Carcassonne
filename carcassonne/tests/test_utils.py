@@ -2,7 +2,7 @@
 from functools import reduce
 from numpy import dot, multiply, prod
 from paycheck import *
-from scipy.linalg import eigh, eigvalsh
+from scipy.linalg import LinAlgError, eigh, eigvalsh, svd
 from scipy.sparse.linalg import eigs, eigsh
 
 from ..data import NDArrayData
@@ -98,6 +98,41 @@ class FromBoth: # {{{
             return self.indices_to_redirect[indices]
         return left_index * right_dimensions[self.right_dimension] + right_index
     # }}}
+# }}}
+# }}}
+
+# Helper functions {{{
+def computeNormalizerAndInverse(matrix,index): # {{{
+    new_indices = list(range(matrix.ndim))
+    del new_indices[index]
+    new_indices.append(index)
+
+    size_of_normalization_dimension = matrix.shape[index]
+
+    old_shape = list(matrix.shape)
+    del old_shape[index]
+    new_shape = (prod(old_shape),size_of_normalization_dimension)
+    old_shape.append(size_of_normalization_dimension)
+
+    new_matrix = matrix.transpose(new_indices).reshape(new_shape)
+
+    old_indices = list(range(matrix.ndim-1))
+    old_indices.insert(index,matrix.ndim-1)
+
+    try:
+        u, s, v = svd(new_matrix,full_matrices=0)
+        return dot(v.transpose().conj()*(1/s),v), dot(v.transpose().conj()*s,v)
+    except LinAlgError:
+        M = dot(new_matrix.conj().transpose(),new_matrix)
+
+        vals, U = eigh(M)
+        vals[vals<0] = 0
+
+        dvals = sqrt(vals)
+        nonzero_dvals = dvals!=0
+        dvals[nonzero_dvals] = 1.0/dvals[nonzero_dvals]
+
+        return dot(U*dvals,U.conj().transpose()), dot(U*vals,U.conj().transpose())
 # }}}
 # }}}
 
