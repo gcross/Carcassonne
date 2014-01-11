@@ -304,42 +304,6 @@ def dropAt(iterable,index): # {{{
     except TypeError:
         return tuple(new_values)
 # }}}
-def formAbsorber(left_join_dimensions,right_join_dimensions,result_dimension_sources): # {{{
-    # Compute the numbers of dimensions {{{
-    number_of_join_dimensions = len(left_join_dimensions)
-    assert number_of_join_dimensions == len(right_join_dimensions)
-    number_of_left_dimensions = number_of_join_dimensions + sum(x.number_of_left_dimensions for x in result_dimension_sources)
-    number_of_right_dimensions = number_of_join_dimensions + sum(x.number_of_right_dimensions for x in result_dimension_sources)
-    # }}}
-    # Compute the transposition {{{
-    next_transpose_dimension = 0
-
-    left_transpose_offsets = {}
-    for dimension in range(number_of_left_dimensions):
-        if dimension not in left_join_dimensions:
-            left_transpose_offsets[dimension] = next_transpose_dimension
-            next_transpose_dimension += 1
-
-    right_transpose_offsets = {}
-    for dimension in range(number_of_right_dimensions):
-        if dimension not in right_join_dimensions:
-            right_transpose_offsets[dimension] = next_transpose_dimension
-            next_transpose_dimension += 1
-
-    transposition = []
-    for result_dimension_source in result_dimension_sources:
-        result_dimension_source.appendDimensionsToTransposition(transposition,left_transpose_offsets,right_transpose_offsets)
-    transposition = tuple(transposition)
-    # }}}
-    join_dimensions = (left_join_dimensions,right_join_dimensions)
-    def absorb(left,right): # {{{
-        left_shape = left.shape
-        right_shape = right.shape
-        result_shape = tuple(x.getResultDimension(left_shape,right_shape) for x in result_dimension_sources)
-        return tensordot(left,right,join_dimensions).transpose(transposition).reshape(result_shape)
-    # }}}
-    return absorb
-# }}}
 def formContractor(order,joins,result_joins): # {{{
     observed_tensor_indices = {}
 
@@ -803,7 +767,6 @@ __all__ = [
     "computeNewDimension",
     "crand",
     "dropAt",
-    "formAbsorber",
     "formContractor",
     "formDataContractor",
     "invertPermutation",
