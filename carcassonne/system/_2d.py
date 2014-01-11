@@ -283,7 +283,6 @@ class System(BaseSystem): # {{{
             return matrix
         compressor = NDArrayData( \
             computeCompressor(
-                old_dimension,
                 new_dimension,
                 Multiplier(
                     (old_dimension,)*2,
