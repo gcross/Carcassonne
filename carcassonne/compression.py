@@ -24,6 +24,13 @@ from .utils import Join, crand, prependDataContractor, unitize
     ]
 )
 def computeProductCompressor(formMatrix,L,R,new_dimension):
+    """\
+Given matrices *L* and *R* such that the last two axes of *L* and the first two
+axes of *R* are all equal to old_dimension, returns the matrix with dimensions
+(old_dimension,*new_dimension*) such that, when inserted (along with its
+conjugate) between *L*'s and *R*'s upper and lower connected axes, results in
+the best approximation to the contraction of *L* and *R*.\
+"""
     if L.shape[1] != L.shape[2]:
         raise ValueError("left inward dimensions do not match (given " + str(L.shape) + ")")
     if R.shape[0] != R.shape[1]:
