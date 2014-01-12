@@ -544,14 +544,12 @@ def replaceAt(iterable,index,new_value): # {{{
     except TypeError:
         return tuple(new_values)
 # }}}
-def relaxOver(initial,expectation_multiplier,normalization_multiplier=None,maximum_number_of_multiplications=None,tolerance=1e-7,dimension_of_krylov_space=None): # {{{
+def relaxOver(initial,expectation_multiplier,normalization_multiplier=None,maximum_number_of_multiplications=None,tolerance=1e-7,dimension_of_krylov_space=3): # {{{
     DataClass = type(initial)
     shape = initial.shape
     initial = initial.toArray().ravel()
     initial /= norm(initial)
     N = len(initial)
-    if dimension_of_krylov_space is None:
-        dimension_of_krylov_space = 3
 
     if normalization_multiplier is None:
         applyInverseNormalization = lambda x: x
