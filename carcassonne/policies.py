@@ -10,10 +10,21 @@ log = logging.getLogger(__name__)
 
 # Base classes {{{
 class Policy: # {{{
+    """A :class:`Policy` defines the behavior of some aspect of simulating a system."""
     def createBindingToSystem(self,system):
+        """\
+Returns the result of binding this policy to a *system*, which is a
+:class:`Proxy` object that contains a reference to the system and forwards all
+requests for attributes to this :class:`Policy` instance.\
+"""
         return self.Proxy(self,system)
 # }}}
 class Proxy: # {{{
+    """\
+A :class:`Proxy` contains a reference to a *system* as well as a place to
+*forward* requests for non-existent fields; it is created as the result of
+calling :meth:`Policy.createBindingToSystem`.\
+"""
     def __init__(self,forward,system): # {{{
         self.forward = forward
         self.system = system
@@ -26,28 +37,38 @@ class Proxy: # {{{
 
 # Simple proxies {{{
 class ApplyProxy(Proxy): # {{{
+    """An instance of :class:`ApplyProxy` has an :meth:`apply` method."""
     def apply(self):
+        """Calls the `apply` method for `self.forward`'s class using this instance."""
         return type(self.forward).apply(self)
 # }}}
 class ConvergedProxy(Proxy): # {{{
+    """An instance of :class:`ConvergedProxy` has an :meth:`converged` method."""
     def converged(self):
+        """Calls the `converged` method for `self.forward`'s class using this instance."""
         return type(self.forward).converged(self)
 # }}}
 class ResetProxy(Proxy): # {{{
+    """An instance of :class:`ResetProxy` has an :meth:`reset` method."""
     def reset(self):
+        """Calls the `reset` method for `self.forward`'s class using this instance."""
         return type(self.forward).reset(self)
 # }}}
 class UpdateProxy(Proxy): # {{{
+    """An instance of :class:`UpdatedProxy` has an :meth:`update` method."""
     def update(self):
+        """Calls the `update` method for `self.forward`'s class using this instance."""
         return type(self.forward).update(self)
 # }}}
 # }}}
 
 # Bandwidth policies {{{
 class BandwidthIncreasePolicy(Policy): # {{{
+    """A :class:`BandwidthIncreasePolicy` determines how to increase the bandwidth of a system; to use it, call the `apply` method."""
     Proxy = ApplyProxy
 # }}}
 class AllDirectionsIncrementBandwidthIncreasePolicy(BandwidthIncreasePolicy): # {{{
+    """A :class:`BandwidthIncreasePolicy` that increases the bandwidth in both directions by *increment*."""
     def __init__(self,increment=1):
         self.increment = increment
     def apply(self):
@@ -56,6 +77,7 @@ class AllDirectionsIncrementBandwidthIncreasePolicy(BandwidthIncreasePolicy): # 
             self.system.increaseBandwidth(direction,by=self.increment,do_as_much_as_possible=True)
 # }}}
 class OneDirectionIncrementBandwidthIncreasePolicy(BandwidthIncreasePolicy): # {{{
+    """A :class:`BandwidthIncreasePolicy` that increases the bandwidth in *direction* by *increment*."""
     def __init__(self,direction,increment=1):
         self.direction = direction
         self.increment = increment
@@ -67,9 +89,11 @@ class OneDirectionIncrementBandwidthIncreasePolicy(BandwidthIncreasePolicy): # {
 
 # Compression policies {{{
 class CompressionPolicy(Policy): # {{{
+    """A :class:`CompressionPolicy` determines how to compress the bandwidth between the corners and sides; to use it, call the `apply` method."""
     Proxy = ApplyProxy
 # }}}
 class ConstantStateCompressionPolicy(CompressionPolicy): # {{{
+    """A :class:`CompressionPolicy` that compresses all dimensions to *new_dimension*."""
     def __init__(self,new_dimension):
         self.new_dimension = new_dimension
     def apply(self):
@@ -82,10 +106,12 @@ class ConstantStateCompressionPolicy(CompressionPolicy): # {{{
 
 # Contraction policies {{{
 class ContractionPolicy(Policy): # {{{
+    """A :class:`ContractionPolicy` determines in which directions to contract the system; to perform a contraction, call the `apply` method; to reset the current direction, call the `reset` method."""
     class Proxy(ApplyProxy,ResetProxy):
         pass
 # }}}
 class RepeatPatternContractionPolicy(ContractionPolicy): # {{{
+    """A :class:`ContractionPolicy` that rotates contracting through the directions in the order given by *directions*."""
     def __init__(self,directions):
         self.directions = directions
         self.reset()
@@ -107,10 +133,27 @@ class RepeatPatternContractionPolicy(ContractionPolicy): # {{{
 
 # Convergence policies {{{
 class ConvergencePolicy(Policy): # {{{
+    """\
+A :class:`ConvergencePolicy` determines when a stage of the simulation has converged.  It has the following methods:
+
+converged
+    returns true if convergence has been reached
+reset
+    reset all information used to determine convergence
+update
+    update all information used to determine convergence given the current state of the system \
+"""
     class Proxy(ConvergedProxy,ResetProxy,UpdateProxy):
         pass
 # }}}
 class PeriodicyThresholdConvergencePolicy(ConvergencePolicy): # {{{
+    """\
+A :class:`ConvergencePolicy` that determines whether the simulation has
+converged based on whether the state tensor is periodic, i.e. based on whether
+normalizing it in each of the *directions* and then absorbing the denormalizer
+on the opposite side obtains the original state site tensor to within the
+absolute norm tolerance set by *threshold*.\
+"""
     def __init__(self,threshold,*directions):
         self.threshold = threshold
         if not directions:
@@ -130,6 +173,11 @@ class PeriodicyThresholdConvergencePolicy(ConvergencePolicy): # {{{
         pass
 # }}}
 class RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{{
+    """\
+A :class:`ConvergencePolicy` that determines whether the simulation has
+converged based on wheter the one-site expectation has conveged relatively to
+within the tolerance specified in *threshold*.\
+"""
     def __init__(self,threshold,direction=0):
         self.direction = direction
         self.threshold = threshold
@@ -152,6 +200,11 @@ class RelativeEstimatedOneSiteExpectationDifferenceThresholdConvergencePolicy(Co
         self.current = self.system.computeEstimatedOneSiteExpectation(self.direction)
 # }}}
 class RelativeExpectationDifferenceDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{{
+    """\
+A :class:`ConvergencePolicy` that determines whether the simulation has
+converged based on wheter the system's expectation has conveged relatively to
+within the tolerance specified in *threshold*.\
+"""
     def __init__(self,threshold):
         self.threshold = threshold
         self.last_value = None
@@ -178,6 +231,11 @@ class RelativeExpectationDifferenceDifferenceThresholdConvergencePolicy(Converge
             self.current_difference = self.current_value-self.last_value
 # }}}
 class RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{{
+    """\
+A :class:`ConvergencePolicy` that determines whether the simulation has
+converged based on wheter the one-site expectation has conveged relatively to
+within the tolerance specified in *threshold*.\
+"""
     def __init__(self,threshold):
         self.threshold = threshold
         self.last = None
@@ -201,6 +259,11 @@ class RelativeOneSiteExpectationDifferenceThresholdConvergencePolicy(Convergence
         self.current = expectation
 # }}}
 class RelativeStateDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{{
+    """\
+A :class:`ConvergencePolicy` that determines whether the simulation has
+converged based on wheter the state tenspr has conveged relatively to within
+the norm tolerance specified in *threshold*.\
+"""
     def __init__(self,threshold):
         self.threshold = threshold
         self.last = None
@@ -227,6 +290,7 @@ class RelativeStateDifferenceThresholdConvergencePolicy(ConvergencePolicy): # {{
 
 # Hook Policy {{{
 class HookPolicy(Policy):
+    """A :class:`HookPolicy` provides a *callback* to be called when `apply` is called."""
     Proxy = ApplyProxy
     def __init__(self,callback):
         self.callback = callback
