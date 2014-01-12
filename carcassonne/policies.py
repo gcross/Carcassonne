@@ -47,14 +47,6 @@ class UpdateProxy(Proxy): # {{{
 class BandwidthIncreasePolicy(Policy): # {{{
     Proxy = ApplyProxy
 # }}}
-class AlternatingDirectionsIncrementBandwidthIncreasePolicy(BandwidthIncreasePolicy): # {{{
-    def __init__(self,directions):
-        self.directions = directions
-        self.direction = 0
-    def apply(self):
-        self.system.increaseBandwidth(self.direction,by=self.increment,do_as_much_as_possible=True)
-        self.direction = O(self.direction)
-# }}}
 class AllDirectionsIncrementBandwidthIncreasePolicy(BandwidthIncreasePolicy): # {{{
     def __init__(self,increment=1):
         self.increment = increment
@@ -254,7 +246,6 @@ __all__ = [
 
     "BandwidthIncreasePolicy",
     "AllDirectionsIncrementBandwidthIncreasePolicy",
-    "AlternatingDirectionsIncrementBandwidthIncreasePolicy",
     "OneDirectionIncrementBandwidthIncreasePolicy",
 
     "CompressionPolicy",
