@@ -11,6 +11,28 @@ set_printoptions(linewidth=132)
 
 # Exceptions {{{
 class DimensionMismatchError(ValueError): # {{{
+    """\
+Thrown when two tensors connected by a join have incompatable dimensions for the
+indices of the join.
+
+    * left_tensor_number
+       the number of the left tensor in the join
+
+    * left_index
+        the index of the left tensor to be joined
+
+    * left_dimension
+        the dimension of the index *left_index* in the left tensor
+
+    * right_tensor_number
+       the number of the right tensor in the join
+
+    * right_index
+        the index of the right tensor to be joined
+
+    * right_dimension
+        the dimension of the index *right_index* in the right tensor\
+"""
     def __init__(self,left_tensor_number,left_index,left_dimension,right_tensor_number,right_index,right_dimension): # {{{
         self.left_tensor_number = left_tensor_number
         self.left_index = left_index
@@ -21,8 +43,15 @@ class DimensionMismatchError(ValueError): # {{{
         ValueError.__init__(self,"tensor {left_tensor_number}'s index {left_index} has dimension {left_dimension}, whereas tensor {right_tensor_number}'s index {right_index} has dimension {right_dimension}".format(**self.__dict__))
     # }}}
 # }}}
-class InvariantViolatedError(Exception): pass
+class InvariantViolatedError(Exception): # {{{
+    """Thrown whan an invariant has been violated."""
+# }}}
 class RelaxFailed(Exception): # {{{
+    """\
+Thrown when the eigensolver encountered a problem improving the initial
+value; *initial_value* is the initial value fed into the eigenvalue solver and
+*final_value* is the output of the solver, which may not be valid.\
+"""
     def __init__(self,initial_value,final_value):
         self.initial_value = initial_value
         self.final_value = final_value
@@ -32,6 +61,18 @@ class RelaxFailed(Exception): # {{{
         return "RelaxFailed({},{})".format(self.initial_value,self.final_value)
 # }}}
 class UnexpectedTensorRankError(ValueError): # {{{
+    """\
+Thrown when a tensor had an unexpected rank.
+
+    * tensor_number
+        the number of the tensor
+
+    * expected_rank
+        the expected rank of the tensor
+
+    * actual_rank
+        the actual rank of the tensor\
+"""
     def __init__(self,tensor_number,expected_rank,actual_rank): # {{{
         self.tensor_number = tensor_number
         self.expected_rank = expected_rank
@@ -43,6 +84,29 @@ class UnexpectedTensorRankError(ValueError): # {{{
 
 # Classes {{{
 class Join: # {{{
+    """\
+Represents a join between two tensors.
+
+    * left_tensor_number
+        the number of the left tensor in the join
+
+    * left_tensor_indices
+        the indices of the left tensor that are joined to the corresponding
+        indices in the right tensor given by *left_tensor_indices*; if this is
+        given as an integer then it is wrapped into a singleton list
+
+    * right_tensor_number
+        the number of the right tensor in the join
+
+    * right_tensor_indices
+        the indices of the right tensor that are joined to the corresponding
+        indices in the right tensor given by *right_tensor_indices*; if this is
+        given as an integer then it is wrapped into a singleton list
+
+The constructor checks that the :class:`Join` is valid, i.e. that it is not a
+self-join (where the left and right tensors are the same) and that the number
+of indices of the left tensor matches that of the right tensor.\
+"""
     def __init__( # {{{
         self
         ,left_tensor_number
@@ -66,6 +130,11 @@ class Join: # {{{
         return "Join({left_tensor_number},{left_tensor_indices},{right_tensor_number},{right_tensor_indices})".format(**self.__dict__)
     # }}}
     def checkOrderAndSwap(self): # {{{
+        """\
+Asserts that the :class:`Join` is not a self-join and then ensures that the
+*left_tensor_number* is less than the *right_tensor_number* by swapping if
+necessary.\
+"""
         if self.left_tensor_number == self.right_tensor_number:
             raise ValueError(
                 ("attempted to create a self-join for tensor {} (indices = {},{})"
@@ -84,12 +153,22 @@ class Join: # {{{
             self.left_tensor_indices = right_tensor_indices
     # }}}
     def mergeWith(self,other): # {{{
+        """\
+Merges the join indices of two joins that involve the same two tensors;  if the
+tensor numbers in the two joins do not match then an error is raised.\
+"""
         assert self.left_tensor_number == other.left_tensor_number
         assert self.right_tensor_number == other.right_tensor_number
         self.left_tensor_indices  += other.left_tensor_indices
         self.right_tensor_indices += other.right_tensor_indices
     # }}}
     def update(self,old_tensor_number,new_tensor_number,index_map): # {{{
+        """\
+Updates the tensor number of the matching tensor from *old_tensor_number* to
+*new_tensot_number*, and also updates its join indices using the given
+*index_map*;  if neither the left nor the right tensor numbers match
+*old_tensor_number* than an error is raised.\
+"""
         if self.left_tensor_number == old_tensor_number:
             self.left_tensor_number = new_tensor_number
             self.left_tensor_indices = applyIndexMapTo(index_map,self.left_tensor_indices)
@@ -99,7 +178,32 @@ class Join: # {{{
             self.right_tensor_indices = applyIndexMapTo(index_map,self.right_tensor_indices)
             self.checkOrderAndSwap()
     # }}}
+# }}}
 class Multiplier: # {{{
+    """\
+Represents a matrix-vector multiplication operation.
+
+    * shape
+        the shape of the matrix
+
+    * multiply
+        a function that applies this multipliction operation to a given vector
+
+    * cost_of_multiply
+        the cost of calling *multiply*
+
+    * formMatrix
+        a function that computes the explicit matrix representation of this
+        multiplication operation
+
+    * cost_of_formMatrix
+        the cost of calling *formMatrix*
+
+The unit of the two costs does not matter as long as they are consistent;  they
+are used to estimate whether using the given *multiply* function is cheaper
+(for a given number of applications) than explicitly constructing and using the
+matrix representation of this operation.\
+"""
     def __init__(self,shape,multiply,cost_of_multiply,formMatrix,cost_of_formMatrix): # {{{
         self.shape = shape
         self.multiply = multiply
@@ -108,10 +212,15 @@ class Multiplier: # {{{
         self.cost_of_formMatrix = cost_of_formMatrix
     # }}}
     def __call__(self,vector): # {{{
+        """Applies this object's *multiply* function to *vector*."""
         return self.multiply(vector)
     # }}}
     @classmethod # fromMatrix {{{
     def fromMatrix(self,matrix):
+        """\
+Constructs a :class:`Multiplier` whose multiplication operator is given by the
+explicit *matrix*.\
+"""
         m, n = matrix.shape
         return \
             Multiplier(
@@ -123,6 +232,11 @@ class Multiplier: # {{{
             )
     # }}}
     def isCheaperToFormMatrix(self,estimated_number_of_applications): # {{{
+        """\
+Computes whether it would be cheaper to form the explicit matrix representation
+of this multiplication if it is going to be used at least
+*estimated_number_of_applications*.\
+"""
         return estimated_number_of_applications*self.cost_of_multiply > \
                 self.cost_of_formMatrix + estimated_number_of_applications*self.shape[0]*self.shape[1]
     # }}}
@@ -131,6 +245,10 @@ class Multiplier: # {{{
 
 # Decorators {{{
 class prepend: # {{{
+    """\
+This decorator takes the arguments and keywords given to it and passes them to
+the decorated function as its first arguments and keywords.\
+"""
     def __init__(self,*args,**keywords):
         self.args = args
         self.keywords = keywords
@@ -138,12 +256,20 @@ class prepend: # {{{
         return partial(f,*self.args,**self.keywords)
 # }}}
 def prependDataContractor(*args,**keywords): # {{{
+    """\
+This decorator chains :func:`prepend` with the result of calling
+:func:`formDataContractor` with the given arguments and keywords.\
+"""
     return prepend(formDataContractor(*args,**keywords))
 # }}}
 # }}}
 
 # Pauli Operators {{{
 class Pauli:
+    """\
+This class is a namespace which contains the four (unnormalized) Pauli
+operators: *I*, *X*, *Y*, and *Z*.\
+"""
     I = identity(2,dtype=complex128)
     X = array([[0,1],[1,0]],dtype=complex128)
     Y = array([[0,-1j],[1j,0]],dtype=complex128)
@@ -152,28 +278,56 @@ class Pauli:
 
 # Functions {{{
 def applyIndexMapTo(index_map,indices): # {{{
+    """\
+Applies the given *index_map* to the given *indices* --- that is, it constructs
+a new list by evaluating the map *index_map* at each index in *indices*.\
+"""
     return [index_map[index] for index in indices]
 # }}}
 def applyPermutation(permutation,values): # {{{
+    """\
+Applies the given *permutation* to the given *values* --- that is, it
+constructs a new list by looking up ``values[i]`` for each ``i`` in
+*permutation*.\
+"""
     return [values[i] for i in permutation]
 # }}}
 def buildProductTensor(*factors): # {{{
+    """Builds a tensor by taking the outer product of all the *factors*."""
     return reduce(multiply.outer,(array(factor,dtype=complex128) for factor in factors)) #,zeros((),dtype=complex128))
 # }}}
 def buildTensor(dimensions,components): # {{{
+    """\
+Buikds a sparse tensor by creating a zero tensor with the given dimensions and
+then filling it with the values in *components*, which keys must be tuples that
+are valid indices of the tensor.\
+"""
     tensor = zeros(dimensions,dtype=complex128)
     for index, value in components.items():
         tensor[index] = value
     return tensor
 # }}}
 def checkForNaNsIn(data): # {{{
+    """Asserts that *data* has no `NaN` and then returns it."""
     assert not data.hasNaN()
     return data
 # }}}
 def crand(*shape): # {{{
+    """Returns a tensor with the given shape filled with random complex numers."""
     return rand(*shape)*2-1+rand(*shape)*2j-1j
 # }}}
 def computeAndCheckNewDimension(shape,direction,by=None,to=None,do_as_much_as_possible=False): # {{{
+    """\
+Computes a new shape from *shape* by increasing its value at the index
+*direction* as much as possible either by the value given in *by* or to the
+value given in *to*.  If the new value of this dimension is large enough that
+it is no longer possible to normalize the tensor along *direction* (which
+happens when the number of degrees of freedom in *direction* is larger than the
+product of the dimensions in all other directions), then if
+*do_as_much_as_possible* is set to True it will set it to the largest possible
+dimension that allows for normalization and otherwise it will raise a
+ValueError.\
+"""
     old_dimension = shape[direction]
     new_dimension = computeNewDimension(old_dimension,by=by,to=to)
     maximum_new_dimension = maximumNewBandwidth(direction,shape)
@@ -185,6 +339,15 @@ def computeAndCheckNewDimension(shape,direction,by=None,to=None,do_as_much_as_po
     return old_dimension, new_dimension, new_dimension-old_dimension
 # }}}
 def computeCompressor(new_dimension,multiplier,dtype): # {{{
+    """\
+Computes the matrix that optimally compresses the Hermetian matrix whose
+matrix-vector multiplication operation is given by *multiplier*, which must be
+of type :class:`Multiplier`, from its current dimension to *new_dimension*.
+That is, if X is a matrix with dimensions (o,o) whose multiplication operation
+is given by *multiplier*, then this function returns a matrix C with dimensions
+(*new_dimension*,o) such that C * C^H is the identity, and C * X * C^H is the
+best (*new_dimension*,*new_dimension*) approximation to X.\
+"""
     old_dimension = multiplier.shape[0]
     assert old_dimension == multiplier.shape[1]
     if new_dimension < 0:
@@ -216,6 +379,7 @@ def computeCompressor(new_dimension,multiplier,dtype): # {{{
     return evecs
 # }}}
 def computeCompressorForMatrixTimesItsDagger(new_dimension,matrix): # {{{
+    """This is a convenience function that, given a matrix X, calls :func:`computeCompressor` with the matrix X^H * X."""
     other_dimension = matrix.shape[0]
     matrix_dagger = matrix.transpose().conj()
     return \
@@ -232,6 +396,12 @@ def computeCompressorForMatrixTimesItsDagger(new_dimension,matrix): # {{{
         )
 # }}}
 def computeLengthAndCheckForGaps(indices,error_message): # {{{
+    """\
+Checks that *indices* contains every number between 0 and ``len(indices)-1``
+exactly once --- i.e., that it represents a permutation;  if the check fails
+then a :exc:`ValueError` is raised which includes the message provided in
+*error_message*.\
+"""
     if len(indices) == 0:
         return 0
     length = max(indices)+1
@@ -243,6 +413,21 @@ def computeLengthAndCheckForGaps(indices,error_message): # {{{
     return length
 # }}}
 def computeAbsoluteLimitingLinearCoefficient(n,multiplyO,multiplyN,multiplyL,multiplyR): # {{{
+    """\
+Given an infinite MPO and MPS, returns the rate at which the expectation value grows as new sites are added to the system.
+
+multiplyO
+    the action of the MPO on the right operator left environment
+
+multiplyN
+    the action of the normalization MPO on the right normalization left environment
+
+multiplyL
+    the result of applying the given matrix to left environment
+
+multiplyR
+    the result of applying the given matrix to right environment\
+"""
     if True: # n <= 3:
         matrix = []
         for i in range(n):
@@ -273,6 +458,15 @@ def computeAbsoluteLimitingLinearCoefficient(n,multiplyO,multiplyN,multiplyL,mul
     return numerator/denominator
 # }}}
 def computeNewDimension(old_dimension,by=None,to=None): # {{{
+    """\
+Computes the result of either adding *by* to *old_dimension* or returning *to*,
+i.e. so that this function either increase *old_dimension* by *by* or increases
+it to *to*.  Errors will be raised if either both *by* and *to* or neither has
+been given, and if the new dimension is smaller than *old_dimension*.
+
+This functions is not very useful as it own, but it exists to make it easier to
+write other functions taking *by* and *to* arguments.\
+"""
     if by is None and to is None:
         raise ValueError("Either 'by' or 'to' must not be None.")
     elif by is not None and to is not None:
@@ -295,6 +489,10 @@ def computePostContractionIndexMap(rank,contracted_indices,offset=0): # {{{
     return index_map
 # }}}
 def dropAt(iterable,index): # {{{
+    """\
+Drops the value at *index* in *iterable*; if possible it constructs a value
+with the same type as *iterable* and if not it returns a tuple.\
+"""
     new_values = (x for i, x in enumerate(iterable) if i != index)
     try:
         return type(iterable)(new_values)
@@ -302,6 +500,31 @@ def dropAt(iterable,index): # {{{
         return tuple(new_values)
 # }}}
 def formDataContractor(joins,final_groups,tensor_ranks=None): # {{{
+    """\
+Returns a function that takes one or more tensors as arguments and returns the
+result of contracting the tensor network specified by *joins* and
+*final_groups*.  For example, the following code returns a function that takes
+two matrices and multiplies them together using standard matrix multiplication:
+
+    ``formDataContractor([Join(0,1,1,0)],[[(0,0)],[(1,1)]])``
+
+The parameters of this function are
+
+joins
+    a sequence of :class:`Join`s which specifies how the tensors are connected
+    to each other
+
+final_groups
+    a sequence of sequences of tensor number/index tuples that specifies the
+    final result --- that is, each element of *final_groups* corresponds to an
+    axis of the final tensor and specifies which input tensor axes are merged
+    together to form that axis
+
+tensor_ranks
+    if not `None`, provides a sequence that gives the rank of each tensor,
+    which is used to check that the tensor ranks inferred from the other
+    arguments are correct\
+"""
     # Tabulate all of the tensor indices to compute the number of arguments and their ranks {{{
     observed_tensor_indices = defaultdict(set)
     observed_joins = set()
@@ -453,41 +676,59 @@ def formDataContractor(joins,final_groups,tensor_ranks=None): # {{{
     # }}}
 # }}}
 def invertPermutation(permutation): # {{{
+    """Inverts the given *permutation*."""
     return [permutation.index(i) for i in range(len(permutation))]
 # }}}
 def maximumNewBandwidth(direction,shape): # {{{
+    """\
+Returns the maximum possible bandwidth along *direction* in *shape* such that
+the tensor is still normalizable in that direction.\
+"""
     return prod(dropAt(shape,direction))
 # }}}
 def multiplyBySingleSiteOperator(state,operator): # {{{
+    """\
+Given a 2D PEPS in *state*, returns the result of applying the single-site
+*operator* to *state* (along the physical axis).\
+"""
     return state.absorbMatrixAt(4,operator)
 # }}}
 def multiplyTensorByMatrixAtIndex(tensor,matrix,index): # {{{
+    """\
+Multiplies the *tensor* at *index* by *matrix*, i.e. it contracts *tensor*'s
+axis *index* with *matrix*'s first axis.\
+"""
     tensor_new_indices = list(range(tensor.ndim-1))
     tensor_new_indices.insert(index,tensor.ndim-1)
     return tensordot(tensor,matrix,(index,0)).transpose(tensor_new_indices)
 # }}}
-def normalize(matrix,index): # {{{
-    new_indices = list(range(matrix.ndim))
+def normalize(tensor,index): # {{{
+    """\
+Returns the normalization of *tensor* at *index* --- that is, the closest
+tensor to *tensor* such that contracting it with its conjugate along all axes
+except *index* results in the identity matrix.\
+"""
+    new_indices = list(range(tensor.ndim))
     del new_indices[index]
     new_indices.append(index)
 
-    old_shape = list(matrix.shape)
+    old_shape = list(tensor.shape)
     del old_shape[index]
-    new_shape = (prod(old_shape),matrix.shape[index])
-    old_shape.append(matrix.shape[index])
+    new_shape = (prod(old_shape),tensor.shape[index])
+    old_shape.append(tensor.shape[index])
 
-    new_matrix = matrix.transpose(new_indices).reshape(new_shape)
-    if new_matrix.shape[1] > new_matrix.shape[0]:
+    new_tensor = tensor.transpose(new_indices).reshape(new_shape)
+    if new_tensor.shape[1] > new_tensor.shape[0]:
         raise ValueError("There are not enough degrees of freedom available to normalize the tensor.")
 
-    old_indices = list(range(matrix.ndim-1))
-    old_indices.insert(index,matrix.ndim-1)
+    old_indices = list(range(tensor.ndim-1))
+    old_indices.insert(index,tensor.ndim-1)
 
     try:
-        u, s, v = svd(new_matrix,full_matrices=0)
+        u, s, v = svd(new_tensor,full_matrices=0)
         return dot(u,v).reshape(old_shape).transpose(old_indices)
     except LinAlgError:
-        M = dot(new_matrix.conj().transpose(),new_matrix)
+        M = dot(new_tensor.conj().transpose(),new_tensor)
 
         vals, U = eigh(M)
         vals[vals<0] = 0
@@ -497,28 +738,33 @@ def normalize(matrix,index): # {{{
         dvals[nonzero_dvals] = 1.0/dvals[nonzero_dvals]
         X = dot(U*dvals,U.conj().transpose())
 
-        return dot(new_matrix,X).reshape(old_shape).transpose(old_indices)
+        return dot(new_tensor,X).reshape(old_shape).transpose(old_indices)
 # }}}
-def normalizeAndReturnInverseNormalizer(matrix,index): # {{{
-    new_indices = list(range(matrix.ndim))
+def normalizeAndReturnInverseNormalizer(tensor,index): # {{{
+    """\
+Like :func:`normalize`, but returns an additional matrix that if ``A, B =
+normalizeAndReturnInverseNormalizer(tensor,index)`` then ``A * B`` (along
+*index* of A) is equal to *tensor*.\
+"""
+    new_indices = list(range(tensor.ndim))
     del new_indices[index]
     new_indices.append(index)
 
-    old_shape = list(matrix.shape)
+    old_shape = list(tensor.shape)
     del old_shape[index]
-    new_shape = (prod(old_shape),matrix.shape[index])
-    old_shape.append(matrix.shape[index])
+    new_shape = (prod(old_shape),tensor.shape[index])
+    old_shape.append(tensor.shape[index])
 
-    new_matrix = matrix.transpose(new_indices).reshape(new_shape)
+    new_tensor = tensor.transpose(new_indices).reshape(new_shape)
 
-    old_indices = list(range(matrix.ndim-1))
-    old_indices.insert(index,matrix.ndim-1)
+    old_indices = list(range(tensor.ndim-1))
+    old_indices.insert(index,tensor.ndim-1)
 
     try:
-        u, s, v = svd(new_matrix,full_matrices=0)
+        u, s, v = svd(new_tensor,full_matrices=0)
         return dot(u,v).reshape(old_shape).transpose(old_indices), dot(v.transpose().conj()*s,v)
     except LinAlgError:
-        M = dot(new_matrix.conj().transpose(),new_matrix)
+        M = dot(new_tensor.conj().transpose(),new_tensor)
 
         vals, U = eigh(M)
         vals[vals<0] = 0
@@ -527,17 +773,27 @@ def normalizeAndReturnInverseNormalizer(matrix,index): # {{{
         nonzero_dvals = dvals!=0
         dvals[nonzero_dvals] = 1.0/dvals[nonzero_dvals]
 
-        return dot(new_matrix,dot(U*dvals,U.conj().transpose())).reshape(old_shape).transpose(old_indices), dot(U*vals,U.conj().transpose())
+        return dot(new_tensor,dot(U*dvals,U.conj().transpose())).reshape(old_shape).transpose(old_indices), dot(U*vals,U.conj().transpose())
 # }}}
 def normalizeAndDenormalize(tensor_to_normalize,index_to_normalize,tensor_to_denormalize,index_to_denormalize): # {{{
-    normalized_tensor, inverse_normalizer = normalizeAndReturnInverseNormalizer(tensor_to_normalize,index_to_normalize)
-    unnormalized_tensor = multiplyTensorByMatrixAtIndex(tensor_to_denormalize,inverse_normalizer.transpose(),index_to_denormalize)
-    return normalized_tensor, unnormalized_tensor
+    """\
+Let ``C, D = normalizeAndDenormalize(A,AI,B,BI)``; then ``C`` is normalized
+(see :func:`normalize`) along axis ``AI`` and ``C * D`` (along ``AI`` and
+``BI``) equals ``A * B``.\
+"""
 # }}}
 def randomComplexSample(shape): # {{{
+    """Returns a random sample of complex numbers with the given *shape*."""
     return random_sample(shape)*2-1+random_sample(shape)*2j-1j
 # }}}
 def replaceAt(iterable,index,new_value): # {{{
+    """\
+Replaces the value in *iterable* at *index* with *new_value*.
+
+If the type of iterable can be called to create a new value with that type then
+the value returned will have the same type as *iterable*; otherwise, the value
+returned will be a tuple.\
+"""
     new_values = (old_value if i != index else new_value for (i,old_value) in enumerate(iterable))
     try:
         return type(iterable)(new_values)
@@ -545,6 +801,26 @@ def replaceAt(iterable,index,new_value): # {{{
         return tuple(new_values)
 # }}}
 def relaxOver(initial,expectation_multiplier,normalization_multiplier=None,maximum_number_of_multiplications=None,tolerance=1e-7,dimension_of_krylov_space=3): # {{{
+    """\
+Computes the eigenvector corresponding to the least (most negative) eigenvalue of the linear operator given by the :class:`Multiplier` given by *expectation_muliplier* using *initial* as the initial guess.
+
+initial
+    the initial guess
+expectation_multiplier
+    the :class:`Multiplier` for the input matrix to the eigensolver
+normalization_multiplier
+    if given, specifies the normalization matrix for the generalized eigenvalue
+    problem
+maximum_number_of_multiplications
+    if given, provides a cap on the number of multiplications to perform; if
+    this cap is reached, then the solver gives up and returns the best result
+    found so far
+tolerance
+    if the distance between the eigenvalues of two successive iterations is
+    below this amount then the eigenvalue is declared to be converged
+dimension_of_krylov_space
+    if given, specifies the size of the Krylov space to use\
+"""
     DataClass = type(initial)
     shape = initial.shape
     initial = initial.toArray().ravel()
@@ -617,19 +893,58 @@ def relaxOver(initial,expectation_multiplier,normalization_multiplier=None,maxim
             last_lowest_eigenvalue = mineval
     # }}}
 def unitize(matrix): # {{{
+    """\
+Finds the best unitary approximation to *matrix* by computing the SVD and then
+setting all of the singular values to 1.\
+"""
     U, _, V = svd(matrix,full_matrices=False)
     return dot(U,V)
 # }}}
 # }}}
 
 # Index functions {{{
-def O(i): return (i+2)%4
-def L(i): return (i+1)%4
-def R(i): return (i-1)%4
-def A(d,i): return i-1 if i > d else i
-def OA(i): return A(i,O(i))
-def LA(i): return A(i,L(i))
-def RA(i): return A(i,R(i))
+def O(i): # {{{
+    """Computes the index of the side opposite to that of the given index."""
+    return (i+2)%4
+# }}}
+def L(i): # {{{
+    """Computes the index of the side left (counter-clockwise) of that of the given index."""
+    return (i+1)%4
+# }}}
+def R(i): # {{{
+    """Computes the index of the side right (clockwise) of that of the given index."""
+    return (i-1)%4
+# }}}
+def A(d,i): # {{{
+    """\
+Returns *i*-1 if *i* > *d* and *i* otherwise.
+
+This function is used when one of the indices has been deleted and so all
+indices after that one are shifted down by one.\
+"""
+    return i-1 if i > d else i
+# }}}
+def OA(i): # {{{
+    """\
+Like :func:`O`, but shifts the resulting index down if it is after *i*,
+intended for the case when the index *i* has been deleted.
+"""
+    return A(i,O(i))
+# }}}
+def LA(i): # {{{
+    """\
+Like :func:`L`, but shifts the resulting index down if it is after *i*,
+intended for the case when the index *i* has been deleted.
+"""
+    return A(i,L(i))
+# }}}
+def RA(i): # {{{
+    """\
+Like :func:`R`, but shifts the resulting index down if it is after *i*,
+intended for the case when the index *i* has been deleted.
+"""
+    return A(i,R(i))
+# }}}
 # }}}
 
 # Exports {{{
