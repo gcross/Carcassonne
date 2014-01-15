@@ -33,8 +33,8 @@ class Complete(Singleton): # {{{
 # }}}
 class OneSiteOperator: # {{{
     __slots__ = ["id"]
-    def __init__(self,id): # {{{
-        self.id = None
+    def __init__(self,id=None): # {{{
+        self.id = id
     # }}}
     def __eq__(self,other): # {{{
         return (

@@ -24,7 +24,7 @@ class System(BaseSystem): # {{{
             tuple({Identity():NDArrayData.newTrivial((1,)*6)} for _ in range(4)),
             tuple({Identity():NDArrayData.newTrivial((1,)*6)+(d,)*2} for d in bandwidth_dimensions),
             NDArrayData.newRandom(*tuple(bandwidth_dimensions)+tuple(O.shape[:1])),
-            {Identity():O.newIdentity(O.shape[0]),OneSiteOperator(None):O}
+            {Identity():O.newIdentity(O.shape[0]),OneSiteOperator():O}
         )
         system.assertDimensionsAreConsistent()
         system.assertNormalizationIsHermitian()
@@ -56,7 +56,7 @@ class System(BaseSystem): # {{{
                 O += O.join(1,0).conj()
             else:
                 O = makeOperator(physical_dimension)
-        operator_center_tensor = {Identity():DataClass.newIdentity(physical_dimension),OneSiteOperator(None):O}
+        operator_center_tensor = {Identity():DataClass.newIdentity(physical_dimension),OneSiteOperator():O}
         system = cls(
             tuple({Identity():corner_data} for corner_data in corners_data),
             tuple({Identity():side_data} for side_data in sides_data),
