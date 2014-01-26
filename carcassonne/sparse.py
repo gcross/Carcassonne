@@ -7,6 +7,7 @@ from .utils import L,R,O, buildTensor
 
 # Base classes {{{
 class Singleton: # {{{
+    """A utility class that when created returns a singleton."""
     __slots__ = []
     def __new__(cls):
         try:
@@ -22,16 +23,29 @@ class Singleton: # {{{
 
 # Tags {{{
 class Identity(Singleton): # {{{
+    """\
+Indicates that the tagged component contains the expectation with respect to
+the identity.\
+"""
     __slots__ = []
     def __repr__(self):
         return "Identity()"
 # }}}
 class Complete(Singleton): # {{{
+    """\
+Indicates that every term in the tagged component contains the complete
+non-trivial part of the operator.\
+"""
     __slots__ = []
     def __repr__(self):
         return "Complete()"
 # }}}
 class OneSiteOperator: # {{{
+    """\
+Indicates that the tagged component is the expectation value of a one-site
+operator; if there is going to be more than one such one-site operator in a
+:class:`System` than use the *id* field to distinguish them.\
+"""
     __slots__ = ["id"]
     def __init__(self,id=None): # {{{
         self.id = id
@@ -53,6 +67,13 @@ class OneSiteOperator: # {{{
     # }}}
 # }}}
 class TwoSiteOperator: # {{{
+    """\
+Indicates that the tagged component is the expectation value of part of a
+two-site operator, the other part of which is in *direction*; in corner and
+side environment tensors the *position* field indicates the distance from the
+center --- i.e., each contraction in a given direction will bump the position
+of the relevant tags up by one.\
+"""
     __slots__ = ["id","direction","position"]
     def __init__(self,id,direction,position=None): # {{{
         self.id = id
@@ -79,6 +100,7 @@ class TwoSiteOperator: # {{{
         return "TwoSiteOperator({},{},{})".format(self.id,self.direction,self.position)
     # }}}
     def matches(left,right): # {{{
+        """Returns :class:`Complete` if *left* and *right* together form an entire two-site operator term and None otherwise."""
         if(
             left.id == right.id and
             left.direction == RIGHT and
@@ -88,6 +110,7 @@ class TwoSiteOperator: # {{{
             return Complete()
     # }}}
     def matchesCenter(self,side_direction,center): # {{{
+        """Returns :class:`Complete` if *self* (a side) and *center* together form an entire two-site operator and None otherwise."""
         if(
             self.id == center.id and
             self.direction == CENTER and
@@ -96,6 +119,7 @@ class TwoSiteOperator: # {{{
             return Complete()
     # }}}
     def matchesCenterIdentity(self): # {{{
+        """Returns a copy of *self* with the position advanced by one if it is not 'broken' by putting an identity operator below it, which is true as long as the direction field is not CENTER, and None otherwise."""
         if self.direction != CENTER:
             return self.moveOut()
     # }}}
